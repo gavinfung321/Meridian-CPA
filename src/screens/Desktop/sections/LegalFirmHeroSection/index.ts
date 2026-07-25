@@ -1,0 +1,1 @@
+export { LegalFirmHeroSection } from "./LegalFirmHeroSection";
