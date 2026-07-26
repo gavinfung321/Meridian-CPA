@@ -1,65 +1,61 @@
 import { Card, CardContent } from "../../../../components/ui/card";
+import { Language, translations } from "../../../../lib/translations";
+import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 
-const contactDetails = [
-  {
-    type: "email",
-    label: "hello@figma.com",
-    href: "mailto:hello@figma.com",
-  },
-  {
-    type: "phone",
-    label: "(555) 123-4567",
-  },
-];
+interface LegalFirmFooterProps {
+  lang: Language;
+}
 
-const addressLines = [
-  "123 Candyland Lane",
-  "Suite 123",
-  "Los Angeles, CA 94117",
-];
+export const LegalFirmFooterSection = ({ lang }: LegalFirmFooterProps): JSX.Element => {
+  const t = translations[lang].footer;
 
-const socialLinks = [
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/figma",
-  },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/figmadesign",
-  },
-  {
-    label: "LinkedIn",
-    href: "http://linkedin.com/company/figma",
-  },
-  {
-    label: "Bluesky",
-    href: "https://bsky.app/profile/figma.com",
-  },
-];
+  const [footerRef, footerVisible] = useScrollAnimation<HTMLDivElement>(0.1);
 
-const paragraphThreeClassName =
-  "font-paragraph-paragraph-3 text-[length:var(--paragraph-paragraph-3-font-size)] font-[number:var(--paragraph-paragraph-3-font-weight)] tracking-[var(--paragraph-paragraph-3-letter-spacing)] leading-[var(--paragraph-paragraph-3-line-height)] [font-style:var(--paragraph-paragraph-3-font-style)]";
+  const contactDetails = [
+    {
+      type: "email",
+      label: t.email,
+      href: `mailto:${t.email}`,
+    },
+    {
+      type: "phone",
+      label: t.phone,
+    },
+  ];
 
-export const LegalFirmFooterSection = (): JSX.Element => {
+  const socialLinks = [
+    {
+      label: "LinkedIn",
+      href: "https://linkedin.com",
+    },
+    {
+      label: "WhatsApp",
+      href: "https://wa.me/85228151234",
+    },
+  ];
+
   return (
-    <footer className="w-full self-stretch bg-backgroundbackground-1 px-6 py-[68px] sm:px-12 lg:px-[152px]">
+    <footer className="w-full self-stretch bg-[#F9F9F6] border-t border-black/5 px-6 py-16 sm:px-12 lg:px-[152px]">
       <Card className="border-0 bg-transparent p-0 shadow-none">
-        <CardContent className="flex flex-col items-start gap-[84px] p-0">
-          <img
-            className="h-auto w-full"
-            alt="Footer header"
-            src="/footer-header.svg"
-          />
-          <p className="w-full font-paragraph-paragraph-2 text-[length:var(--paragraph-paragraph-2-font-size)] font-[number:var(--paragraph-paragraph-2-font-weight)] tracking-[var(--paragraph-paragraph-2-letter-spacing)] leading-[var(--paragraph-paragraph-2-line-height)] text-paragraphparagraph-1 [font-style:var(--paragraph-paragraph-2-font-style)]">
-            Deep expertise, decisive courtroom presence
-          </p>
-          <div className="grid w-full grid-cols-1 items-start gap-8 md:grid-cols-3 md:gap-[45px]">
-            <address className="not-italic">
+        <CardContent className="flex flex-col items-start gap-12 p-0">
+          <div className="w-full flex items-center justify-between border-b border-black/5 pb-8 flex-wrap gap-4">
+            <span className="text-[20px] font-bold text-[#0F2A1D]">Meridian CPA</span>
+            <p className="text-[15px] font-medium text-[#2C3E35]">
+              {t.tagline}
+            </p>
+          </div>
+
+          {/* Three-column grid: fade-up on scroll */}
+          <div
+            ref={footerRef}
+            className={`grid w-full grid-cols-1 items-start gap-8 md:grid-cols-3 md:gap-[45px] text-[14px] leading-relaxed text-[#2C3E35] scroll-hidden scroll-fade-up ${footerVisible ? "scroll-visible" : ""}`}
+          >
+            <address className="not-italic flex flex-col gap-2">
               {contactDetails.map((detail) =>
                 detail.href ? (
                   <a
                     key={detail.type}
-                    className={`block text-paragraphparagraph-1 ${paragraphThreeClassName}`}
+                    className="block text-[#0F2A1D] hover:underline font-medium"
                     href={detail.href}
                     rel="noopener noreferrer"
                     target="_blank"
@@ -69,28 +65,28 @@ export const LegalFirmFooterSection = (): JSX.Element => {
                 ) : (
                   <p
                     key={detail.type}
-                    className={`text-paragraphparagraph-1 ${paragraphThreeClassName}`}
+                    className="font-medium text-[#0F2A1D]"
                   >
                     {detail.label}
                   </p>
-                ),
+                )
               )}
             </address>
-            <address
-              className={`not-italic text-paragraphparagraph-1 ${paragraphThreeClassName}`}
-            >
-              {addressLines.map((line) => (
+
+            <address className="not-italic flex flex-col gap-1">
+              {t.address.map((line) => (
                 <span key={line} className="block">
                   {line}
                 </span>
               ))}
             </address>
+
             <nav aria-label="Social media links">
-              <ul className="space-y-0">
+              <ul className="space-y-2 font-medium">
                 {socialLinks.map((link) => (
                   <li key={link.label}>
                     <a
-                      className={`text-paragraphparagraph-1 ${paragraphThreeClassName}`}
+                      className="text-[#0F2A1D] hover:underline"
                       href={link.href}
                       rel="noopener noreferrer"
                       target="_blank"
@@ -102,12 +98,18 @@ export const LegalFirmFooterSection = (): JSX.Element => {
               </ul>
             </nav>
           </div>
-          <p className={`text-paragraphparagraph-1 ${paragraphThreeClassName}`}>
-            Jones &amp; Brown Legal
-            <br />© 2025 All Rights Reserved
-          </p>
+
+          <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-black/5 pt-8 text-[12px] text-[#2C3E35]/70">
+            <p className="whitespace-pre-line">
+              {t.rights}
+            </p>
+            <p className="font-semibold text-[#0F2A1D]/80">
+              {t.license}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </footer>
   );
 };
+

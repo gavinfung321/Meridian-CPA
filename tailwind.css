@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css?family=Geist:var(--paragraph-paragraph-3-font-weight),var(--paragraph-paragraph-2-font-weight),var(--display-display-3-font-weight),400,var(--display-hero-display-font-weight),var(--button-font-weight),var(--header-header-1-font-weight)");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,12 +9,10 @@
   }
 }
 
-@import url("https://fonts.googleapis.com/css?family=Geist:var(--paragraph-paragraph-3-font-weight),var(--paragraph-paragraph-2-font-weight),var(--display-display-3-font-weight),400,var(--display-hero-display-font-weight),var(--button-font-weight),var(--header-header-1-font-weight)");
-
 :root {
-  --app-accent: rgba(49, 17, 15, 1);
-  --backgroundbackground-1: rgba(247, 244, 235, 1);
-  --backgroundbackground-2: rgba(13, 31, 8, 1);
+  --app-accent: rgba(15, 42, 29, 1);
+  --backgroundbackground-1: rgba(249, 249, 246, 1);
+  --backgroundbackground-2: rgba(15, 42, 29, 1);
   --button-font-family: "Geist", Helvetica;
   --button-font-size: 18px;
   --button-font-style: normal;
@@ -133,6 +132,7 @@
 }
 
 @keyframes shimmer {
+
   0%,
   90%,
   to {
@@ -247,5 +247,96 @@
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+  }
+}
+
+/* ─── Scroll-reveal: elements start hidden ────────────────────────────────── */
+.scroll-hidden {
+  opacity: 0;
+}
+
+.scroll-hidden.scroll-fade-up {
+  transform: translateY(32px);
+}
+
+.scroll-hidden.scroll-slide-left {
+  transform: translateX(-40px);
+}
+
+.scroll-hidden.scroll-slide-right {
+  transform: translateX(40px);
+}
+
+.scroll-hidden.scroll-scale {
+  transform: scale(0.95);
+}
+
+/* ─── Scroll-reveal: visible state ───────────────────────────────────────── */
+.scroll-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ─── Stagger delay helpers ───────────────────────────────────────────────── */
+.stagger-1 { transition-delay: 80ms;  }
+.stagger-2 { transition-delay: 160ms; }
+.stagger-3 { transition-delay: 240ms; }
+.stagger-4 { transition-delay: 320ms; }
+.stagger-5 { transition-delay: 400ms; }
+
+/* ─── Transition timing for scroll animations ─────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .scroll-hidden {
+    transition:
+      opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ─── Parallax banner (CSS-only, desktop) ─────────────────────────────────── */
+.parallax-banner {
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* iOS Safari fix: disable fixed attachment on small screens */
+@media (max-width: 767px) {
+  .parallax-banner {
+    background-attachment: scroll;
+    background-position: center 30%;
+  }
+}
+
+/* ─── Brand accent token ──────────────────────────────────────────────────── */
+:root {
+  --accent-gold: #C9A84C;
+}
+
+/* ─── Extra stagger helpers for people roster ─────────────────────────────── */
+.stagger-6 { transition-delay: 480ms; }
+.stagger-7 { transition-delay: 560ms; }
+.stagger-8 { transition-delay: 640ms; }
+
+/* ─── Timeline connector line draw animation ──────────────────────────────── */
+@keyframes timeline-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.timeline-line-hidden {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.timeline-line-visible {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .timeline-line-hidden {
+    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
