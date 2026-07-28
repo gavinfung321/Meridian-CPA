@@ -26,9 +26,12 @@ export const ContactSection = ({ lang, onBookClick }: ContactSectionProps): JSX.
           <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">
             {c.label}
           </span>
-          <h2 className="font-serif text-[2.4rem] font-bold text-white tracking-tight leading-tight">
-            {c.title}
-          </h2>
+          <div className="flex flex-col gap-3">
+            <h2 className="font-serif text-[2.4rem] font-bold text-white tracking-tight leading-tight">
+              {c.title}
+            </h2>
+            <div className="h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+          </div>
           <p className="text-[1rem] text-white/70 leading-relaxed">
             {c.subtitle}
           </p>

@@ -19,7 +19,7 @@ export const PeopleSection = ({ lang }: PeopleSectionProps): JSX.Element => {
   return (
     <section
       id="partners"
-      className="flex w-full flex-col items-center bg-[#F9F9F6] px-6 py-24 sm:px-12 sm:py-28 lg:px-[152px] scroll-mt-24"
+      className="flex w-full flex-col items-center bg-[#FFFFFF] px-6 py-24 sm:px-12 sm:py-28 lg:px-[152px] scroll-mt-24"
     >
       <div className="flex w-full max-w-[1180px] flex-col gap-10">
 
@@ -32,9 +32,12 @@ export const PeopleSection = ({ lang }: PeopleSectionProps): JSX.Element => {
             {people.label}
           </span>
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
-              {people.title}
-            </h2>
+            <div className="flex flex-col gap-3">
+              <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
+                {people.title}
+              </h2>
+              <div className="h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+            </div>
             <p className="max-w-[420px] text-[1rem] text-[#2C3E35]/70 leading-relaxed md:text-right">
               {people.subtitle}
             </p>
@@ -130,7 +133,7 @@ const PartnerCard = ({
   hideBio,
 }: PartnerCardProps) => (
   <article
-    className={`flex flex-col overflow-hidden rounded-sm border border-[#0F2A1D]/10 bg-white scroll-hidden scroll-fade-up stagger-${stagger} ${gridVisible ? "scroll-visible" : ""}`}
+    className={`flex flex-col overflow-hidden rounded-sm border border-[#0F2A1D]/8 border-t-2 border-t-[#C9A84C] bg-[#F9F9F6] transition-transform duration-200 hover:-translate-y-0.5 scroll-hidden scroll-fade-up stagger-${stagger} ${gridVisible ? "scroll-visible" : ""}`}
   >
     {/* Photo */}
     <div className="aspect-[4/3] w-full overflow-hidden bg-[#EDECE6]">

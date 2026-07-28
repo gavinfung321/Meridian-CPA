@@ -25,8 +25,8 @@ Nav (fixed)
 → Welcome (#about) + proofs
 → Office banner
 → Offer / Services (#services)
-→ Audit Lifecycle (#process)
 → Why Us (#why-us)
+→ Audit Lifecycle (#process)
 → Partners (#partners)
 → Clients (#clients)
 → FAQ (#faq)
@@ -84,29 +84,30 @@ Lang state lives in [`App.tsx`](src/App.tsx) (`en` \| `zh`); sets `document.docu
 - Dark band; each service = **name + outcome** line
 - Book a Consultation → modal (no dead “+more” / fake services page)
 
-### 6. Audit Lifecycle (`#process`)
+### 6. Why Us (`#why-us`)
+**File:** [`WhyUsSection.tsx`](src/screens/Desktop/sections/WhyUsSection/WhyUsSection.tsx)  
+**Image:** `/images/why-us.png`
+
+- Split: arched team photo + **Why Meridian** title + two-line check reasons (no Book CTA)
+- Sits after Offer, before Lifecycle (what → why → how)
+- No fake KPI badges; Lifecycle remains the only numbered process section
+
+### 7. Audit Lifecycle (`#process`)
 **File:** [`AuditTimelineSection.tsx`](src/screens/Desktop/sections/AuditTimelineSection/AuditTimelineSection.tsx)  
 **Image:** `/images/audit-lifecycle.png`
 
 - Numbered stages with connector (line does not cut through numbers)
 - Gold accent on timeline markers
 
-### 7. Why Us (`#why-us`)
-**File:** [`WhyUsSection.tsx`](src/screens/Desktop/sections/WhyUsSection/WhyUsSection.tsx)  
-**Image:** `/images/why-us.png`
-
-- Split: arched team photo + **Why Meridian** title, two-line check reasons, Book → modal, proof caption under CTA
-- No fake KPI badges; Lifecycle remains the only numbered process section
-
 ### 8. Partners (`#partners`)
-**File:** [`PeopleSection.tsx`](src/screens/Desktop/sections/PeopleSection/PeopleSection.tsx)  
+**File:** [`PeopleSection.tsx`](src/screens/Desktop/sections/PeopleSection/PeopleSection.tsx)
 **Images:** `/images/partners/` (Andrew Lam, Cecilia Yam, Ringo Chiu, Wing Chan)
 
 - Authority line above grid
 - One title pill + specialty text per partner
 
 ### 9. Clients (`#clients`)
-**File:** `MainContentSection.tsx`  
+**File:** `MainContentSection.tsx`
 **Images:** `/images/clients/`
 
 - Quiet quote treatment (no heavy white card chrome)

@@ -113,9 +113,12 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
             ref={welcomeTextRef}
             className={`flex w-full max-w-[720px] flex-col items-start gap-8 text-[1.05rem] leading-relaxed text-[#2C3E35] scroll-hidden scroll-fade-up ${welcomeVisible ? "scroll-visible" : ""}`}
           >
-            <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
-              {welcome.title}
-            </h2>
+            <div className="flex flex-col gap-3">
+              <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
+                {welcome.title}
+              </h2>
+              <div className="h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+            </div>
             <p
               className={`scroll-hidden scroll-fade-up stagger-2 ${welcomeTextVisible ? "scroll-visible" : ""}`}
             >
@@ -178,9 +181,12 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
             ref={offerHeadRef}
             className={`shrink-0 md:w-1/3 scroll-hidden scroll-fade-up ${offerHeadVisible ? "scroll-visible" : ""}`}
           >
-            <h2 className="font-serif text-[2.4rem] font-bold text-white tracking-tight leading-tight">
-              {offer.title}
-            </h2>
+            <div className="flex flex-col gap-3">
+              <h2 className="font-serif text-[2.4rem] font-bold text-white tracking-tight leading-tight">
+                {offer.title}
+              </h2>
+              <div className="h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+            </div>
           </header>
 
           <nav
@@ -212,8 +218,8 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
         </div>
       </section>
 
-      <AuditTimelineSection lang={lang} />
       <WhyUsSection lang={lang} />
+      <AuditTimelineSection lang={lang} />
       <PeopleSection lang={lang} />
 
       <section
@@ -223,11 +229,14 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
       >
         <div className="flex w-full max-w-[800px] flex-col items-center gap-10">
           <header className="flex w-full flex-col items-center gap-4 text-center">
-            <h2
-              className={`font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight scroll-hidden scroll-fade-up ${testimonialVisible ? "scroll-visible" : ""}`}
+            <div
+              className={`flex flex-col items-center gap-3 scroll-hidden scroll-fade-up ${testimonialVisible ? "scroll-visible" : ""}`}
             >
-              {clients.title}
-            </h2>
+              <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight">
+                {clients.title}
+              </h2>
+              <div className="mx-auto h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+            </div>
             <p
               className={`max-w-[600px] text-[1.05rem] text-[#2C3E35] leading-relaxed scroll-hidden scroll-fade-up stagger-2 ${testimonialVisible ? "scroll-visible" : ""}`}
             >

@@ -29,9 +29,12 @@ export const FaqSection = ({ lang }: FaqSectionProps): JSX.Element => {
             {faq.label}
           </span>
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
-              {faq.title}
-            </h2>
+            <div className="flex flex-col gap-3">
+              <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
+                {faq.title}
+              </h2>
+              <div className="h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+            </div>
             <p className="max-w-[420px] text-[1rem] text-[#2C3E35]/70 leading-relaxed md:text-right">
               {faq.subtitle}
             </p>
