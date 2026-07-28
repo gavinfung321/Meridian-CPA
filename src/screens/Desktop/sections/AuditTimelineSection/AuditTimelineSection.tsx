@@ -14,26 +14,44 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
   const [stepsRef, stepsVisible] = useScrollAnimation<HTMLDivElement>(0.1);
 
   return (
-    <section className="flex w-full flex-col items-center bg-[#0F2A1D] px-6 py-24 sm:px-12 lg:px-[152px] overflow-hidden">
-      <div className="flex w-full max-w-[1180px] flex-col gap-16">
+    <section
+      id="process"
+      className="flex w-full flex-col items-center bg-[#F9F9F6] px-6 py-24 sm:px-12 sm:py-28 lg:px-[152px] overflow-hidden scroll-mt-24"
+    >
+      <div className="flex w-full max-w-[1180px] flex-col gap-10">
 
         {/* Header */}
         <header
           ref={headerRef}
           className={`flex flex-col gap-3 scroll-hidden scroll-fade-up ${headerVisible ? "scroll-visible" : ""}`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0F2A1D]/50">
             {tl.label}
           </span>
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <h2 className="text-[2.4rem] font-bold text-white tracking-tight leading-tight">
+            <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
               {tl.title}
             </h2>
-            <p className="max-w-[360px] text-[1rem] text-white/55 leading-relaxed md:text-right">
+            <p className="max-w-[360px] text-[1rem] text-[#2C3E35]/70 leading-relaxed md:text-right">
               {tl.subtitle}
             </p>
           </div>
         </header>
+
+        {/* Atmosphere photo strip */}
+        <div className="relative h-[160px] w-full overflow-hidden rounded-sm sm:h-[200px]">
+          <img
+            src="/images/audit-lifecycle.png"
+            alt="Meridian CPA team reviewing audit documents in the office"
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "rgba(15,42,29,0.15)" }}
+            aria-hidden="true"
+          />
+        </div>
 
         {/* Desktop: horizontal layout with connector line */}
         <div className="hidden lg:block relative">
@@ -41,7 +59,7 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
           {/* Animated connector line */}
           <div
             ref={lineRef}
-            className="absolute top-[38px] left-0 right-0 h-px bg-white/15 mx-0"
+            className="absolute top-[7px] left-0 right-0 h-px bg-[#0F2A1D]/15 mx-0"
             aria-hidden="true"
           >
             <div
@@ -63,7 +81,7 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
                 >
                   {/* Node dot */}
                   <div className="relative flex items-center justify-center">
-                    <div className="h-[14px] w-[14px] rounded-full border-2 border-[#C9A84C] bg-[#0F2A1D] relative z-10" />
+                    <div className="h-[14px] w-[14px] rounded-full border-2 border-[#C9A84C] bg-[#F9F9F6] relative z-10" />
                   </div>
 
                   {/* Step number */}
@@ -75,12 +93,12 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
                   </span>
 
                   {/* Title */}
-                  <h3 className="text-[15px] font-semibold text-white leading-snug">
+                  <h3 className="text-[15px] font-semibold text-[#0F2A1D] leading-snug">
                     {step.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-[13px] text-white/55 leading-relaxed">
+                  <p className="text-[13px] text-[#2C3E35]/70 leading-relaxed line-clamp-3">
                     {step.description}
                   </p>
                 </div>
@@ -97,9 +115,9 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
               <div key={step.number} className="flex gap-6">
                 {/* Left: node + vertical line */}
                 <div className="flex flex-col items-center shrink-0">
-                  <div className="mt-1 h-[14px] w-[14px] rounded-full border-2 border-[#C9A84C] bg-[#0F2A1D] shrink-0" />
+                  <div className="mt-1 h-[14px] w-[14px] rounded-full border-2 border-[#C9A84C] bg-[#F9F9F6] shrink-0" />
                   {!isLast && (
-                    <div className="flex-1 w-px bg-white/15 my-2 min-h-[40px]" />
+                    <div className="flex-1 w-px bg-[#0F2A1D]/15 my-2 min-h-[40px]" />
                   )}
                 </div>
 
@@ -111,10 +129,10 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
                   >
                     {step.number}
                   </span>
-                  <h3 className="text-[15px] font-semibold text-white leading-snug">
+                  <h3 className="text-[15px] font-semibold text-[#0F2A1D] leading-snug">
                     {step.title}
                   </h3>
-                  <p className="text-[13px] text-white/55 leading-relaxed">
+                  <p className="text-[13px] text-[#2C3E35]/70 leading-relaxed line-clamp-3">
                     {step.description}
                   </p>
                 </div>

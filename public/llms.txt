@@ -1,0 +1,19 @@
+# Meridian CPA & Advisory
+
+> Hong Kong CPA firm providing statutory audit, tax, accounting, company secretarial, and business advisory services.
+
+## Facts
+- Name: Meridian CPA & Advisory
+- Location: Suite 1801, 18/F, Chinachem Tower, 34-37 Connaught Road Central, Central, Hong Kong
+- Email: info@meridiancpa.com.hk
+- Phone: +852 2815 1234
+- Services: Statutory audit, profits tax return & advisory, HKFRS / SME-FRS bookkeeping, company secretarial, cloud accounting (Xero), business advisory
+- Languages: English, Traditional Chinese
+- Website: https://www.meridiancpa.com.hk/
+
+## Pages
+- / — Home (services, audit lifecycle, methodology, partners, client reviews, FAQ, contact)
+- /about — About the firm (placeholder content)
+
+## Contact
+Prefer email or phone for engagement enquiries. Book a consultation via the Contact section on the homepage.

@@ -1,19 +1,31 @@
 import { useState } from "react";
-import { LegalFirmFooterSection } from "./sections/LegalFirmFooterSection/LegalFirmFooterSection";
-import { LegalFirmHeroSection } from "./sections/LegalFirmHeroSection";
-import { LegalServicesContentSection } from "./sections/LegalServicesContentSection/LegalServicesContentSection";
-import { TopNavigationSection } from "./sections/TopNavigationSection/TopNavigationSection";
+import { ContactModal } from "../../components/ContactModal";
 import { Language } from "../../lib/translations";
+import { FooterSection } from "./sections/FooterSection/FooterSection";
+import { HeroSection } from "./sections/HeroSection";
+import { MainContentSection } from "./sections/MainContentSection/MainContentSection";
+import { TopNavigationSection } from "./sections/TopNavigationSection/TopNavigationSection";
 
-export const Desktop = (): JSX.Element => {
-  const [lang, setLang] = useState<Language>("en");
+interface DesktopProps {
+  lang: Language;
+  setLang: (lang: Language) => void;
+}
+
+export const Desktop = ({ lang, setLang }: DesktopProps): JSX.Element => {
+  const [contactOpen, setContactOpen] = useState(false);
+  const openContact = () => setContactOpen(true);
+  const closeContact = () => setContactOpen(false);
 
   return (
-    <main className="flex min-h-screen w-full flex-col overflow-x-hidden bg-displaydisplay-2">
-      <TopNavigationSection lang={lang} setLang={setLang} />
-      <LegalFirmHeroSection lang={lang} />
-      <LegalServicesContentSection lang={lang} />
-      <LegalFirmFooterSection lang={lang} />
+    <main
+      id="main"
+      className="flex min-h-screen w-full flex-col overflow-x-hidden bg-displaydisplay-2"
+    >
+      <TopNavigationSection lang={lang} setLang={setLang} onBookClick={openContact} />
+      <HeroSection lang={lang} onBookClick={openContact} />
+      <MainContentSection lang={lang} onBookClick={openContact} />
+      <FooterSection lang={lang} />
+      <ContactModal lang={lang} open={contactOpen} onClose={closeContact} />
     </main>
   );
 };

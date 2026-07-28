@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" role="img" aria-label="Meridian CPA">
+  <rect width="36" height="36" fill="#0F2A1D"/>
+  <g transform="translate(0, 0)" fill="#FFFFFF" stroke="#FFFFFF">
+    <path d="M2 18 L9 14.5 L9 21.5 Z" stroke="none"/>
+    <path d="M34 18 L27 14.5 L27 21.5 Z" stroke="none"/>
+    <rect x="17.2" y="2" width="1.6" height="32" stroke="none"/>
+    <path d="M8 28 V10 L18 22 L28 10 V28" fill="none" stroke-width="2.2" stroke-linejoin="miter"/>
+  </g>
+</svg>

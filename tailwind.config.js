@@ -58,7 +58,9 @@ module.exports = {
         "header-header-1": "var(--header-header-1-font-family)",
         "paragraph-paragraph-2": "var(--paragraph-paragraph-2-font-family)",
         "paragraph-paragraph-3": "var(--paragraph-paragraph-3-font-family)",
+        serif: ["Georgia", "'Times New Roman'", "Times", "serif"],
         sans: [
+          "Geist",
           "ui-sans-serif",
           "system-ui",
           "sans-serif",

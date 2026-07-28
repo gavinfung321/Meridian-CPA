@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Geist:var(--paragraph-paragraph-3-font-weight),var(--paragraph-paragraph-2-font-weight),var(--display-display-3-font-weight),400,var(--display-hero-display-font-weight),var(--button-font-weight),var(--header-header-1-font-weight)");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +6,14 @@
 @layer base {
   .all-unset {
     all: unset;
+  }
+
+  html {
+    font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  body {
+    font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
   }
 }
 
@@ -259,6 +267,10 @@
   transform: translateY(32px);
 }
 
+.scroll-hidden.scroll-fade-up-sm {
+  transform: translateY(16px);
+}
+
 .scroll-hidden.scroll-slide-left {
   transform: translateX(-40px);
 }
@@ -272,7 +284,13 @@
 }
 
 /* ─── Scroll-reveal: visible state ───────────────────────────────────────── */
-.scroll-visible {
+/* Must beat .scroll-hidden.scroll-fade-up (etc.) specificity or translateY sticks */
+.scroll-hidden.scroll-visible,
+.scroll-hidden.scroll-fade-up.scroll-visible,
+.scroll-hidden.scroll-fade-up-sm.scroll-visible,
+.scroll-hidden.scroll-slide-left.scroll-visible,
+.scroll-hidden.scroll-slide-right.scroll-visible,
+.scroll-hidden.scroll-scale.scroll-visible {
   opacity: 1;
   transform: none;
 }
@@ -291,6 +309,13 @@
       opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
       transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+/* ─── Static photo banner (no parallax) ───────────────────────────────────── */
+.static-banner {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* ─── Parallax banner (CSS-only, desktop) ─────────────────────────────────── */
@@ -338,5 +363,53 @@
 @media (prefers-reduced-motion: no-preference) {
   .timeline-line-hidden {
     transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ─── Methodology card hover (color invert, no flip) ─────────────────────── */
+.methodology-card {
+  transition:
+    background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.methodology-card-icon,
+.methodology-card-title,
+.methodology-card-body {
+  transition:
+    background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) {
+  .methodology-card:hover,
+  .methodology-card:focus-within {
+    background-color: #0f2a1d;
+    border-color: #0f2a1d;
+  }
+
+  .methodology-card:hover .methodology-card-icon,
+  .methodology-card:focus-within .methodology-card-icon {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #c9a84c;
+  }
+
+  .methodology-card:hover .methodology-card-title,
+  .methodology-card:focus-within .methodology-card-title {
+    color: #ffffff;
+  }
+
+  .methodology-card:hover .methodology-card-body,
+  .methodology-card:focus-within .methodology-card-body {
+    color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .methodology-card,
+  .methodology-card-icon,
+  .methodology-card-title,
+  .methodology-card-body {
+    transition: none;
   }
 }
