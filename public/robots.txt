@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.meridiancpa.com.hk/sitemap.xml
+Sitemap: https://figma-bolt-meridian-cpa.vercel.app/sitemap.xml

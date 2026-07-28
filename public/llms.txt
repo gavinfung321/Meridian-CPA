@@ -9,7 +9,8 @@
 - Phone: +852 2815 1234
 - Services: Statutory audit, profits tax return & advisory, HKFRS / SME-FRS bookkeeping, company secretarial, cloud accounting (Xero), business advisory
 - Languages: English, Traditional Chinese
-- Website: https://www.meridiancpa.com.hk/
+- Website: https://figma-bolt-meridian-cpa.vercel.app/
+- Brand domain (planned): https://www.meridiancpa.com.hk/
 
 ## Pages
 - / — Home (services, audit lifecycle, methodology, partners, client reviews, FAQ, contact)
