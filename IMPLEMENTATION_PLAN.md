@@ -26,7 +26,7 @@ Nav (fixed)
 → Office banner
 → Offer / Services (#services)
 → Audit Lifecycle (#process)
-→ Methodology (#methodology)
+→ Why Us (#why-us)
 → Partners (#partners)
 → Clients (#clients)
 → FAQ (#faq)
@@ -37,7 +37,7 @@ Nav (fixed)
 ```
 
 **Nav anchors (thin):** About · Services · Audit Cycle · Our Team · FAQ · **Book**  
-**On page but not in nav:** Methodology, Clients, Contact (reached by scroll / CTAs).
+**On page but not in nav:** Why Us, Clients, Contact (reached by scroll / CTAs).
 
 ---
 
@@ -63,10 +63,11 @@ Lang state lives in [`App.tsx`](src/App.tsx) (`en` \| `zh`); sets `document.docu
 
 ### 2. Hero
 **File:** [`HeroSection.tsx`](src/screens/Desktop/sections/HeroSection/HeroSection.tsx)  
-**Image:** `/images/hero.png`
+**Image:** `/images/hero.png` (higher-resolution still; V14 feedback)
 
 - Full-bleed photo + dark gradient
 - Headline, one supporting line, solid white Book button → modal
+- Social share preview uses separate `og-image.jpg` (not auto-synced to hero)
 
 ### 3. Welcome (`#about`)
 **File:** [`MainContentSection.tsx`](src/screens/Desktop/sections/MainContentSection/MainContentSection.tsx)
@@ -90,11 +91,12 @@ Lang state lives in [`App.tsx`](src/App.tsx) (`en` \| `zh`); sets `document.docu
 - Numbered stages with connector (line does not cut through numbers)
 - Gold accent on timeline markers
 
-### 7. Methodology (`#methodology`)
-**File:** [`AuditMethodologySection.tsx`](src/screens/Desktop/sections/AuditMethodologySection/AuditMethodologySection.tsx)
+### 7. Why Us (`#why-us`)
+**File:** [`WhyUsSection.tsx`](src/screens/Desktop/sections/WhyUsSection/WhyUsSection.tsx)  
+**Image:** `/images/why-us.png`
 
-- Step cards: gold numbers, icons, gold edge
-- Hover = whole-card dark invert (no 3D flip)
+- Split: arched team photo + **Why Meridian** title, two-line check reasons, Book → modal, proof caption under CTA
+- No fake KPI badges; Lifecycle remains the only numbered process section
 
 ### 8. Partners (`#partners`)
 **File:** [`PeopleSection.tsx`](src/screens/Desktop/sections/PeopleSection/PeopleSection.tsx)  
@@ -211,7 +213,7 @@ src/screens/Desktop/sections/
   HeroSection/
   MainContentSection/     ← Welcome, Offer, Clients, banners
   AuditTimelineSection/
-  AuditMethodologySection/
+  WhyUsSection/
   PeopleSection/
   FaqSection/
   ContactSection/

@@ -5,7 +5,7 @@ import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 import { PeopleSection } from "../PeopleSection/PeopleSection";
 import { AuditTimelineSection } from "../AuditTimelineSection/AuditTimelineSection";
-import { AuditMethodologySection } from "../AuditMethodologySection/AuditMethodologySection";
+import { WhyUsSection } from "../WhyUsSection/WhyUsSection";
 import { FaqSection } from "../FaqSection/FaqSection";
 import { ContactSection } from "../ContactSection/ContactSection";
 
@@ -213,7 +213,7 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
       </section>
 
       <AuditTimelineSection lang={lang} />
-      <AuditMethodologySection lang={lang} />
+      <WhyUsSection lang={lang} />
       <PeopleSection lang={lang} />
 
       <section

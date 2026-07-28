@@ -6,8 +6,6 @@ export const translations = {
       about: "About Us",
       services: "Services",
       auditCycle: "Audit Cycle",
-      methodology: "Methodology",
-      whyUs: "Client Review",
       ourTeam: "Our Team",
       faq: "FAQ",
       bookConsult: "Book",
@@ -167,40 +165,26 @@ export const translations = {
         },
       ],
     },
-    methodology: {
-      label: "OUR METHODOLOGY",
-      title: "Rigour at every stage",
-      subtitle: "Our audit approach is built on six core principles that ensure accuracy, independence, and genuine value for your business.",
-      pillars: [
+    whyUs: {
+      title: "Why Meridian",
+      subtitle: "Audits and advisory that stay clear, controlled, and free of last-minute surprises.",
+      imageAlt: "Meridian CPA professionals in a Hong Kong office overlooking the harbour",
+      reasons: [
         {
-          icon: "risk",
-          title: "Risk-Based Approach",
-          description: "Focus resources on areas where material misstatements are most likely.",
+          title: "Risk-based focus",
+          detail: "Focus where material misstatement risk is highest.",
         },
         {
-          icon: "independence",
-          title: "Independence & Objectivity",
-          description: "Ethical walls, partner rotation, and documented independence confirmations.",
+          title: "Independence",
+          detail: "Ethical walls, rotation, and documented confirmations.",
         },
         {
-          icon: "standards",
-          title: "HKSA Compliance",
-          description: "Procedures designed and documented in full HKICPA alignment.",
+          title: "HKSA alignment",
+          detail: "Procedures designed and recorded to HKICPA standards.",
         },
         {
-          icon: "technology",
-          title: "Technology-Enhanced",
-          description: "CaseWare, Xero, and analytics for faster, broader fieldwork.",
-        },
-        {
-          icon: "communication",
-          title: "Clear Communication",
-          description: "Plain-language findings at every stage — no surprises.",
-        },
-        {
-          icon: "quality",
-          title: "Quality Review",
-          description: "Mandatory engagement quality review before every report is signed.",
+          title: "Clear communication",
+          detail: "Plain-language findings at every stage.",
         },
       ],
     },
@@ -275,8 +259,6 @@ export const translations = {
       about: "關於我們",
       services: "服務",
       auditCycle: "審計週期",
-      methodology: "方法論",
-      whyUs: "客戶評價",
       ourTeam: "我們的團隊",
       faq: "常見問題",
       bookConsult: "預約",
@@ -436,40 +418,26 @@ export const translations = {
         },
       ],
     },
-    methodology: {
-      label: "我們的方法論",
-      title: "每個環節均嚴謹把關",
-      subtitle: "我們的審計方法建基於六大核心原則，確保準確、獨立，並為您的業務帶來真正價值。",
-      pillars: [
+    whyUs: {
+      title: "為何選擇 Meridian",
+      subtitle: "審計與諮詢保持清晰可控，避免臨門一腳的意外。",
+      imageAlt: "Meridian CPA 專業團隊於香港辦公室，背景為維港景致",
+      reasons: [
         {
-          icon: "risk",
           title: "風險為本",
-          description: "將資源集中於最可能出現重大失實陳述的領域。",
+          detail: "將資源集中於最可能出現重大失實陳述的領域。",
         },
         {
-          icon: "independence",
           title: "獨立及客觀",
-          description: "嚴格道德隔離、合夥人輪換及書面獨立性確認。",
+          detail: "嚴格道德隔離、合夥人輪換及書面獨立性確認。",
         },
         {
-          icon: "standards",
           title: "遵守香港審計準則",
-          description: "所有程序均按香港會計師公會審計準則設計及記錄。",
+          detail: "所有程序均按香港會計師公會審計準則設計及記錄。",
         },
         {
-          icon: "technology",
-          title: "科技輔助",
-          description: "採用CaseWare、Xero及數據分析，加快實地工作。",
-        },
-        {
-          icon: "communication",
           title: "清晰溝通",
-          description: "每階段以淺白語言傳達發現事項，報告階段絕無意外。",
-        },
-        {
-          icon: "quality",
-          title: "質量審閱",
-          description: "簽署報告前，須由業務質量審閱員強制審閱。",
+          detail: "每階段以淺白語言傳達發現事項，報告階段絕無意外。",
         },
       ],
     },
