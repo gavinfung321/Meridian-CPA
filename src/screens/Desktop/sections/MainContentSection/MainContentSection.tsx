@@ -169,7 +169,7 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
         role="img"
         aria-label="Meridian CPA office with Hong Kong skyline view"
         className="static-banner relative h-[320px] sm:h-[380px] lg:h-[420px] w-full"
-        style={{ backgroundImage: "url('/images/office.jpg')" }}
+        style={{ backgroundImage: "url('/images/office.png')" }}
       />
 
       <section
@@ -322,7 +322,7 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
         role="img"
         aria-label="Audited financial statements with Hong Kong harbour view"
         className="static-banner relative h-[320px] sm:h-[380px] lg:h-[420px] w-full"
-        style={{ backgroundImage: "url('/images/documents.jpg')" }}
+        style={{ backgroundImage: "url('/images/documents.png')" }}
       />
     </section>
   );

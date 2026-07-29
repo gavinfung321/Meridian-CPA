@@ -76,7 +76,7 @@ Lang state lives in [`App.tsx`](src/App.tsx) (`en` \| `zh`); sets `document.docu
 - Proof column: AFRC Registered · TCSP Licensed · HKICPA Practising (labels only — no fake licence numbers)
 
 ### 4. Office banner
-**Image:** `/images/office.jpg` — short mid-page atmosphere strip
+**Image:** `/images/office.png` — short mid-page atmosphere strip
 
 ### 5. Offer / Services (`#services`)
 **File:** `MainContentSection.tsx`
@@ -126,7 +126,7 @@ Lang state lives in [`App.tsx`](src/App.tsx) (`en` \| `zh`); sets `document.docu
 - Reply line: usually within one business day
 
 ### 12. Documents banner
-**Image:** `/images/documents.jpg`
+**Image:** `/images/documents.png`
 
 ### 13. Footer
 **File:** [`FooterSection.tsx`](src/screens/Desktop/sections/FooterSection/FooterSection.tsx)
