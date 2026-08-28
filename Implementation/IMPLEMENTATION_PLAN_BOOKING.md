@@ -11,7 +11,7 @@ This document outlines the detailed, step-by-step technical plan to implement us
 | Phase | Name | Status | GitHub | Notes |
 |-------|------|--------|--------|-------|
 | **1** | Authentication & Profiles | **Complete** | [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed) | Auth, profiles, avatars, dashboard shells, base schema |
-| **2** | Session & Category Management | Not started | — | CRUD + availability rules + admin session UI |
+| **2** | Session & Category Management | **In progress** | [#5](https://github.com/gavinfung321/Meridian-CPA/issues/5) | Schema migrated; admin CRUD wired |
 | **3** | Booking Logic & Evolution | Not started | — | Client booking flow, role promotion, admin overview widgets |
 | **4** | History & Logging | Not started | — | Login/session/booking audit trails |
 | **5** | Admin Controls & Reporting | Not started | — | User management, charts, `app_settings` |
@@ -394,15 +394,15 @@ Core auth, profile sync, avatars, dashboard shells, and base database schema.
 
 Admin-managed taxonomy and session slots. Replaces mock `/admin/sessions` data with live CRUD.
 
-- [ ] CRUD for `categories`
-- [ ] CRUD for `session_types`
-- [ ] CRUD for `sessions` (wire to existing `sessions` table; link to `session_types` when ready)
-- [ ] Implement Availability Rules using JSONB recurrence rules
-- [ ] Admin UI for Session management (List, Create, Edit)
-- [ ] Routes: `/admin/sessions/new`, `/admin/sessions/edit/:id`
-- [ ] Form fields: slot limits, datetime pickers, type/category selections, locations, pricing
-- [ ] Cancel session slot (cascade or notify affected bookings with reason input)
-- [ ] RLS policies for new `categories` / `session_types` tables
+- [x] CRUD for `categories`
+- [x] CRUD for `session_types`
+- [x] CRUD for `sessions` (wire to existing `sessions` table; link to `session_types` when ready)
+- [x] Implement Availability Rules using JSONB recurrence rules *(JSON field on session form)*
+- [x] Admin UI for Session management (List, Create, Edit)
+- [x] Routes: `/admin/sessions/new`, `/admin/sessions/edit/:id`
+- [x] Form fields: slot limits, datetime pickers, type/category selections, locations, pricing
+- [x] Cancel session slot (reason input; existing bookings unchanged in this step)
+- [x] RLS policies for new `categories` / `session_types` tables *(migration Step 1)*
 - [ ] Landing page: read active, non-cancelled sessions for public availability *(schema + RLS already in Phase 1)*
 
 **Existing mock UI to replace:** `/admin/sessions` table placeholder ✅ *Phase 1*
@@ -486,7 +486,7 @@ Items from the old layer-based phases map to the feature phases above:
 - ✅ **Banned state:** Suspension screen implemented
 - ⏳ **Production reset URL:** Add production domain to Supabase Auth redirect allow-list on deploy
 
-### Phase 2 — Session & Category Management (pending)
+### Phase 2 — Session & Category Management (in progress)
 - **Category/Type CRUD:** Admin can create, edit, deactivate categories and session types
 - **Session CRUD:** Admin can create/edit/cancel sessions; changes persist and respect RLS
 - **Availability rules:** Recurrence JSONB correctly generates bookable slots

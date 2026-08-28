@@ -8,6 +8,8 @@ import { AdminBookings } from "./screens/Admin/AdminBookings";
 import { AdminClients } from "./screens/Admin/AdminClients";
 import { AdminDashboardOverview } from "./screens/Admin/AdminDashboardOverview";
 import { AdminSessions } from "./screens/Admin/AdminSessions";
+import { AdminSessionForm } from "./screens/Admin/AdminSessionForm";
+import { AdminTaxonomy } from "./screens/Admin/AdminTaxonomy";
 import { AdminProfile } from "./screens/Admin/AdminProfile";
 import { AdminSettings } from "./screens/Admin/AdminSettings";
 import { DashboardBookings } from "./screens/Dashboard/DashboardBookings";
@@ -56,6 +58,9 @@ export const App = (): JSX.Element => {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboardOverview />} />
             <Route path="/admin/sessions" element={<AdminSessions />} />
+            <Route path="/admin/sessions/new" element={<AdminSessionForm />} />
+            <Route path="/admin/sessions/edit/:id" element={<AdminSessionForm />} />
+            <Route path="/admin/taxonomy" element={<AdminTaxonomy />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/clients" element={<AdminClients />} />
             <Route path="/admin/profile" element={<AdminProfile />} />
