@@ -213,7 +213,7 @@ create table public.booking_history (
 
 The roadmap adds normalized session taxonomy and global settings. These extend — not replace — the current flat `sessions.type` text field.
 
-#### `categories` *(Phase 2)*
+#### `categories` *(Phase 2)* ✅ *Migrated — `20250828183000_session_categories_and_types.sql`*
 ```sql
 -- Planned: top-level groupings for session types (e.g. Tax, Audit, Advisory)
 create table public.categories (
@@ -226,7 +226,7 @@ create table public.categories (
 );
 ```
 
-#### `session_types` *(Phase 2)*
+#### `session_types` *(Phase 2)* ✅ *Migrated — `20250828183000_session_categories_and_types.sql`*
 ```sql
 -- Planned: bookable service types linked to a category
 create table public.session_types (
@@ -253,7 +253,12 @@ create table public.app_settings (
 -- Example key: 'booking' -> { "max_booking_days_advance": 90 }
 ```
 
-> **Note:** Phase 1 `sessions` table uses a `type text` column for mock data. Phase 2 may add `session_type_id` FK or migrate existing rows when categories/types CRUD is built.
+> **Note:** Phase 1 `sessions` table uses a `type text` column for mock data. Phase 2 added `session_type_id` FK and `recurrence_rules` JSONB via `20250828183000_session_categories_and_types.sql`. Legacy `type` retained for backward compatibility.
+
+**Phase 2 migrations:**
+| Migration | Purpose |
+|-----------|---------|
+| `20250828183000_session_categories_and_types.sql` | `categories`, `session_types`, `sessions.session_type_id`, `recurrence_rules`, RLS, seed data |
 
 ---
 
