@@ -2,6 +2,29 @@
 
 This document outlines the detailed, step-by-step technical plan to implement user authentication, a Supabase database backend, automatic email notifications, client dashboards, and admin management pages for the Meridian CPA booking system.
 
+> **Detailed Phase 1 record:** See [PHASE_1_AUTH_PROFILES.md](./PHASE_1_AUTH_PROFILES.md) for full checklists, design decisions, and QA notes.
+
+---
+
+## Implementation Status
+
+| Phase | Status | GitHub | Notes |
+|-------|--------|--------|-------|
+| **Phase 1** — Database, Auth & Dashboard Mockups | **Complete** | [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3) (closed), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed) | Schema, auth, profiles, mock dashboards merged to `main` |
+| **Phase 2** — Edge Functions & Email | Not started | — | |
+| **Phase 3** — Public Routing & Auth (full polish) | Partially done in Phase 1 | — | Core auth flows live; toast system still pending |
+| **Phase 4** — Client Dashboard (real CRUD) | Mock UI only | — | Placeholder pages exist |
+| **Phase 5** — Admin Dashboard (real CRUD) | Mock UI only | — | Placeholder pages exist |
+
+**Phase 1 delivered (Aug 2026):**
+- Supabase project linked; all core migrations applied remotely
+- Full schema: `profiles`, `sessions`, `bookings`, audit log tables, enums, triggers, RLS
+- Profile extensions: `first_name` / `last_name`, contact/address fields, `avatar_path`, `profile-pictures` storage bucket
+- Auth: signup, login, forgot/reset password, session context, role-based `ProtectedRoute`, not-authorized page
+- Profile UI: `/profile`, `/dashboard/profile`, `/admin/profile` with avatar upload and full contact/address form
+- Homepage profile avatar menu with role-based Dashboard/Admin links and context-aware logout
+- Mock client portal (`/dashboard/*`) and admin console (`/admin/*`) layout shells for routing QA
+
 ---
 
 ## 1. System Architecture & Tech Stack
@@ -36,27 +59,29 @@ To ensure all dashboard screens look premium and seamlessly align with the landi
 Instead of heavy overlays or modals for main views, we will use unique pages with dedicated slugs.
 
 ### Authentication & Public Pages
-- `/login` - Login with email/password.
-- `/signup` - Registration form (first name + last name).
-- `/forgot-password` - Request a password reset email.
-- `/reset-password` - Set a new password from the email link.
-- `/logout` - Redirect helper / cleanup.
-- `/not-authorized` - Shown when a signed-in `user` or `client` attempts to access `/admin/*`.
+- `/login` - Login with email/password. ✅ *Phase 1*
+- `/signup` - Registration form (first name + last name). ✅ *Phase 1*
+- `/forgot-password` - Request a password reset email. ✅ *Phase 1*
+- `/reset-password` - Set a new password from the email link. ✅ *Phase 1*
+- `/logout` - Session cleanup via `signOut()`, then redirect to `/`. ✅ *Phase 1*
+- `/not-authorized` - Shown when a signed-in `user` or `client` attempts to access `/admin/*`. ✅ *Phase 1*
+- `/profile` - Unified profile page (all roles); avatar upload; contact/address form. ✅ *Phase 1* ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4))
 
 ### Client Pages (`/dashboard/*` - Protected Client Route)
-- `/dashboard` - Overview showing next upcoming booking, summary stats.
-- `/dashboard/bookings` - History of past bookings, active booking list, request cancellation button.
-- `/dashboard/profile` - Edit profile info (name, phone prefix/number, address, email), view account status.
+- `/dashboard` - Overview showing next upcoming booking, summary stats. ✅ *Mock UI — Phase 1*
+- `/dashboard/bookings` - History of past bookings, active booking list, request cancellation button. ✅ *Mock UI — Phase 1*
+- `/dashboard/profile` - Edit profile info (name, phone prefix/number, address, email), view account status. ✅ *Phase 1*
 
 ### Admin Pages (`/admin/*` - Protected Admin Route)
-- `/admin/dashboard` - Visual overview with key metrics.
-- `/admin/sessions` - CRUD list of all sessions (Tax planning, Audits, etc.), view schedules.
+- `/admin/dashboard` - Visual overview with key metrics. ✅ *Mock UI — Phase 1*
+- `/admin/sessions` - CRUD list of all sessions (Tax planning, Audits, etc.), view schedules. ✅ *Mock UI — Phase 1*
 - `/admin/sessions/new` - Form to create a session slot.
 - `/admin/sessions/edit/:id` - Form to edit/cancel a session slot.
-- `/admin/bookings` - Global listing of bookings; actions to approve, reject, cancel, filter by user/status.
-- `/admin/clients` - List of all signed-up users. Actions to promote to client, demote to user, view logs, ban, or reinstate.
+- `/admin/bookings` - Global listing of bookings; actions to approve, reject, cancel, filter by user/status. ✅ *Mock UI — Phase 1*
+- `/admin/clients` - List of all signed-up users. Actions to promote to client, demote to user, view logs, ban, or reinstate. ✅ *Mock UI — Phase 1*
+- `/admin/profile` - Admin profile form inside admin sidebar (same fields as client profile). ✅ *Phase 1*
 - `/admin/reporting` - Metrics charts (occupancy rate, estimated revenue, type distribution).
-- `/admin/settings` - Global booking settings, firm business hours, notification preferences.
+- `/admin/settings` - Global booking settings, firm business hours, notification preferences. ✅ *Mock UI — Phase 1*
 
 ---
 
@@ -90,6 +115,17 @@ create table public.profiles (
 ```
 
 **Name fields:** Collect `first_name` and `last_name` separately in the UI. Store a denormalized `full_name` (`first_name || ' ' || last_name`) for display, search, and email templates. Split fields improve form UX, personalization (e.g. "Welcome back, Kenji"), and future sorting/filtering in admin views.
+
+**Profile pictures (Storage):** Private bucket `profile-pictures` stores objects at `{user_id}/avatar.{ext}`. `profiles.avatar_path` holds the object path. RLS: users manage own files; admins can read all. ✅ *Phase 1*
+
+**Applied migrations (Phase 1):**
+| Migration | Purpose |
+|-----------|---------|
+| `20250828164500_create_profiles.sql` | Profiles, enums, signup trigger, base RLS |
+| `20250828171000_create_booking_schema.sql` | Sessions, bookings, audit logs, booking role trigger |
+| `20250828174000_add_profile_name_fields.sql` | `first_name`, `last_name` on profiles |
+| `20250828180000_profile_pictures_storage.sql` | `avatar_path`, storage bucket + RLS |
+| `20250828182000_add_profile_contact_address_fields.sql` | Contact/address columns; replaces legacy `phone` |
 
 ### `sessions` (Booking Slots)
 ```sql
@@ -170,6 +206,8 @@ create table public.booking_history (
 
 ## 5. Security & Row Level Security (RLS) Rules
 
+> ✅ All policies below are implemented in Phase 1 migrations. Verify behaviour during Phase 2+ QA as real CRUD is wired up.
+
 1. **Profiles Table:**
    - Anyone can read active profiles (needed to display attendee lists).
    - Only the profile owner can edit their own profile details.
@@ -188,6 +226,8 @@ create table public.booking_history (
 ---
 
 ## 6. Supabase Database Triggers
+
+> ✅ Triggers A and B are implemented in Phase 1 migrations.
 
 ### A. Automatic Profile Creation
 Create a trigger that inserts a row into `public.profiles` whenever a new user registers through Supabase Auth.
@@ -263,11 +303,21 @@ create trigger on_booking_change
 
 ## 7. Step-by-Step Implementation Flow
 
-### Phase 1: Database & Supabase Configuration
-1. Initialize the Supabase project.
-2. Run SQL migrations to create Enums, Tables (`profiles`, `sessions`, `bookings`, logs).
-3. Set up Database Triggers for user registration and role adjustments.
-4. Define RLS Policies for all tables to protect admin and client views.
+### Phase 1: Database & Supabase Configuration ✅ **COMPLETE**
+1. ✅ Initialize the Supabase project.
+2. ✅ Run SQL migrations to create Enums, Tables (`profiles`, `sessions`, `bookings`, logs).
+3. ✅ Set up Database Triggers for user registration and role adjustments.
+4. ✅ Define RLS Policies for all tables to protect admin and client views.
+
+**Also completed in Phase 1 (ahead of later phases):**
+- ✅ Auth UI: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/logout`, `/not-authorized`
+- ✅ `AuthContext`, `ProtectedRoute`, role-based routing (`user` / `client` / `admin`)
+- ✅ Profile pages with avatar upload and full contact/address form ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4))
+- ✅ Homepage profile avatar menu (Profile, Dashboard/Admin, Log out)
+- ✅ Mock dashboard shells: `/dashboard/*` and `/admin/*` (UI placeholders, no real CRUD)
+- ✅ Supabase Storage: `profile-pictures` bucket + storage RLS
+
+**Key commits on `main`:** `e5f4cba`, `f28d70e`, `d6729a9`, `1f47107`, `fcc87cc`
 
 ### Phase 2: Supabase Edge Functions & Email Routing
 1. Create a Edge Function `booking-notifier`.
@@ -275,41 +325,62 @@ create trigger on_booking_change
 3. Configure **Resend** or **SendGrid** in the Edge Function to send nicely-styled HTML emails containing session dates, locations, and directions.
 
 ### Phase 3: Public Routing & Authentication Client Views
-1. Build `/login`, `/signup`, `/forgot-password`, and `/reset-password` UI flows adhering to the styling guide.
-2. Hook up auth state listeners in React (`supabase.auth.onAuthStateChange`).
-3. Configure Supabase **Authentication → URL Configuration** redirect allow-list to include `/reset-password` for local dev and production domains.
+1. ✅ Build `/login`, `/signup`, `/forgot-password`, and `/reset-password` UI flows adhering to the styling guide. *(Done in Phase 1)*
+2. ✅ Hook up auth state listeners in React (`supabase.auth.onAuthStateChange`). *(Done in Phase 1 — `AuthContext`)*
+3. Configure Supabase **Authentication → URL Configuration** redirect allow-list to include `/reset-password` for local dev and production domains. *(Partial — local URL documented; production URL pending deploy)*
 4. Set up Top-Left Toast system (`react-hot-toast` or custom styled wrapper).
-5. Implement a custom route guard component (`ProtectedRoute`) to check user role & account status (blocks banned users).
+5. ✅ Implement a custom route guard component (`ProtectedRoute`) to check user role & account status (blocks banned users). *(Done in Phase 1)*
 
 ### Phase 4: Client Dashboard (`/dashboard/*`)
 1. Create `/dashboard` landing showing:
    - Next session schedule countdown.
    - Status indicators (e.g., "Pending Approval").
+   - ✅ *Mock overview page exists — replace with live data in this phase.*
 2. Create `/dashboard/bookings`:
    - Table of bookings with search.
    - Cancellation triggers (opens confirmation modal, calls DB update).
+   - ✅ *Mock table exists — wire to real `bookings` table in this phase.*
 3. Create `/dashboard/profile`:
    - Form to edit basic user info (phone, name).
+   - ✅ *Complete in Phase 1 — includes phone prefix/number, address fields, avatar upload ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4)).*
 
 ### Phase 5: Admin Dashboard Layout & Features (`/admin/*`)
-1. Create sidebar navigation layout tailored with Forest Green headers and minimal border treatments.
+1. ✅ Create sidebar navigation layout tailored with Forest Green headers and minimal border treatments. *(Done in Phase 1 — `AdminLayout`)*
 2. Build `/admin/dashboard` metrics display:
    - **Session Occupancy Rate** (total booked slots / total available slots).
    - **Projected Revenue** (accumulated cost of confirmed sessions).
    - **Popular Categories** (bar chart showing bookings by type).
    - **Banned/Active client ratios**.
+   - ✅ *Mock metrics page exists — replace with live queries in this phase.*
 3. Build `/admin/sessions` CRUD:
    - Form to add new sessions with slot limits, datetime pickers, type selections, locations, and pricing fields.
    - Option to cancel a session slot (triggers cancellations of all user bookings for that session with reason input).
+   - ✅ *Mock sessions table exists — add `/admin/sessions/new` and `/admin/sessions/edit/:id` in this phase.*
 4. Build `/admin/bookings` listing:
    - Easy action tabs (Approve, Reject, Cancel) updating bookings table.
+   - ✅ *Mock listing exists — wire actions to DB in this phase.*
 5. Build `/admin/clients` list:
    - Ban user toggle (updates profile status to `banned`).
    - Audit view displaying `user_login_history` log for selected users.
+   - ✅ *Mock clients list exists — wire promote/ban/audit in this phase.*
+6. ✅ Build `/admin/profile` — profile form inside admin sidebar. *(Done in Phase 1)*
+7. Build `/admin/reporting` — metrics charts (occupancy rate, estimated revenue, type distribution).
+8. ✅ Build `/admin/settings` mock placeholder. *(Mock UI — Phase 1; wire real settings in this phase.)*
 
 ---
 
 ## 8. Verification & QA Plan
+
+### Phase 1 — Verified / in progress
+- ✅ **Auth flows:** Sign up, login, forgot/reset password, logout (context-aware)
+- ✅ **Role routing:** `user`/`client` → `/dashboard`; `admin` → `/admin/dashboard`
+- ✅ **Not authorized:** Non-admins hitting `/admin/*` see `/not-authorized`
+- ✅ **Profile CRUD:** Name, contact, address, avatar upload on all profile routes
+- ✅ **Mock dashboards:** Layout shells render for client and admin roles
+- ⏳ **Banned state:** Suspension screen implemented; full toast UX pending Phase 3
+- ⏳ **Production reset URL:** Add production domain to Supabase Auth redirect allow-list on deploy
+
+### Phase 2+ — Pending (real booking CRUD & notifications)
 - **Auth Guard Test:** Attempt to access `/admin/*` as a standard `client` or `user` to ensure the **Not authorized** page is shown (no admin content rendered).
 - **Banned State Test:** Log in as a banned user and verify they receive a top-left toast alert and cannot view dashboards.
 - **Role Progression Test:** Sign up a new user (verify role = `user`), make a booking (verify role = `client`), cancel the booking (verify role reverts to `user`).

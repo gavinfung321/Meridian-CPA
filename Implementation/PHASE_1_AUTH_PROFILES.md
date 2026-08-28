@@ -3,6 +3,29 @@
 ## Overview
 Establish the full Supabase schema first, then wire up signup/login, and build **mock** admin and user dashboards to test authentication and role-based routing. Admin users are promoted manually in Supabase — not via app UI.
 
+> **Status: ✅ Complete** — merged to `main` (Aug 2026).  
+> **Issues:** [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3) (closed), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed)  
+> **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) — Phase 1 marked complete; Phases 2–5 pending.
+
+### Key commits on `main`
+| Commit | Summary |
+|--------|---------|
+| `e5f4cba` | Initialize Supabase for GitHub integration |
+| `f28d70e` | Supabase auth, full schema, mock role-based dashboards |
+| `d6729a9` | Password reset, first/last name, not-authorized page |
+| `1f47107` | Profile pictures, profile pages, logout fixes, admin profile nav |
+| `fcc87cc` | Profile contact/address fields ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4)) |
+
+### Applied migrations
+| Migration | Purpose |
+|-----------|---------|
+| `20250828164500_create_profiles.sql` | Profiles, enums, signup trigger, base RLS |
+| `20250828171000_create_booking_schema.sql` | Sessions, bookings, audit logs, booking role trigger |
+| `20250828174000_add_profile_name_fields.sql` | `first_name`, `last_name` |
+| `20250828180000_profile_pictures_storage.sql` | `avatar_path`, storage bucket + RLS |
+| `20250828182000_add_profile_contact_address_fields.sql` | Contact/address columns |
+
+---
 ## 1. Supabase Setup (All Tables)
 - [x] Install `@supabase/supabase-js` and create `src/lib/supabase.ts`
 - [x] Verify `.env` keys (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
@@ -10,7 +33,7 @@ Establish the full Supabase schema first, then wire up signup/login, and build *
 - [x] Migration: remaining tables from `IMPLEMENTATION_PLAN_BOOKING.md`
 - [x] Migration: `first_name` / `last_name` on profiles (keep `full_name` for display)
 - [x] Migration: `profile-pictures` storage bucket + `avatar_path` on profiles
-- [x] Migration: contact + address fields on profiles (`phone_prefix`, `phone_number`, address lines, city, county, post_code, country)
+- [x] Migration: contact + address fields on profiles (`phone_prefix`, `phone_number`, address lines, city, county, post_code, country) — [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4)
 
 ## 2. Authentication
 - [x] `AuthContext` — session + profile state
@@ -112,21 +135,23 @@ Legacy single `phone` column replaced by `phone_prefix` + `phone_number` in migr
 - [x] Profile page: upload, change, and remove profile picture (max 2 MB)
 
 ### Profile page checklist
-- [ ] Signed-in user opens avatar menu on homepage → sees name, email, Profile, Dashboard (user/client) or Admin (admin), and Log out
-- [ ] Profile menu links to `/profile`
-- [ ] `/profile` loads for `user`, `client`, and `admin` roles
-- [ ] Profile page shows avatar, name, and email **above the form** (not only in sidebar)
-- [ ] `/dashboard/profile` uses the same identity header as `/profile`
-- [ ] `/admin/profile` appears in admin sidebar and uses the same profile form
-- [ ] User can upload a profile picture on `/profile`
-- [ ] Uploaded picture appears in header avatar menu after refresh
-- [ ] User can remove their profile picture
-- [ ] Avatar shows initials when no profile picture is set
-- [ ] User cannot access another user's profile picture URL (private bucket)
-- [ ] Admin can view any user's profile picture (for future admin client views)
-- [ ] Profile form saves first name, last name, phone prefix/number, and address fields
-- [ ] Log out from homepage dropdown clears session and **stays on homepage** (header shows Login, not avatar)
-- [ ] Sidebar footer shows display name (e.g. "Gavin Fung"), not stale `full_name` like "New User"
+> Implementation complete. Items below verified during Phase 1 development; re-run before major releases.
+
+- [x] Signed-in user opens avatar menu on homepage → sees name, email, Profile, Dashboard (user/client) or Admin (admin), and Log out
+- [x] Profile menu links to `/profile`
+- [x] `/profile` loads for `user`, `client`, and `admin` roles
+- [x] Profile page shows avatar, name, and email **above the form** (not only in sidebar)
+- [x] `/dashboard/profile` uses the same identity header as `/profile`
+- [x] `/admin/profile` appears in admin sidebar and uses the same profile form
+- [x] User can upload a profile picture on `/profile`
+- [x] Uploaded picture appears in header avatar menu after refresh
+- [x] User can remove their profile picture
+- [x] Avatar shows initials when no profile picture is set
+- [x] User cannot access another user's profile picture URL (private bucket)
+- [ ] Admin can view any user's profile picture (for future admin client views) — *RLS in place; admin client UI not built yet*
+- [x] Profile form saves first name, last name, phone prefix/number, and address fields
+- [x] Log out from homepage dropdown clears session and **stays on homepage** (header shows Login, not avatar)
+- [x] Sidebar footer shows display name (e.g. "Gavin Fung"), not stale `full_name` like "New User"
 
 ### Name fields decision
 Use **first name + last name** in forms instead of a single full-name field. Benefits:
@@ -138,8 +163,8 @@ Use **first name + last name** in forms instead of a single full-name field. Ben
 
 ### Password reset setup (Supabase dashboard)
 Add these to **Authentication → URL Configuration → Redirect URLs**:
-- `http://localhost:5173/reset-password`
-- Your production domain `/reset-password` when deployed
+- [x] `http://localhost:5173/reset-password`
+- [ ] Your production domain `/reset-password` when deployed
 
 ## 3. Admin User (Manual Setup)
 After tables exist, promote an admin in the Supabase dashboard:
@@ -175,15 +200,35 @@ Build layout shells with placeholder content to verify routing and roles. No rea
 Non-admin users who visit any `/admin/*` route are shown the **Not authorized** page (`/not-authorized`) with a link back to their dashboard. Admins who visit `/dashboard/*` are redirected to `/admin/dashboard`.
 
 ## 6. Verification Checklist
-- [ ] Sign up → profile created with `role = user`, first/last name stored
-- [ ] Sign in as user → lands on `/dashboard`
-- [ ] Forgot password → email received → reset link works
-- [ ] Manually set `role = admin` → sign in → lands on `/admin/dashboard`
-- [ ] User/client visiting `/admin/*` sees **Not authorized** page (not admin content)
-- [ ] Admin cannot access `/dashboard/*` (redirected to admin)
-- [ ] Banned user sees suspension screen
+> Core flows verified during Phase 1. Re-run before Phase 2 kickoff or production deploy.
 
-***
+- [x] Sign up → profile created with `role = user`, first/last name stored
+- [x] Sign in as user → lands on `/dashboard`
+- [x] Forgot password → email received → reset link works
+- [x] Manually set `role = admin` → sign in → lands on `/admin/dashboard`
+- [x] User/client visiting `/admin/*` sees **Not authorized** page (not admin content)
+- [x] Admin cannot access `/dashboard/*` (redirected to admin)
+- [x] Banned user sees suspension screen
 
-**Status**: Ready for QA  
-**Assigned Issue**: [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3)
+## 8. Key implementation files (reference)
+| Area | Files |
+|------|-------|
+| Auth | `src/contexts/AuthContext.tsx`, `src/components/ProtectedRoute.tsx`, `src/lib/auth-routes.ts` |
+| Profile UI | `src/components/ProfilePageContent.tsx`, `ProfileIdentityHeader.tsx`, `ProfileMenu.tsx`, `ProfileAvatar.tsx` |
+| Profile storage | `src/lib/profile-avatar.ts`, `src/hooks/useProfileAvatarUrl.ts` |
+| Layouts | `src/components/DashboardLayout.tsx`, `src/components/AdminLayout.tsx` |
+| Routes | `src/App.tsx` |
+| Types | `src/types/database.ts` |
+
+## 9. Out of scope (Phase 2+)
+- Real session/booking CRUD (mock dashboard data remains)
+- Supabase Edge Functions + email notifications (Resend/SendGrid)
+- Top-left toast system (`react-hot-toast` or custom)
+- Admin client management actions (promote, ban, audit logs UI)
+- `/admin/reporting`, `/admin/sessions/new`, `/admin/sessions/edit/:id`
+
+---
+
+**Status**: ✅ **Complete** (Aug 2026)  
+**Assigned Issues**: [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3) (closed), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed)  
+**Next**: Phase 2 — Edge Functions & email routing ([IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md))
