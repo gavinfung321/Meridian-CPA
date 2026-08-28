@@ -9,6 +9,7 @@ export interface Profile {
   full_name: string;
   email: string;
   phone: string | null;
+  avatar_path: string | null;
   role: UserRole;
   status: UserStatus;
   created_at: string;
@@ -27,6 +28,7 @@ export interface Database {
           full_name: string;
           email: string;
           phone?: string | null;
+          avatar_path?: string | null;
           role?: UserRole;
           status?: UserStatus;
           created_at?: string;
@@ -38,6 +40,7 @@ export interface Database {
           full_name?: string;
           email?: string;
           phone?: string | null;
+          avatar_path?: string | null;
           role?: UserRole;
           status?: UserStatus;
         };

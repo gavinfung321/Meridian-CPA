@@ -8,6 +8,7 @@ import { AdminBookings } from "./screens/Admin/AdminBookings";
 import { AdminClients } from "./screens/Admin/AdminClients";
 import { AdminDashboardOverview } from "./screens/Admin/AdminDashboardOverview";
 import { AdminSessions } from "./screens/Admin/AdminSessions";
+import { AdminProfile } from "./screens/Admin/AdminProfile";
 import { AdminSettings } from "./screens/Admin/AdminSettings";
 import { DashboardBookings } from "./screens/Dashboard/DashboardBookings";
 import { DashboardOverview } from "./screens/Dashboard/DashboardOverview";
@@ -18,6 +19,8 @@ import { ForgotPassword } from "./screens/Login/ForgotPassword";
 import { ResetPassword } from "./screens/Login/ResetPassword";
 import { Signup } from "./screens/Signup/Signup";
 import { NotAuthorized } from "./screens/NotAuthorized/NotAuthorized";
+import { Logout } from "./screens/Logout/Logout";
+import { Profile } from "./screens/Profile/Profile";
 
 export const App = (): JSX.Element => {
   const [lang, setLang] = useState<Language>("en");
@@ -37,7 +40,11 @@ export const App = (): JSX.Element => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/not-authorized" element={<NotAuthorized />} />
-          <Route path="/logout" element={<Navigate to="/login" replace />} />
+          <Route path="/logout" element={<Logout />} />
+
+          <Route element={<ProtectedRoute access="any" />}>
+            <Route path="/profile" element={<Profile />} />
+          </Route>
 
           <Route element={<ProtectedRoute access="dashboard" />}>
             <Route path="/dashboard" element={<DashboardOverview />} />
@@ -46,10 +53,12 @@ export const App = (): JSX.Element => {
           </Route>
 
           <Route element={<ProtectedRoute access="admin" />}>
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboardOverview />} />
             <Route path="/admin/sessions" element={<AdminSessions />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/clients" element={<AdminClients />} />
+            <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
         </Routes>

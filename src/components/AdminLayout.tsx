@@ -5,12 +5,14 @@ import {
   LogOut,
   Menu,
   Settings,
+  User,
   Users,
   X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getDisplayName } from "../lib/profile";
 import { cn } from "../lib/utils";
 import { MeridianLogo } from "./MeridianLogo";
 import { RoleBadge } from "./RoleBadge";
@@ -25,12 +27,18 @@ const navItems = [
   { to: "/admin/sessions", label: "Sessions", icon: CalendarDays, end: false },
   { to: "/admin/bookings", label: "Bookings", icon: BarChart3, end: false },
   { to: "/admin/clients", label: "Clients", icon: Users, end: false },
+  { to: "/admin/profile", label: "Profile", icon: User, end: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, end: false },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { profile, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const displayName = getDisplayName(
+    profile?.first_name,
+    profile?.last_name,
+    profile?.full_name,
+  );
 
   return (
     <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#0F2A1D]">
@@ -83,7 +91,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="border-t border-white/10 px-4 py-5">
             <div className="flex items-center gap-2 px-3">
-              <p className="truncate text-sm font-medium">{profile?.full_name}</p>
+              <p className="truncate text-sm font-medium">{displayName}</p>
               {profile ? <RoleBadge role={profile.role} /> : null}
             </div>
             <p className="truncate px-3 text-xs text-white/60">{profile?.email}</p>

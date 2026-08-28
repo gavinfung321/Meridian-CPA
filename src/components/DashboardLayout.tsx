@@ -2,6 +2,7 @@ import { CalendarDays, LayoutDashboard, LogOut, Menu, User, X } from "lucide-rea
 import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getDisplayName } from "../lib/profile";
 import { MeridianLogo } from "./MeridianLogo";
 import { RoleBadge } from "./RoleBadge";
 import { Button } from "./ui/button";
@@ -20,6 +21,11 @@ const navItems = [
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const displayName = getDisplayName(
+    profile?.first_name,
+    profile?.last_name,
+    profile?.full_name,
+  );
 
   return (
     <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#0F2A1D]">
@@ -72,7 +78,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <div className="border-t border-white/10 px-4 py-5">
             <div className="flex items-center gap-2 px-3">
-              <p className="truncate text-sm font-medium">{profile?.full_name}</p>
+              <p className="truncate text-sm font-medium">{displayName}</p>
               {profile ? <RoleBadge role={profile.role} /> : null}
             </div>
             <p className="truncate px-3 text-xs text-white/60">{profile?.email}</p>

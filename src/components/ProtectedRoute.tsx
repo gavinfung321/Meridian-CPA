@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { isAdminRole, isDashboardUserRole } from "../lib/auth-routes";
 
-export type RouteAccess = "admin" | "dashboard";
+export type RouteAccess = "admin" | "dashboard" | "any";
 
 interface ProtectedRouteProps {
   access: RouteAccess;

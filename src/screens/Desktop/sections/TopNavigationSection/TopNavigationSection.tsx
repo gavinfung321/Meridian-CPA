@@ -1,9 +1,9 @@
 import { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { MeridianLogo } from "../../../../components/MeridianLogo";
+import { ProfileMenu } from "../../../../components/ProfileMenu";
 import { Button } from "../../../../components/ui/button";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { getHomeRouteForRole } from "../../../../lib/auth-routes";
 import { Language, translations } from "../../../../lib/translations";
 
 interface TopNavigationProps {
@@ -14,7 +14,7 @@ interface TopNavigationProps {
 
 export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigationProps): JSX.Element => {
   const t = translations[lang].nav;
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const panelId = useId();
@@ -63,13 +63,7 @@ export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigati
     "text-[12px] xl:text-[13px] font-medium text-white/80 hover:text-white transition-colors duration-150 whitespace-nowrap tracking-[-0.02em]";
 
   const authLink = !loading && user ? (
-    <Link
-      to={getHomeRouteForRole(profile?.role)}
-      className={authLinkClass}
-      onClick={closeMenu}
-    >
-      {t.dashboard}
-    </Link>
+    <ProfileMenu lang={lang} onNavigate={closeMenu} />
   ) : (
     <Link to="/login" className={authLinkClass} onClick={closeMenu}>
       {t.login}
@@ -125,6 +119,7 @@ export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigati
         </nav>
 
         <div className="ml-auto flex lg:hidden items-center gap-3">
+          {!loading && user ? <ProfileMenu lang={lang} onNavigate={closeMenu} /> : null}
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center text-white"
@@ -169,7 +164,9 @@ export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigati
                 {item.label}
               </a>
             ))}
-            <div className="py-3 border-b border-white/10">{authLink}</div>
+            {!loading && !user ? (
+              <div className="py-3 border-b border-white/10">{authLink}</div>
+            ) : null}
             <Button
               type="button"
               onClick={handleBook}
