@@ -1,4 +1,4 @@
-﻿# GitHub Issues Guide — Meridian CPA
+# GitHub Issues Guide — Meridian CPA
 
 > **Feed this file at the start of every new chat.**
 > This guide ensures every AI dev agent maintains consistent, disciplined issue tracking across the project lifecycle.
@@ -39,6 +39,23 @@ OPEN  ──►  IN PROGRESS  ──►  DONE (Closed)
 | **Starting work** | Add a comment: `"Starting work on this: [brief description of approach]"` |
 | **Blocked / paused** | Add a comment explaining what is blocking progress |
 | **Done** | Close the issue with a final comment summarising what was done |
+
+---
+
+## 💻 Development Workflow
+
+### 2. Execution (During Work)
+- **Branching**: Specific branches should be created for the issue.
+  - *Naming Convention*: `feat/issue-ID-short-description` or `fix/issue-ID-short-description`.
+- **Commits**: All commit messages must reference the issue ID.
+  - *Format*: `[#ISSUE_ID] Commit message` (e.g., `[#12] Add responsive styles to header`)
+
+### 3. Completion (End of Task)
+1. **Verification**: Ensure all Acceptance Criteria are met.
+2. **Closing**: Close the issue using the GitHub tool.
+   - *Tool*: `github_update_issue` (state: closed)
+   - *Note*: GitHub automatically records the `closed_at` timestamp.
+3. **Completion Record**: Update the issue body or add a comment with the final resolution and the finishing time if explicit tracking is needed.
 
 ---
 
