@@ -11,6 +11,11 @@ This document outlines the detailed, step-by-step technical plan to implement us
 - **Styling & UI Components:** Tailwind CSS, Lucide React icons, and custom components adhering to the **Meridian CPA Brand Guide** (inspired by Shadcn design principles).
 - **Notifications:** Supabase Edge Functions + Resend / SendGrid API for automated booking confirmation and status change emails.
 
+### Environment Variables
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (for admin-only edge functions)
+
 ---
 
 ## 2. Branding & Design System Guide
