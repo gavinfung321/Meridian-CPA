@@ -46,7 +46,7 @@ Instead of heavy overlays or modals for main views, we will use unique pages wit
 ### Client Pages (`/dashboard/*` - Protected Client Route)
 - `/dashboard` - Overview showing next upcoming booking, summary stats.
 - `/dashboard/bookings` - History of past bookings, active booking list, request cancellation button.
-- `/dashboard/profile` - Edit profile info (name, phone, company, email), view account status.
+- `/dashboard/profile` - Edit profile info (name, phone prefix/number, address, email), view account status.
 
 ### Admin Pages (`/admin/*` - Protected Admin Route)
 - `/admin/dashboard` - Visual overview with key metrics.
@@ -74,7 +74,15 @@ create table public.profiles (
   last_name text not null,
   full_name text not null,
   email text not null,
-  phone text,
+  phone_prefix text,
+  phone_number text,
+  address_line1 text,
+  address_line2 text,
+  city text,
+  county text,
+  post_code text,
+  country text,
+  avatar_path text,
   role user_role default 'user'::user_role not null,
   status user_status default 'active'::user_status not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null

@@ -10,6 +10,7 @@ Establish the full Supabase schema first, then wire up signup/login, and build *
 - [x] Migration: remaining tables from `IMPLEMENTATION_PLAN_BOOKING.md`
 - [x] Migration: `first_name` / `last_name` on profiles (keep `full_name` for display)
 - [x] Migration: `profile-pictures` storage bucket + `avatar_path` on profiles
+- [x] Migration: contact + address fields on profiles (`phone_prefix`, `phone_number`, address lines, city, county, post_code, country)
 
 ## 2. Authentication
 - [x] `AuthContext` — session + profile state
@@ -40,7 +41,7 @@ Implementation:
 
 ## 7. Profile Page (All Roles)
 - [x] `/profile` — unified profile page for `user`, `client`, and `admin`
-- [x] Edit first name, last name, phone (live Supabase update)
+- [x] Edit first name, last name, phone prefix/number, and address fields (live Supabase update)
 - [x] Read-only email, role, and status badges
 - [x] Homepage header: avatar dropdown with user **name + email**, then **Profile**, role-based **Dashboard** (`user`/`client`) or **Admin** (`admin`), and **Log out**
 
@@ -87,6 +88,22 @@ The bottom-left sidebar footer must show the user's **display name** (`first_nam
 
 Why: accounts created before first/last name fields, or promoted manually in Supabase, may still have `full_name = 'New User'` even after the profile form shows the correct name. Use `getDisplayName(first_name, last_name, full_name)` everywhere — sidebar footer, profile header, and avatar menu.
 
+### Profile table fields (`profiles`)
+| Field | Type | Notes |
+|-------|------|-------|
+| `first_name`, `last_name` | text | Required; collected at signup |
+| `full_name` | text | Denormalized display name |
+| `email` | text | From auth; read-only in UI |
+| `phone_prefix` | text | e.g. `+852` |
+| `phone_number` | text | National number without prefix |
+| `address_line1`, `address_line2` | text | Street address |
+| `city`, `county` | text | Locality / region |
+| `post_code`, `country` | text | Postal code and country |
+| `avatar_path` | text | Supabase Storage object path |
+| `role`, `status` | enum | `user` / `client` / `admin`; `active` / `banned` |
+
+Legacy single `phone` column replaced by `phone_prefix` + `phone_number` in migration `20250828182000_add_profile_contact_address_fields.sql`.
+
 ### Profile pictures (Supabase Storage)
 - [x] `profile-pictures` private storage bucket
 - [x] `profiles.avatar_path` column stores object path (`{user_id}/avatar.{ext}`)
@@ -107,7 +124,7 @@ Why: accounts created before first/last name fields, or promoted manually in Sup
 - [ ] Avatar shows initials when no profile picture is set
 - [ ] User cannot access another user's profile picture URL (private bucket)
 - [ ] Admin can view any user's profile picture (for future admin client views)
-- [ ] Profile form saves first name, last name, and phone
+- [ ] Profile form saves first name, last name, phone prefix/number, and address fields
 - [ ] Log out from homepage dropdown clears session and **stays on homepage** (header shows Login, not avatar)
 - [ ] Sidebar footer shows display name (e.g. "Gavin Fung"), not stale `full_name` like "New User"
 
