@@ -8,22 +8,29 @@ This document outlines the detailed, step-by-step technical plan to implement us
 
 ## Implementation Status
 
-| Phase | Status | GitHub | Notes |
-|-------|--------|--------|-------|
-| **Phase 1** — Database, Auth & Dashboard Mockups | **Complete** | [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3) (closed), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed) | Schema, auth, profiles, mock dashboards merged to `main` |
-| **Phase 2** — Edge Functions & Email | Not started | — | |
-| **Phase 3** — Public Routing & Auth (full polish) | Partially done in Phase 1 | — | Core auth flows live; toast system still pending |
-| **Phase 4** — Client Dashboard (real CRUD) | Mock UI only | — | Placeholder pages exist |
-| **Phase 5** — Admin Dashboard (real CRUD) | Mock UI only | — | Placeholder pages exist |
+| Phase | Name | Status | GitHub | Notes |
+|-------|------|--------|--------|-------|
+| **1** | Authentication & Profiles | **Complete** | [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed) | Auth, profiles, avatars, dashboard shells, base schema |
+| **2** | Session & Category Management | Not started | — | CRUD + availability rules + admin session UI |
+| **3** | Booking Logic & Evolution | Not started | — | Client booking flow, role promotion, admin overview widgets |
+| **4** | History & Logging | Not started | — | Login/session/booking audit trails |
+| **5** | Admin Controls & Reporting | Not started | — | User management, charts, `app_settings` |
+
+> **Phase alignment:** Our earlier plan grouped work by technical layer (DB → email → auth UI → client dashboard → admin dashboard). The phases below follow the **feature-domain roadmap** (Auth → Sessions → Bookings → Logging → Admin). All prior checklist items are preserved inside the matching phase.
 
 **Phase 1 delivered (Aug 2026):**
-- Supabase project linked; all core migrations applied remotely
-- Full schema: `profiles`, `sessions`, `bookings`, audit log tables, enums, triggers, RLS
-- Profile extensions: `first_name` / `last_name`, contact/address fields, `avatar_path`, `profile-pictures` storage bucket
+- Supabase project linked; core migrations applied remotely
+- Full base schema: `profiles`, `sessions`, `bookings`, audit log tables, enums, triggers, RLS
+- Profile extensions: names, contact/address fields, `avatar_path`, `profile-pictures` storage bucket
 - Auth: signup, login, forgot/reset password, session context, role-based `ProtectedRoute`, not-authorized page
 - Profile UI: `/profile`, `/dashboard/profile`, `/admin/profile` with avatar upload and full contact/address form
 - Homepage profile avatar menu with role-based Dashboard/Admin links and context-aware logout
 - Mock client portal (`/dashboard/*`) and admin console (`/admin/*`) layout shells for routing QA
+
+**Carried forward from prior plan (not yet scheduled in Phases 2–5):**
+- Supabase Edge Functions + email notifications (Resend/SendGrid) — assign to Phase 3 when booking status changes go live
+- Top-left toast system (`react-hot-toast` or custom) — polish during Phase 3 or 5
+- Production `/reset-password` redirect URL — add on deploy
 
 ---
 
@@ -202,6 +209,52 @@ create table public.booking_history (
 );
 ```
 
+### Planned tables (Phase 2 & 5 — not migrated yet)
+
+The roadmap adds normalized session taxonomy and global settings. These extend — not replace — the current flat `sessions.type` text field.
+
+#### `categories` *(Phase 2)*
+```sql
+-- Planned: top-level groupings for session types (e.g. Tax, Audit, Advisory)
+create table public.categories (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  slug text not null unique,
+  sort_order integer default 0 not null,
+  is_active boolean default true not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+```
+
+#### `session_types` *(Phase 2)*
+```sql
+-- Planned: bookable service types linked to a category
+create table public.session_types (
+  id uuid default gen_random_uuid() primary key,
+  category_id uuid references public.categories(id) on delete restrict not null,
+  name text not null,
+  description text,
+  default_duration_minutes integer not null,
+  default_price numeric(10, 2) default 0.00 not null,
+  is_active boolean default true not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+```
+
+#### `app_settings` *(Phase 5)*
+```sql
+-- Planned: singleton or key-value firm settings (booking window, business hours, notifications)
+create table public.app_settings (
+  key text primary key,
+  value jsonb not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_by uuid references public.profiles(id) on delete set null
+);
+-- Example key: 'booking' -> { "max_booking_days_advance": 90 }
+```
+
+> **Note:** Phase 1 `sessions` table uses a `type text` column for mock data. Phase 2 may add `session_type_id` FK or migrate existing rows when categories/types CRUD is built.
+
 ---
 
 ## 5. Security & Row Level Security (RLS) Rules
@@ -301,87 +354,152 @@ create trigger on_booking_change
 
 ---
 
-## 7. Step-by-Step Implementation Flow
+## 7. Implementation Phases
 
-### Phase 1: Database & Supabase Configuration ✅ **COMPLETE**
-1. ✅ Initialize the Supabase project.
-2. ✅ Run SQL migrations to create Enums, Tables (`profiles`, `sessions`, `bookings`, logs).
-3. ✅ Set up Database Triggers for user registration and role adjustments.
-4. ✅ Define RLS Policies for all tables to protect admin and client views.
+### Phase 1: Authentication & Profiles ✅ **COMPLETE**
 
-**Also completed in Phase 1 (ahead of later phases):**
-- ✅ Auth UI: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/logout`, `/not-authorized`
-- ✅ `AuthContext`, `ProtectedRoute`, role-based routing (`user` / `client` / `admin`)
-- ✅ Profile pages with avatar upload and full contact/address form ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4))
-- ✅ Homepage profile avatar menu (Profile, Dashboard/Admin, Log out)
-- ✅ Mock dashboard shells: `/dashboard/*` and `/admin/*` (UI placeholders, no real CRUD)
-- ✅ Supabase Storage: `profile-pictures` bucket + storage RLS
+Core auth, profile sync, avatars, dashboard shells, and base database schema.
+
+- [x] Connect Supabase client (`src/lib/supabase.ts`, env keys verified)
+- [x] Implement Auth flow (Sign up, Sign in, Sign out)
+- [x] Forgot password + reset password flows
+- [x] Logic: New signups get `user` role (signup trigger)
+- [x] Profile setup: Full profile sync — names, phone prefix/number, address fields ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4))
+- [x] Avatar handling: Supabase Storage integration for profile pictures (`profile-pictures` bucket)
+- [x] Dashboard shell: Sidebar, navigation, and protected routes (`DashboardLayout`, `AdminLayout`, `ProtectedRoute`)
+- [x] Role-based redirection logic (`user` / `client` / `admin`, `/not-authorized`)
+- [x] Homepage profile avatar menu (Profile, Dashboard/Admin, context-aware Log out)
+- [x] Run SQL migrations: enums, `profiles`, `sessions`, `bookings`, audit log tables, RLS
+- [x] Database triggers: automatic profile creation; booking-based role promotion (`user` ↔ `client`)
+- [x] Mock dashboard pages for routing QA (`/dashboard/*`, `/admin/*` placeholders)
+
+**Also from prior plan (completed in Phase 1):**
+- [x] Auth UI: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/logout`, `/not-authorized`
+- [x] `AuthContext` with `supabase.auth.onAuthStateChange`
+- [x] Profile routes: `/profile`, `/dashboard/profile`, `/admin/profile`
+- [x] Banned user suspension screen
 
 **Key commits on `main`:** `e5f4cba`, `f28d70e`, `d6729a9`, `1f47107`, `fcc87cc`
 
-### Phase 2: Supabase Edge Functions & Email Routing
-1. Create a Edge Function `booking-notifier`.
-2. Connect the Edge Function to trigger on `bookings` changes (e.g., when a booking goes `pending -> confirmed`, send confirmation; when an admin rejects/cancels, send update).
-3. Configure **Resend** or **SendGrid** in the Edge Function to send nicely-styled HTML emails containing session dates, locations, and directions.
+**Detail record:** [PHASE_1_AUTH_PROFILES.md](./PHASE_1_AUTH_PROFILES.md)
 
-### Phase 3: Public Routing & Authentication Client Views
-1. ✅ Build `/login`, `/signup`, `/forgot-password`, and `/reset-password` UI flows adhering to the styling guide. *(Done in Phase 1)*
-2. ✅ Hook up auth state listeners in React (`supabase.auth.onAuthStateChange`). *(Done in Phase 1 — `AuthContext`)*
-3. Configure Supabase **Authentication → URL Configuration** redirect allow-list to include `/reset-password` for local dev and production domains. *(Partial — local URL documented; production URL pending deploy)*
-4. Set up Top-Left Toast system (`react-hot-toast` or custom styled wrapper).
-5. ✅ Implement a custom route guard component (`ProtectedRoute`) to check user role & account status (blocks banned users). *(Done in Phase 1)*
+---
 
-### Phase 4: Client Dashboard (`/dashboard/*`)
-1. Create `/dashboard` landing showing:
-   - Next session schedule countdown.
-   - Status indicators (e.g., "Pending Approval").
-   - ✅ *Mock overview page exists — replace with live data in this phase.*
-2. Create `/dashboard/bookings`:
-   - Table of bookings with search.
-   - Cancellation triggers (opens confirmation modal, calls DB update).
-   - ✅ *Mock table exists — wire to real `bookings` table in this phase.*
-3. Create `/dashboard/profile`:
-   - Form to edit basic user info (phone, name).
-   - ✅ *Complete in Phase 1 — includes phone prefix/number, address fields, avatar upload ([#4](https://github.com/gavinfung321/Meridian-CPA/issues/4)).*
+### Phase 2: Session & Category Management
 
-### Phase 5: Admin Dashboard Layout & Features (`/admin/*`)
-1. ✅ Create sidebar navigation layout tailored with Forest Green headers and minimal border treatments. *(Done in Phase 1 — `AdminLayout`)*
-2. Build `/admin/dashboard` metrics display:
-   - **Session Occupancy Rate** (total booked slots / total available slots).
-   - **Projected Revenue** (accumulated cost of confirmed sessions).
-   - **Popular Categories** (bar chart showing bookings by type).
-   - **Banned/Active client ratios**.
-   - ✅ *Mock metrics page exists — replace with live queries in this phase.*
-3. Build `/admin/sessions` CRUD:
-   - Form to add new sessions with slot limits, datetime pickers, type selections, locations, and pricing fields.
-   - Option to cancel a session slot (triggers cancellations of all user bookings for that session with reason input).
-   - ✅ *Mock sessions table exists — add `/admin/sessions/new` and `/admin/sessions/edit/:id` in this phase.*
-4. Build `/admin/bookings` listing:
-   - Easy action tabs (Approve, Reject, Cancel) updating bookings table.
-   - ✅ *Mock listing exists — wire actions to DB in this phase.*
-5. Build `/admin/clients` list:
-   - Ban user toggle (updates profile status to `banned`).
-   - Audit view displaying `user_login_history` log for selected users.
-   - ✅ *Mock clients list exists — wire promote/ban/audit in this phase.*
-6. ✅ Build `/admin/profile` — profile form inside admin sidebar. *(Done in Phase 1)*
-7. Build `/admin/reporting` — metrics charts (occupancy rate, estimated revenue, type distribution).
-8. ✅ Build `/admin/settings` mock placeholder. *(Mock UI — Phase 1; wire real settings in this phase.)*
+Admin-managed taxonomy and session slots. Replaces mock `/admin/sessions` data with live CRUD.
+
+- [ ] CRUD for `categories`
+- [ ] CRUD for `session_types`
+- [ ] CRUD for `sessions` (wire to existing `sessions` table; link to `session_types` when ready)
+- [ ] Implement Availability Rules using JSONB recurrence rules
+- [ ] Admin UI for Session management (List, Create, Edit)
+- [ ] Routes: `/admin/sessions/new`, `/admin/sessions/edit/:id`
+- [ ] Form fields: slot limits, datetime pickers, type/category selections, locations, pricing
+- [ ] Cancel session slot (cascade or notify affected bookings with reason input)
+- [ ] RLS policies for new `categories` / `session_types` tables
+- [ ] Landing page: read active, non-cancelled sessions for public availability *(schema + RLS already in Phase 1)*
+
+**Existing mock UI to replace:** `/admin/sessions` table placeholder ✅ *Phase 1*
+
+---
+
+### Phase 3: Booking Logic & Evolution
+
+Client booking flow, business rules, live dashboard data, and notifications.
+
+- [ ] Implement Booking flow for clients (homepage / dashboard → book a session)
+- [ ] Logic: First booking promotion (`user` → `client`) *(DB trigger exists — verify end-to-end)*
+- [ ] Constraint: Check `app_settings.max_booking_days_advance` before allowing a booking
+- [ ] Constraint: Reject booking when session `max_slots` is full
+- [ ] Admin Dashboard: Overview widgets (Total Bookings, Active Clients, occupancy, revenue)
+- [ ] Client `/dashboard` landing: next upcoming booking, status indicators (e.g. "Pending Approval")
+- [ ] Client `/dashboard/bookings`: live table, search, cancellation flow
+- [ ] Admin `/admin/bookings`: Approve, Reject, Cancel actions wired to DB
+- [ ] Supabase Edge Function `booking-notifier` on booking status changes *(from prior plan)*
+- [ ] Email via **Resend** or **SendGrid** (confirmation, rejection, cancellation) *(from prior plan)*
+- [ ] Top-left toast system for booking feedback *(from prior plan)*
+- [ ] Configure production **Authentication → Redirect URLs** for `/reset-password`
+
+**Existing mock UI to replace:** `/dashboard`, `/dashboard/bookings`, `/admin/dashboard`, `/admin/bookings` ✅ *Phase 1*
+
+---
+
+### Phase 4: History & Logging
+
+Audit trails for compliance and admin visibility.
+
+- [ ] Auth Hook: Save entry in `user_login_history` on successful login *(table exists — wire auth hook)*
+- [ ] Database Triggers (or service logic) for `session_history` on session CREATE / UPDATE / CANCEL
+- [ ] Database Triggers (or service logic) for `booking_history` on booking CREATE / STATUS_CHANGE / USER_CANCEL
+- [ ] Master Booking history view for Admin
+- [ ] Admin `/admin/clients`: audit view displaying `user_login_history` for selected users
+- [ ] Admin session change log viewer (from `session_history`)
+
+**Tables already migrated in Phase 1:** `user_login_history`, `session_history`, `booking_history` (RLS: admin read only)
+
+---
+
+### Phase 5: Admin Controls & Reporting
+
+Firm settings, user lifecycle management, and analytics.
+
+- [ ] User Management: Account deletion and role management (promote/demote, ban/reinstate)
+- [ ] Admin `/admin/clients`: wire promote to `client`, demote to `user`, ban toggle (`status = banned`)
+- [ ] Reporting: Charts for session popularity using **Recharts** (`/admin/reporting`)
+- [ ] Metrics: occupancy rate, projected revenue, category/type distribution, active vs banned clients
+- [ ] Settings Page: Manage `app_settings` (including `max_booking_days_advance` booking window)
+- [ ] Admin `/admin/settings`: wire notification preferences, business hours placeholders
+- [ ] Admin can view any user's profile picture in client detail views *(storage RLS ready from Phase 1)*
+
+**Existing mock UI to replace:** `/admin/clients`, `/admin/settings` ✅ *Phase 1*
+
+---
+
+### Prior plan crosswalk (retained for reference)
+
+Items from the old layer-based phases map to the feature phases above:
+
+| Old phase (layer-based) | Now lives in |
+|-------------------------|--------------|
+| Database & Supabase Configuration | **Phase 1** ✅ |
+| Edge Functions & Email | **Phase 3** |
+| Public Routing & Authentication | **Phase 1** ✅ (+ toast polish in **Phase 3**) |
+| Client Dashboard (`/dashboard/*`) | **Phase 3** (profile done in **Phase 1** ✅) |
+| Admin Dashboard (`/admin/*`) | **Phase 2** (sessions), **Phase 3** (bookings/overview), **Phase 4** (audit), **Phase 5** (clients/reporting/settings) |
 
 ---
 
 ## 8. Verification & QA Plan
 
-### Phase 1 — Verified / in progress
+### Phase 1 — Verified ✅
 - ✅ **Auth flows:** Sign up, login, forgot/reset password, logout (context-aware)
 - ✅ **Role routing:** `user`/`client` → `/dashboard`; `admin` → `/admin/dashboard`
 - ✅ **Not authorized:** Non-admins hitting `/admin/*` see `/not-authorized`
 - ✅ **Profile CRUD:** Name, contact, address, avatar upload on all profile routes
 - ✅ **Mock dashboards:** Layout shells render for client and admin roles
-- ⏳ **Banned state:** Suspension screen implemented; full toast UX pending Phase 3
+- ✅ **Banned state:** Suspension screen implemented
 - ⏳ **Production reset URL:** Add production domain to Supabase Auth redirect allow-list on deploy
 
-### Phase 2+ — Pending (real booking CRUD & notifications)
+### Phase 2 — Session & Category Management (pending)
+- **Category/Type CRUD:** Admin can create, edit, deactivate categories and session types
+- **Session CRUD:** Admin can create/edit/cancel sessions; changes persist and respect RLS
+- **Availability rules:** Recurrence JSONB correctly generates bookable slots
+
+### Phase 3 — Booking Logic & Evolution (pending)
 - **Auth Guard Test:** Attempt to access `/admin/*` as a standard `client` or `user` to ensure the **Not authorized** page is shown (no admin content rendered).
-- **Banned State Test:** Log in as a banned user and verify they receive a top-left toast alert and cannot view dashboards.
 - **Role Progression Test:** Sign up a new user (verify role = `user`), make a booking (verify role = `client`), cancel the booking (verify role reverts to `user`).
 - **Edge Cases:** Booking a session that has reached `max_slots` should reject the booking request immediately.
+- **Booking window:** Booking beyond `max_booking_days_advance` is rejected.
+- **Banned State Test:** Log in as a banned user and verify they cannot view dashboards (toast UX when implemented).
+
+### Phase 4 — History & Logging (pending)
+- **Login audit:** Successful sign-in writes to `user_login_history`
+- **Session audit:** Session create/update/cancel writes to `session_history`
+- **Booking audit:** Status changes write to `booking_history`
+- **Admin views:** Master booking history and per-user login log visible to admins
+
+### Phase 5 — Admin Controls & Reporting (pending)
+- **User management:** Promote, demote, ban, reinstate, and delete accounts work as expected
+- **Reporting:** Charts reflect live booking/session data
+- **Settings:** Changes to `app_settings` (e.g. booking window) take effect on new bookings
