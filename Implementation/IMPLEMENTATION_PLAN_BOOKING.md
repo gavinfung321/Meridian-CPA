@@ -37,8 +37,11 @@ Instead of heavy overlays or modals for main views, we will use unique pages wit
 
 ### Authentication & Public Pages
 - `/login` - Login with email/password.
-- `/signup` - Registration form.
+- `/signup` - Registration form (first name + last name).
+- `/forgot-password` - Request a password reset email.
+- `/reset-password` - Set a new password from the email link.
 - `/logout` - Redirect helper / cleanup.
+- `/not-authorized` - Shown when a signed-in `user` or `client` attempts to access `/admin/*`.
 
 ### Client Pages (`/dashboard/*` - Protected Client Route)
 - `/dashboard` - Overview showing next upcoming booking, summary stats.
@@ -67,6 +70,8 @@ create type user_status as enum ('active', 'banned');
 create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   updated_at timestamp with time zone,
+  first_name text not null,
+  last_name text not null,
   full_name text not null,
   email text not null,
   phone text,
@@ -75,6 +80,8 @@ create table public.profiles (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 ```
+
+**Name fields:** Collect `first_name` and `last_name` separately in the UI. Store a denormalized `full_name` (`first_name || ' ' || last_name`) for display, search, and email templates. Split fields improve form UX, personalization (e.g. "Welcome back, Kenji"), and future sorting/filtering in admin views.
 
 ### `sessions` (Booking Slots)
 ```sql
@@ -179,11 +186,21 @@ Create a trigger that inserts a row into `public.profiles` whenever a new user r
 ```sql
 create function public.handle_new_user()
 returns trigger as $$
+declare
+  v_first_name text;
+  v_last_name text;
+  v_full_name text;
 begin
-  insert into public.profiles (id, full_name, email, role, status)
+  v_first_name := coalesce(nullif(trim(new.raw_user_meta_data->>'first_name'), ''), 'New');
+  v_last_name := coalesce(nullif(trim(new.raw_user_meta_data->>'last_name'), ''), 'User');
+  v_full_name := trim(v_first_name || ' ' || v_last_name);
+
+  insert into public.profiles (id, first_name, last_name, full_name, email, role, status)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', 'New User'),
+    v_first_name,
+    v_last_name,
+    v_full_name,
     new.email,
     'user'::user_role,
     'active'::user_status
@@ -250,10 +267,11 @@ create trigger on_booking_change
 3. Configure **Resend** or **SendGrid** in the Edge Function to send nicely-styled HTML emails containing session dates, locations, and directions.
 
 ### Phase 3: Public Routing & Authentication Client Views
-1. Build `/login` and `/signup` UI flows adhering to the styling guide.
+1. Build `/login`, `/signup`, `/forgot-password`, and `/reset-password` UI flows adhering to the styling guide.
 2. Hook up auth state listeners in React (`supabase.auth.onAuthStateChange`).
-3. Set up Top-Left Toast system (`react-hot-toast` or custom styled wrapper).
-4. Implement a custom route guard component (`ProtectedRoute`) to check user role & account status (blocks banned users).
+3. Configure Supabase **Authentication → URL Configuration** redirect allow-list to include `/reset-password` for local dev and production domains.
+4. Set up Top-Left Toast system (`react-hot-toast` or custom styled wrapper).
+5. Implement a custom route guard component (`ProtectedRoute`) to check user role & account status (blocks banned users).
 
 ### Phase 4: Client Dashboard (`/dashboard/*`)
 1. Create `/dashboard` landing showing:
@@ -284,7 +302,7 @@ create trigger on_booking_change
 ---
 
 ## 8. Verification & QA Plan
-- **Auth Guard Test:** Attempt to access `/admin/*` as a standard `client` or `user` to ensure redirect occurs.
+- **Auth Guard Test:** Attempt to access `/admin/*` as a standard `client` or `user` to ensure the **Not authorized** page is shown (no admin content rendered).
 - **Banned State Test:** Log in as a banned user and verify they receive a top-left toast alert and cannot view dashboards.
 - **Role Progression Test:** Sign up a new user (verify role = `user`), make a booking (verify role = `client`), cancel the booking (verify role reverts to `user`).
 - **Edge Cases:** Booking a session that has reached `max_slots` should reject the booking request immediately.

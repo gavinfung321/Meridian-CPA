@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getHomeRouteForRole, isAdminRole, isDashboardUserRole } from "../lib/auth-routes";
+import { isAdminRole, isDashboardUserRole } from "../lib/auth-routes";
 
 export type RouteAccess = "admin" | "dashboard";
 
@@ -39,7 +39,7 @@ export function ProtectedRoute({ access }: ProtectedRouteProps) {
 
   if (access === "admin") {
     if (!isAdminRole(profile?.role)) {
-      return <Navigate to={getHomeRouteForRole(profile?.role)} replace />;
+      return <Navigate to="/not-authorized" replace state={{ from: location.pathname }} />;
     }
   }
 

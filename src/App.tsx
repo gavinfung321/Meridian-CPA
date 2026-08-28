@@ -14,7 +14,10 @@ import { DashboardOverview } from "./screens/Dashboard/DashboardOverview";
 import { DashboardProfile } from "./screens/Dashboard/DashboardProfile";
 import { Desktop } from "./screens/Desktop/Desktop";
 import { Login } from "./screens/Login/Login";
+import { ForgotPassword } from "./screens/Login/ForgotPassword";
+import { ResetPassword } from "./screens/Login/ResetPassword";
 import { Signup } from "./screens/Signup/Signup";
+import { NotAuthorized } from "./screens/NotAuthorized/NotAuthorized";
 
 export const App = (): JSX.Element => {
   const [lang, setLang] = useState<Language>("en");
@@ -31,6 +34,9 @@ export const App = (): JSX.Element => {
           <Route path="/about" element={<AboutUs lang={lang} setLang={setLang} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/not-authorized" element={<NotAuthorized />} />
           <Route path="/logout" element={<Navigate to="/login" replace />} />
 
           <Route element={<ProtectedRoute access="dashboard" />}>

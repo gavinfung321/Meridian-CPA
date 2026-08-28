@@ -19,6 +19,9 @@ export function Login(): JSX.Element {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(
+    (location.state as { message?: string } | null)?.message ?? null,
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const from =
@@ -89,9 +92,17 @@ export function Login(): JSX.Element {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-[#C9A84C] hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <input
                   id="password"
                   type="password"
@@ -102,6 +113,12 @@ export function Login(): JSX.Element {
                   className="w-full rounded-md border border-[#EDECE6] bg-[#F9F9F6] px-3 py-2 text-sm outline-none ring-[#C9A84C] focus:ring-2"
                 />
               </div>
+
+              {notice ? (
+                <p className="rounded-md border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-3 py-2 text-sm">
+                  {notice}
+                </p>
+              ) : null}
 
               {error ? (
                 <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

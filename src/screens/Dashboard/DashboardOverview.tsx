@@ -22,7 +22,7 @@ export function DashboardOverview(): JSX.Element {
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-serif text-3xl font-semibold text-[#0F2A1D]">
-              Welcome back{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
+              Welcome back{profile?.first_name ? `, ${profile.first_name}` : ""}
             </h1>
             <p className="mt-2 text-[#0F2A1D]/70">
               Your client portal. Book sessions and manage your profile here.

@@ -2,6 +2,8 @@ import { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { MeridianLogo } from "../../../../components/MeridianLogo";
 import { Button } from "../../../../components/ui/button";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { getHomeRouteForRole } from "../../../../lib/auth-routes";
 import { Language, translations } from "../../../../lib/translations";
 
 interface TopNavigationProps {
@@ -12,6 +14,7 @@ interface TopNavigationProps {
 
 export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigationProps): JSX.Element => {
   const t = translations[lang].nav;
+  const { user, profile, loading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const panelId = useId();
@@ -56,6 +59,23 @@ export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigati
     onBookClick();
   };
 
+  const authLinkClass =
+    "text-[12px] xl:text-[13px] font-medium text-white/80 hover:text-white transition-colors duration-150 whitespace-nowrap tracking-[-0.02em]";
+
+  const authLink = !loading && user ? (
+    <Link
+      to={getHomeRouteForRole(profile?.role)}
+      className={authLinkClass}
+      onClick={closeMenu}
+    >
+      {t.dashboard}
+    </Link>
+  ) : (
+    <Link to="/login" className={authLinkClass} onClick={closeMenu}>
+      {t.login}
+    </Link>
+  );
+
   return (
     <header className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-[#0f2a1d]/90 backdrop-blur-sm">
       <div className="flex w-full items-center px-4 sm:px-8 lg:px-[50px] py-3 lg:py-4">
@@ -73,6 +93,7 @@ export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigati
               {item.label}
             </a>
           ))}
+          {authLink}
           <Button
             type="button"
             onClick={onBookClick}
@@ -148,6 +169,7 @@ export const TopNavigationSection = ({ lang, setLang, onBookClick }: TopNavigati
                 {item.label}
               </a>
             ))}
+            <div className="py-3 border-b border-white/10">{authLink}</div>
             <Button
               type="button"
               onClick={handleBook}

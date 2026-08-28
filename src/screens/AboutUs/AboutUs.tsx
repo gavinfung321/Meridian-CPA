@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MeridianLogo } from "../../components/MeridianLogo";
+import { useAuth } from "../../contexts/AuthContext";
+import { getHomeRouteForRole } from "../../lib/auth-routes";
 import { Language, translations } from "../../lib/translations";
 
 interface AboutUsProps {
@@ -10,6 +12,8 @@ interface AboutUsProps {
 
 export const AboutUs = ({ lang, setLang }: AboutUsProps): JSX.Element => {
   const t = translations[lang].aboutPage;
+  const nav = translations[lang].nav;
+  const { user, profile, loading } = useAuth();
 
   useEffect(() => {
     document.title =
@@ -28,7 +32,23 @@ export const AboutUs = ({ lang, setLang }: AboutUsProps): JSX.Element => {
         <Link to="/" className="flex shrink-0 items-center" aria-label="Meridian CPA Home">
           <MeridianLogo variant="light" />
         </Link>
-        <div className="flex items-center gap-2 text-[12px] font-medium text-white/60">
+        <div className="flex items-center gap-4 sm:gap-6">
+          {!loading && user ? (
+            <Link
+              to={getHomeRouteForRole(profile?.role)}
+              className="text-[12px] font-medium text-white/80 hover:text-white transition-colors"
+            >
+              {nav.dashboard}
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="text-[12px] font-medium text-white/80 hover:text-white transition-colors"
+            >
+              {nav.login}
+            </Link>
+          )}
+          <div className="flex items-center gap-2 text-[12px] font-medium text-white/60">
           <button
             type="button"
             onClick={() => setLang("en")}
@@ -44,6 +64,7 @@ export const AboutUs = ({ lang, setLang }: AboutUsProps): JSX.Element => {
           >
             繁
           </button>
+          </div>
         </div>
       </header>
 
