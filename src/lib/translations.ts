@@ -248,6 +248,61 @@ export const translations = {
         successClose: "Close",
       },
     },
+    booking: {
+      label: "UPCOMING SESSIONS",
+      title: "Book a Session",
+      subtitle: "Join our specialized 1-on-1 consultations or group workshops to stay ahead on compliance and planning.",
+      filters: {
+        allTypes: "All Types",
+        taxPlanning: "Tax Planning",
+        auditCompliance: "Audit & Compliance",
+        payrollMpf: "Payroll & MPF",
+        advisory: "Advisory",
+        allLocations: "All Locations",
+        centralOffice: "Central Office",
+        onlineZoom: "Online / Zoom",
+        clientSite: "Client Site",
+      },
+      card: {
+        spotsLeft: "spots left",
+        booked: "booked",
+        privateSession: "Private Session",
+        min: "min",
+        bookConsultation: "Book Consultation",
+        reserveSpot: "Reserve Spot",
+        registerNow: "Register Now",
+        bookAuditReview: "Book Audit Review",
+      },
+      sessions: {
+        taxPlanning: {
+          title: "1-on-1 Tax Planning & Advisory (Private Session)",
+          tags: ["Tax", "1-on-1"],
+        },
+        ptrClinic: {
+          title: "HK Profits Tax Return (PTR) Q&A Clinic",
+          tags: ["Compliance", "Group Workshop"],
+        },
+        mpfMasterclass: {
+          title: "MPF & Hong Kong Payroll Compliance Masterclass",
+          tags: ["Payroll", "Workshop"],
+        },
+        auditReadiness: {
+          title: "Audit Readiness & Document Review",
+          tags: ["Audit", "1-on-1"],
+        },
+        gbaStructuring: {
+          title: "Cross-Border Tax & GBA Structuring Workshop",
+          tags: ["Advisory", "Seminar"],
+        },
+      },
+      locations: {
+        centralZoom: "Central Office / Zoom",
+        boardroomHybrid: "Boardroom / Hybrid",
+        onlineWebinar: "Online Webinar",
+        centralOffice: "Central Office",
+        hybrid: "Hybrid",
+      }
+    },
     aboutPage: {
       title: "More about Us",
       body: "This page is a placeholder. Firm story, credentials, and practice details will be added here.",
@@ -499,6 +554,61 @@ export const translations = {
         success: "多謝 — 您的電郵程式應已開啟申請內容。我們會盡快回覆。",
         successClose: "關閉",
       },
+    },
+    booking: {
+      label: "即將舉行的諮詢與活動",
+      title: "預約諮詢",
+      subtitle: "參加我們專屬的一對一諮詢或小組工作坊，掌握最新的合規及規劃資訊。",
+      filters: {
+        allTypes: "所有類型",
+        taxPlanning: "稅務規劃",
+        auditCompliance: "審計與合規",
+        payrollMpf: "薪酬與強積金",
+        advisory: "顧問服務",
+        allLocations: "所有地點",
+        centralOffice: "中環辦公室",
+        onlineZoom: "網上 / Zoom",
+        clientSite: "客戶地點",
+      },
+      card: {
+        spotsLeft: "個名額",
+        booked: "已預約",
+        privateSession: "私人諮詢",
+        min: "分鐘",
+        bookConsultation: "預約諮詢",
+        reserveSpot: "預留名額",
+        registerNow: "立即登記",
+        bookAuditReview: "預約審計評估",
+      },
+      sessions: {
+        taxPlanning: {
+          title: "一對一稅務規劃及顧問 (私人諮詢)",
+          tags: ["稅務", "一對一"],
+        },
+        ptrClinic: {
+          title: "香港利得稅 (PTR) 答疑診所",
+          tags: ["合規", "小組工作坊"],
+        },
+        mpfMasterclass: {
+          title: "強積金及香港薪酬合規大師班",
+          tags: ["薪酬", "工作坊"],
+        },
+        auditReadiness: {
+          title: "審計準備與文件審閱",
+          tags: ["審計", "一對一"],
+        },
+        gbaStructuring: {
+          title: "跨境稅務及大灣區架構工作坊",
+          tags: ["顧問", "研討會"],
+        },
+      },
+      locations: {
+        centralZoom: "中環辦公室 / Zoom",
+        boardroomHybrid: "會議室 / 混合模式",
+        onlineWebinar: "網上研討會",
+        centralOffice: "中環辦公室",
+        hybrid: "混合模式",
+      }
     },
     aboutPage: {
       title: "關於我們",

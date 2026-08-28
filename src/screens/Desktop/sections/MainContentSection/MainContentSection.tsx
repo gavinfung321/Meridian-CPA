@@ -8,6 +8,7 @@ import { AuditTimelineSection } from "../AuditTimelineSection/AuditTimelineSecti
 import { WhyUsSection } from "../WhyUsSection/WhyUsSection";
 import { FaqSection } from "../FaqSection/FaqSection";
 import { ContactSection } from "../ContactSection/ContactSection";
+import { BookingSection } from "../BookingSection/BookingSection";
 
 interface MainContentSectionProps {
   lang: Language;
@@ -217,6 +218,8 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
           </nav>
         </div>
       </section>
+
+      <BookingSection lang={lang} onBookClick={onBookClick} />
 
       <WhyUsSection lang={lang} />
       <AuditTimelineSection lang={lang} />
