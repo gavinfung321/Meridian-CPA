@@ -167,16 +167,10 @@ export function CatalogSessionTypesTab(): JSX.Element {
           </table>
         ) : sessionTypes.length === 0 ? (
           <div className="px-4 py-12 text-center">
-            <p className="text-[#0F2A1D]/70">No session types yet. Define your consultation products.</p>
-            {categories.length > 0 ? (
-              <Button
-                type="button"
-                onClick={openCreate}
-                className="mt-4 bg-[#0F2A1D] text-white hover:bg-[#0F2A1D]/90"
-              >
-                + New Session Type
-              </Button>
-            ) : null}
+            <p className="text-[#0F2A1D]/70">
+              Use <span className="font-medium text-[#0F2A1D]">+ New Session Type</span> above to
+              define your first consultation product.
+            </p>
           </div>
         ) : (
           <table className="min-w-full text-left text-sm">

@@ -624,7 +624,7 @@ Admin-managed taxonomy and session slots. **In scope now.** Bookings and clients
 | Single **Catalog Management** hub with 3 tabs | Forest Green / Gold / Cream — **no** dark/orange theme |
 | Modals for **Category** and **Session type** create/edit | Full **pages** for session new/edit *(recurrence, image, cancel reason)* |
 | Table columns: Session, Date & Time, Capacity, Price, Status | Existing Supabase CRUD + RLS *(no logic rewrite)* |
-| Empty states with friendly copy | Sidebar + Quick action dropdown unchanged |
+| Empty states with friendly copy *(no duplicate primary buttons)* | Sidebar + Quick action dropdown unchanged |
 | Inline status actions on session rows | Session cover images + recurrence editor on full form |
 
 #### Route & navigation
@@ -645,9 +645,9 @@ Replace current `/admin/sessions` table with catalog-styled layout:
 - [ ] Section title: **Upcoming Schedule** with live count
 - [ ] Table columns: **Session** (title + type), **Date & Time**, **Capacity** (booked/max), **Price**, **Status** (Active / Cancelled pill)
 - [ ] Row actions: **Edit** → `/admin/sessions/edit/:id`; **Cancel** / **Reactivate** inline *(reason modal on cancel)*
-- [ ] Primary CTA: **+ New Session** *(page header or tab toolbar — not duplicate of header Quick action)*
-- [ ] Empty state: *No sessions on the horizon. Create your first bookable slot.* + link to new session
-- [ ] Loading skeleton rows
+- [x] Primary CTA: **+ New Session** in tab toolbar only *(header Quick action is separate global shortcut)*
+- [x] Empty state: *Use **+ New Session** above to create your first bookable slot.* — copy only, no second CTA
+- [x] Loading skeleton rows
 
 #### Tab 2 — Session Types
 
@@ -658,7 +658,8 @@ Absorb `/admin/taxonomy` session-types column:
 - [ ] Modal fields: Name, Category (select), Base price, Default duration, Description
 - [ ] Info hint: *Base prices can be overridden for specific scheduled sessions.* *(cream info box, not reference blue)*
 - [ ] Edit / Deactivate via row actions → same modal in edit mode
-- [ ] Empty state + loading skeleton
+- [x] Empty state: copy-only — points to toolbar **+ New Session Type** button
+- [x] Loading skeleton
 
 #### Tab 3 — Categories
 
@@ -668,12 +669,14 @@ Absorb `/admin/taxonomy` categories column:
 - [ ] **+ New Category** opens **modal**
 - [ ] Modal fields: Name, Description *(optional — add column if missing)*, Sort order; auto-slug from name
 - [ ] Edit / Deactivate via row actions
-- [ ] Empty state + loading skeleton
+- [x] Empty state: copy-only — points to toolbar **+ New Category** button
+- [x] Loading skeleton
 
 #### Modal & tab styling *(Meridian brand)*
 
 - Modal: white panel, `border-[#EDECE6]`, Forest Green primary button, outline Cancel
 - Tab bar: segmented control — active tab `bg-[#0F2A1D] text-white` or Gold accent per brand guide; inactive cream/white
+- **Empty states:** One primary CTA per tab in the **toolbar only**; empty panel uses short copy pointing at that button — no link or duplicate button
 - Do **not** use reference dark overlay beyond standard `bg-black/40` scrim
 
 #### Components to build *(implementation checklist)*
@@ -870,7 +873,8 @@ Items from the old layer-based phases map to the feature phases above:
 ### Phase 2.5 — Unified Catalog UX ✅
 - **Tabbed hub:** Active Sessions | Session Types | Categories at `/admin/sessions`
 - **Modals:** Category and session type create/edit *(Meridian-styled)*
-- **Sessions tab:** Status column, inline cancel/reactivate, empty/loading states
+- **Sessions tab:** Status column, inline cancel/reactivate, loading skeletons
+- **Empty states:** Toolbar primary CTA only; empty panel uses copy pointing to toolbar button *(no link or duplicate button)*
 - **Redirects:** `/admin/taxonomy` → types tab; full pages kept for session new/edit
 
 ### Phase 3 — Booking Logic & Evolution (next)

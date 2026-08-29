@@ -145,15 +145,9 @@ export function CatalogCategoriesTab(): JSX.Element {
         ) : categories.length === 0 ? (
           <div className="px-4 py-12 text-center">
             <p className="text-[#0F2A1D]/70">
-              No categories yet. Group your services into service lines.
+              Use <span className="font-medium text-[#0F2A1D]">+ New Category</span> above to group
+              your services into service lines.
             </p>
-            <Button
-              type="button"
-              onClick={openCreate}
-              className="mt-4 bg-[#0F2A1D] text-white hover:bg-[#0F2A1D]/90"
-            >
-              + New Category
-            </Button>
           </div>
         ) : (
           <table className="min-w-full text-left text-sm">

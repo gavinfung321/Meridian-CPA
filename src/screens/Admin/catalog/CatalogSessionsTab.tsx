@@ -144,11 +144,9 @@ export function CatalogSessionsTab(): JSX.Element {
         ) : sessions.length === 0 ? (
           <div className="px-4 py-12 text-center">
             <p className="text-[#0F2A1D]/70">
-              No sessions on the horizon. Create your first bookable slot.
+              Use <span className="font-medium text-[#0F2A1D]">+ New Session</span> above to create
+              your first bookable slot.
             </p>
-            <Button asChild className="mt-4 bg-[#0F2A1D] text-white hover:bg-[#0F2A1D]/90">
-              <Link to="/admin/sessions/new">+ New Session</Link>
-            </Button>
           </div>
         ) : (
           <table className="min-w-full text-left text-sm">
