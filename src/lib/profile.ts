@@ -32,3 +32,41 @@ export function getProfileAvatarUrl(
 export function getPasswordResetRedirectUrl(): string {
   return `${window.location.origin}/reset-password`;
 }
+
+export function formatProfileJoinedDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-HK", {
+    dateStyle: "medium",
+  }).format(new Date(iso));
+}
+
+export function formatPhone(
+  prefix: string | null | undefined,
+  number: string | null | undefined,
+): string | null {
+  const combined = `${prefix ?? ""}${number ?? ""}`.trim();
+  if (!combined) return null;
+  if (prefix && number) return `${prefix} ${number}`;
+  return combined;
+}
+
+export function formatAddress(profile: {
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  county?: string | null;
+  post_code?: string | null;
+  country?: string | null;
+}): string | null {
+  const parts = [
+    profile.address_line1,
+    profile.address_line2,
+    profile.city,
+    profile.county,
+    profile.post_code,
+    profile.country,
+  ]
+    .map((part) => part?.trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : null;
+}

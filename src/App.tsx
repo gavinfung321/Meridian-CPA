@@ -6,6 +6,7 @@ import { Language } from "./lib/translations";
 import { AboutUs } from "./screens/AboutUs/AboutUs";
 import { AdminBookings } from "./screens/Admin/AdminBookings";
 import { AdminClients } from "./screens/Admin/AdminClients";
+import { AdminClientDetail } from "./screens/Admin/AdminClientDetail";
 import { AdminDashboardOverview } from "./screens/Admin/AdminDashboardOverview";
 import { AdminCatalogPage } from "./screens/Admin/AdminCatalogPage";
 import { AdminSessionForm } from "./screens/Admin/AdminSessionForm";
@@ -65,6 +66,7 @@ export const App = (): JSX.Element => {
             />
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/clients" element={<AdminClients />} />
+            <Route path="/admin/clients/:id" element={<AdminClientDetail />} />
             <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>

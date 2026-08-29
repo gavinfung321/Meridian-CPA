@@ -27,6 +27,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
   sort_order: number;
   is_active: boolean;
   created_at: string;
@@ -126,6 +127,7 @@ export interface Database {
           id?: string;
           name: string;
           slug: string;
+          description?: string | null;
           sort_order?: number;
           is_active?: boolean;
           created_at?: string;
@@ -133,6 +135,7 @@ export interface Database {
         Update: {
           name?: string;
           slug?: string;
+          description?: string | null;
           sort_order?: number;
           is_active?: boolean;
         };

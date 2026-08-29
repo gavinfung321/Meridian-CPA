@@ -82,7 +82,8 @@ export function SessionTypeFormModal({
     >
       <form id="session-type-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="rounded-lg border border-[#EDECE6] bg-[#F9F9F6] px-3 py-2 text-xs text-[#0F2A1D]/70">
-          Base prices can be overridden for specific scheduled sessions.
+          Use a product name that differs from the category — e.g. category &quot;Tax Planning&quot; →
+          type &quot;Initial Tax Consultation&quot;. Base prices can be overridden per scheduled session.
         </div>
 
         <div>
@@ -94,7 +95,7 @@ export function SessionTypeFormModal({
             value={name}
             onChange={(event) => setName(event.target.value)}
             className={`${adminInputClassName} mt-1`}
-            placeholder="e.g. Tax Planning Consultation"
+            placeholder="e.g. Initial Tax Consultation"
             required
           />
         </div>

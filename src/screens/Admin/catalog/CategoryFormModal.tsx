@@ -10,7 +10,12 @@ interface CategoryFormModalProps {
   nextSortOrder: number;
   saving: boolean;
   onClose: () => void;
-  onSave: (payload: { name: string; slug: string; sort_order: number }) => void;
+  onSave: (payload: {
+    name: string;
+    slug: string;
+    description: string | null;
+    sort_order: number;
+  }) => void;
 }
 
 export function CategoryFormModal({
@@ -22,11 +27,13 @@ export function CategoryFormModal({
   onSave,
 }: CategoryFormModalProps): JSX.Element {
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [sortOrder, setSortOrder] = useState(nextSortOrder);
 
   useEffect(() => {
     if (!open) return;
     setName(category?.name ?? "");
+    setDescription(category?.description ?? "");
     setSortOrder(category?.sort_order ?? nextSortOrder);
   }, [open, category, nextSortOrder]);
 
@@ -37,6 +44,7 @@ export function CategoryFormModal({
     onSave({
       name: trimmed,
       slug: slugify(trimmed),
+      description: description.trim() || null,
       sort_order: sortOrder,
     });
   };
@@ -79,20 +87,37 @@ export function CategoryFormModal({
           />
         </div>
         <div>
-          <label htmlFor="category-sort" className="block text-sm font-medium text-[#0F2A1D]">
-            Sort order
+          <label htmlFor="category-description" className="block text-sm font-medium text-[#0F2A1D]">
+            Description
           </label>
-          <input
-            id="category-sort"
-            type="number"
-            min={0}
-            value={sortOrder}
-            onChange={(event) => setSortOrder(Number(event.target.value))}
+          <textarea
+            id="category-description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
             className={`${adminInputClassName} mt-1`}
+            placeholder="Brief summary of this service line for admins and public filters."
           />
         </div>
+        {category ? (
+          <div>
+            <label htmlFor="category-sort" className="block text-sm font-medium text-[#0F2A1D]">
+              Sort order{" "}
+              <span className="font-normal text-[#0F2A1D]/50">(display order on public site)</span>
+            </label>
+            <input
+              id="category-sort"
+              type="number"
+              min={0}
+              value={sortOrder}
+              onChange={(event) => setSortOrder(Number(event.target.value))}
+              className={`${adminInputClassName} mt-1`}
+            />
+          </div>
+        ) : null}
         <p className="text-xs text-[#0F2A1D]/60">
-          Slug: <span className="font-mono">{slugPreview}</span>
+          URL slug: <span className="font-mono">{slugPreview}</span>
+          {!category ? " — generated automatically" : null}
         </p>
       </form>
     </AdminModal>

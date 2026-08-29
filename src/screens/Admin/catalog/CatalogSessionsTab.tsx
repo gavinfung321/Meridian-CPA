@@ -6,6 +6,7 @@ import {
   formatPrice,
   formatSessionSchedule,
 } from "../../../lib/session-admin";
+import { adminTableRowClassName } from "../../../lib/table-styles";
 import { supabase } from "../../../lib/supabase";
 import type { Session } from "../../../types/database";
 import { SessionCancelModal } from "./SessionCancelModal";
@@ -134,7 +135,7 @@ export function CatalogSessionsTab(): JSX.Element {
                 <th className="px-4 py-3 font-medium">Capacity</th>
                 <th className="px-4 py-3 font-medium">Price</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium" />
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -157,7 +158,7 @@ export function CatalogSessionsTab(): JSX.Element {
                 <th className="px-4 py-3 font-medium">Capacity</th>
                 <th className="px-4 py-3 font-medium">Price</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium" />
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -169,7 +170,7 @@ export function CatalogSessionsTab(): JSX.Element {
                     : session.type;
 
                 return (
-                  <tr key={session.id} className="border-b border-[#EDECE6] last:border-0">
+                  <tr key={session.id} className={adminTableRowClassName}>
                     <td className="px-4 py-4">
                       <p className="font-medium text-[#0F2A1D]">{session.title}</p>
                       <p className="mt-0.5 text-xs text-[#0F2A1D]/60">{typeLabel}</p>

@@ -53,7 +53,12 @@ export function CatalogCategoriesTab(): JSX.Element {
     setEditingCategory(null);
   };
 
-  const handleSave = async (payload: { name: string; slug: string; sort_order: number }) => {
+  const handleSave = async (payload: {
+    name: string;
+    slug: string;
+    description: string | null;
+    sort_order: number;
+  }) => {
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -132,14 +137,13 @@ export function CatalogCategoriesTab(): JSX.Element {
             <thead className="border-b border-[#EDECE6] bg-[#F9F9F6] text-[#0F2A1D]/60">
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Slug</th>
-                <th className="px-4 py-3 font-medium">Sort order</th>
+                <th className="px-4 py-3 font-medium">Description</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium" />
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <TableSkeleton columns={5} />
+              <TableSkeleton columns={4} />
             </tbody>
           </table>
         ) : categories.length === 0 ? (
@@ -154,18 +158,18 @@ export function CatalogCategoriesTab(): JSX.Element {
             <thead className="border-b border-[#EDECE6] bg-[#F9F9F6] text-[#0F2A1D]/60">
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Slug</th>
-                <th className="px-4 py-3 font-medium">Sort order</th>
+                <th className="px-4 py-3 font-medium">Description</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium" />
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {categories.map((category) => (
                 <tr key={category.id} className="border-b border-[#EDECE6] last:border-0">
                   <td className="px-4 py-4 font-medium">{category.name}</td>
-                  <td className="px-4 py-4 font-mono text-xs text-[#0F2A1D]/70">{category.slug}</td>
-                  <td className="px-4 py-4">{category.sort_order}</td>
+                  <td className="max-w-md px-4 py-4 text-[#0F2A1D]/70">
+                    {category.description ?? "—"}
+                  </td>
                   <td className="px-4 py-4">
                     {category.is_active ? (
                       <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800">

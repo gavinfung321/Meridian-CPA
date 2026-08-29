@@ -1,4 +1,4 @@
-import { Bell, Menu, X, type LucideIcon } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Menu, X, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { cn } from "../lib/utils";
@@ -28,14 +28,19 @@ export function PortalLayout({
   children,
 }: PortalLayoutProps): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+
+  const sidebarOpenOnMobile = mobileOpen;
+  const sidebarOpenOnDesktop = !desktopCollapsed;
 
   return (
     <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#0F2A1D]">
       <div className="flex min-h-screen">
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-[#EDECE6] bg-[#0F2A1D] text-white transition-transform lg:static lg:translate-x-0",
-            mobileOpen ? "translate-x-0" : "-translate-x-full",
+            "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-[#EDECE6] bg-[#0F2A1D] text-white transition-transform duration-200 lg:static lg:translate-x-0",
+            sidebarOpenOnMobile ? "translate-x-0" : "-translate-x-full",
+            desktopCollapsed && "lg:-ml-64 lg:overflow-hidden",
           )}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
@@ -78,6 +83,33 @@ export function PortalLayout({
             ))}
           </nav>
         </aside>
+
+        {!sidebarOpenOnMobile ? (
+          <button
+            type="button"
+            className="fixed left-0 top-24 z-50 flex h-10 w-7 items-center justify-center rounded-r-lg border border-l-0 border-[#EDECE6] bg-white text-[#0F2A1D] shadow-md transition-colors hover:bg-[#F9F9F6] lg:hidden"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        ) : null}
+
+        <button
+          type="button"
+          className={cn(
+            "fixed top-24 z-50 hidden h-10 w-7 items-center justify-center rounded-r-lg border border-l-0 border-[#EDECE6] bg-white text-[#0F2A1D] shadow-md transition-[left] duration-200 hover:bg-[#F9F9F6] lg:flex",
+            sidebarOpenOnDesktop ? "left-64" : "left-0",
+          )}
+          onClick={() => setDesktopCollapsed((collapsed) => !collapsed)}
+          aria-label={sidebarOpenOnDesktop ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {sidebarOpenOnDesktop ? (
+            <ChevronLeft className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </button>
 
         {mobileOpen ? (
           <button

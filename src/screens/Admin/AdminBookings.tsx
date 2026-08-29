@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AdminLayout } from "../../components/AdminLayout";
+import { adminTableRowClassName } from "../../lib/table-styles";
 import { MockupBanner } from "../../components/RoleBadge";
 
 const mockBookings = [
@@ -61,7 +62,7 @@ export function AdminBookings(): JSX.Element {
               {mockBookings.map((booking) => (
                 <tr
                   key={`${booking.client}-${booking.session}`}
-                  className="border-b border-[#EDECE6] last:border-0"
+                  className={adminTableRowClassName}
                 >
                   <td className="px-4 py-4 font-medium">{booking.client}</td>
                   <td className="px-4 py-4">{booking.session}</td>
