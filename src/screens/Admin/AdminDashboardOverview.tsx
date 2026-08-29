@@ -19,9 +19,7 @@ export function AdminDashboardOverview(): JSX.Element {
       <div className="mx-auto max-w-6xl">
         <MockupBanner />
         <div className="mb-8">
-          <h1 className="font-serif text-3xl font-semibold text-[#0F2A1D]">
-            Admin overview
-          </h1>
+          <h1 className="font-serif text-3xl font-semibold text-[#0F2A1D]">Admin overview</h1>
           <p className="mt-2 text-[#0F2A1D]/70">
             Firm-wide metrics and booking performance at a glance.
           </p>

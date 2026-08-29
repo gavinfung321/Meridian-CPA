@@ -1,62 +1,64 @@
-import { Clock, MapPin, Users } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import { translations, Language } from "../../../../lib/translations";
-import { Session } from "./data/sessions";
+import type { PublicSessionCard } from "../../../../lib/public-sessions";
 
 type SessionCardProps = {
-  session: Session;
+  session: PublicSessionCard;
   lang: Language;
   onBook: () => void;
 };
 
-// Helper to resolve nested keys like "booking.card.booked"
-const resolvePath = (obj: any, path: string) => {
-  return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+const resolvePath = (obj: Record<string, unknown>, path: string): unknown => {
+  return path.split(".").reduce<unknown>((acc, part) => {
+    if (acc && typeof acc === "object" && part in acc) {
+      return (acc as Record<string, unknown>)[part];
+    }
+    return undefined;
+  }, obj);
 };
 
 export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
   const t = translations[lang];
-
-  const title = resolvePath(t, session.titleKey) || session.titleKey;
-  const location = resolvePath(t, session.locationKey) || session.locationKey;
-  const ctaText = resolvePath(t, session.ctaTextKey) || session.ctaTextKey;
-  
-  // Tags could be an array of keys or an array of strings in translation file
-  const tagsStr = resolvePath(t, session.tagsKey);
-  const tags = Array.isArray(tagsStr) ? tagsStr : [tagsStr];
+  const minLabel = resolvePath(t as Record<string, unknown>, "booking.card.min") as string;
+  const privateLabel = resolvePath(t as Record<string, unknown>, "booking.card.privateSession") as string;
+  const spotsLeftLabel = resolvePath(t as Record<string, unknown>, "booking.card.spotsLeft") as string;
+  const bookedLabel = resolvePath(t as Record<string, unknown>, "booking.card.booked") as string;
+  const defaultCta = resolvePath(t as Record<string, unknown>, "booking.card.bookConsultation") as string;
 
   const { booked, total } = session.capacity;
   const spotsLeft = total - booked;
-  const isPrivate = session.isPrivate;
-  
-  const capacityLabel = isPrivate 
-    ? `1/1 ${resolvePath(t, "booking.card.privateSession")}`
-    : `${spotsLeft} ${resolvePath(t, "booking.card.spotsLeft")}`;
+  const capacityLabel = session.isPrivate
+    ? `1/1 ${privateLabel}`
+    : `${spotsLeft} ${spotsLeftLabel}`;
 
-  const progressPercent = Math.min(100, Math.max(0, (booked / total) * 100));
+  const progressPercent = total > 0 ? Math.min(100, Math.max(0, (booked / total) * 100)) : 0;
+  const isFull = spotsLeft <= 0;
 
   return (
-    <div className="flex flex-col border border-[#EDECE6] rounded-xl overflow-hidden bg-white hover:shadow-lg transition-shadow duration-300">
-      <div className="p-6 flex-1 flex flex-col">
-        {/* Header: Title & Location */}
-        <div className="flex justify-between items-start mb-4 gap-4">
-          <h3 className="font-serif text-xl text-[#0F2A1D] font-medium leading-tight">
-            {title}
+    <div className="flex flex-col overflow-hidden rounded-xl border border-[#EDECE6] bg-white transition-shadow duration-300 hover:shadow-lg">
+      {session.imageUrl ? (
+        <div className="aspect-[16/9] w-full overflow-hidden bg-[#EDECE6]">
+          <img src={session.imageUrl} alt="" className="h-full w-full object-cover" />
+        </div>
+      ) : null}
+
+      <div className="flex flex-1 flex-col p-6">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <h3 className="font-serif text-xl font-medium leading-tight text-[#0F2A1D]">
+            {session.title}
           </h3>
-          <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full whitespace-nowrap shrink-0">
-            <MapPin className="w-3 h-3 mr-1" />
-            {location}
+          <div className="flex shrink-0 items-center whitespace-nowrap rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">
+            <MapPin className="mr-1 h-3 w-3" />
+            {session.location}
           </div>
         </div>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {tags.map((tag, idx) => (
-            <span 
-              key={idx} 
-              className={`text-xs px-2.5 py-0.5 rounded-full ${
-                idx === 0 
-                  ? "bg-[#0F2A1D] text-white" 
-                  : "bg-[#C9A84C]/20 text-[#0F2A1D]"
+        <div className="mb-6 flex flex-wrap gap-2">
+          {session.tags.map((tag, index) => (
+            <span
+              key={`${tag}-${index}`}
+              className={`rounded-full px-2.5 py-0.5 text-xs ${
+                index === 0 ? "bg-[#0F2A1D] text-white" : "bg-[#C9A84C]/20 text-[#0F2A1D]"
               }`}
             >
               {tag}
@@ -64,27 +66,29 @@ export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
           ))}
         </div>
 
-        {/* Schedule & Capacity Details */}
         <div className="mt-auto space-y-4 text-sm text-[#2C3E35]">
           <div className="flex items-center justify-between font-medium">
-            <span>{session.day} {session.time}</span>
-            <span className="flex items-center text-gray-500 font-normal">
-              <Clock className="w-4 h-4 mr-1.5" />
-              {session.duration} {resolvePath(t, "booking.card.min")}
+            <span>
+              {session.day} {session.time}
+            </span>
+            <span className="flex items-center font-normal text-gray-500">
+              <Clock className="mr-1.5 h-4 w-4" />
+              {session.duration} {minLabel}
             </span>
           </div>
 
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-gray-500">
               <span>{capacityLabel}</span>
-              {!isPrivate && (
-                <span>{booked}/{total} {resolvePath(t, "booking.card.booked")}</span>
-              )}
+              {!session.isPrivate ? (
+                <span>
+                  {booked}/{total} {bookedLabel}
+                </span>
+              ) : null}
             </div>
-            {/* Progress Bar */}
-            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-[#C9A84C] transition-all duration-500 rounded-full"
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-[#C9A84C] transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -92,13 +96,14 @@ export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
         </div>
       </div>
 
-      {/* Action Area */}
-      <div className="p-4 bg-[#F9F9F6] border-t border-[#EDECE6]">
-        <button 
+      <div className="border-t border-[#EDECE6] bg-[#F9F9F6] p-4">
+        <button
+          type="button"
           onClick={onBook}
-          className="w-full py-2.5 px-4 bg-[#0F2A1D] text-white rounded-lg hover:bg-[#0F2A1D]/90 transition-colors font-medium text-sm"
+          disabled={isFull}
+          className="w-full rounded-lg bg-[#0F2A1D] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0F2A1D]/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {ctaText}
+          {isFull ? (lang === "zh" ? "已滿" : "Full") : defaultCta}
         </button>
       </div>
     </div>

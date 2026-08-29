@@ -56,6 +56,7 @@ export interface Session {
   max_slots: number;
   price: number;
   recurrence_rules: Record<string, unknown> | null;
+  image_path: string | null;
   is_cancelled: boolean;
   cancel_reason: string | null;
   cancelled_at: string | null;
@@ -174,6 +175,7 @@ export interface Database {
           max_slots?: number;
           price?: number;
           recurrence_rules?: Record<string, unknown> | null;
+          image_path?: string | null;
           is_cancelled?: boolean;
           cancel_reason?: string | null;
           cancelled_at?: string | null;
@@ -192,6 +194,7 @@ export interface Database {
           max_slots?: number;
           price?: number;
           recurrence_rules?: Record<string, unknown> | null;
+          image_path?: string | null;
           is_cancelled?: boolean;
           cancel_reason?: string | null;
           cancelled_at?: string | null;

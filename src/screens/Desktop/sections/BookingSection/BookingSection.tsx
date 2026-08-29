@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Language, translations } from "../../../../lib/translations";
+import { fetchPublicSessions, type PublicSessionCard } from "../../../../lib/public-sessions";
 import { BookingFilters, SessionLocationFilter, SessionTypeFilter } from "./BookingFilters";
 import { SessionCard } from "./SessionCard";
-import { MOCK_SESSIONS } from "./data/sessions";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 
 interface BookingSectionProps {
@@ -13,47 +13,72 @@ interface BookingSectionProps {
 export const BookingSection = ({ lang, onBookClick }: BookingSectionProps) => {
   const [typeFilter, setTypeFilter] = useState<SessionTypeFilter>("all");
   const [locationFilter, setLocationFilter] = useState<SessionLocationFilter>("all");
-  
+  const [sessions, setSessions] = useState<PublicSessionCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [headerRef, headerVisible] = useScrollAnimation<HTMLDivElement>(0.1);
   const [gridRef, gridVisible] = useScrollAnimation<HTMLDivElement>(0.1);
 
   const t = translations[lang];
+  const locale = lang === "zh" ? "zh-HK" : "en-HK";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetchPublicSessions(locale)
+      .then((data) => {
+        if (!cancelled) setSessions(data);
+      })
+      .catch((fetchError) => {
+        if (!cancelled) {
+          setError(fetchError instanceof Error ? fetchError.message : "Failed to load sessions.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   const filteredSessions = useMemo(() => {
-    return MOCK_SESSIONS.filter((session) => {
+    return sessions.filter((session) => {
       if (typeFilter !== "all" && session.typeFilter !== typeFilter) return false;
       if (locationFilter !== "all" && session.locationFilter !== locationFilter) return false;
       return true;
     });
-  }, [typeFilter, locationFilter]);
+  }, [sessions, typeFilter, locationFilter]);
 
   return (
-    <section 
+    <section
       id="booking"
-      className="flex w-full flex-col items-center bg-[#F9F9F6] px-6 py-24 sm:px-12 sm:py-28 lg:px-[152px] scroll-mt-24 border-t border-[#EDECE6]"
+      className="scroll-mt-24 flex w-full flex-col items-center border-t border-[#EDECE6] bg-[#F9F9F6] px-6 py-24 sm:px-12 sm:py-28 lg:px-[152px]"
     >
       <div className="flex w-full max-w-[1180px] flex-col gap-10">
-        <header 
+        <header
           ref={headerRef}
-          className={`flex flex-col gap-3 scroll-hidden scroll-fade-up ${headerVisible ? "scroll-visible" : ""}`}
+          className={`scroll-hidden scroll-fade-up flex flex-col gap-3 ${headerVisible ? "scroll-visible" : ""}`}
         >
-          <div className="text-sm font-semibold tracking-wider text-[#C9A84C] uppercase">
+          <div className="text-sm font-semibold uppercase tracking-wider text-[#C9A84C]">
             {t.booking?.label}
           </div>
-          <h2 className="font-serif text-[2.4rem] font-bold text-[#0F2A1D] tracking-tight leading-tight">
+          <h2 className="font-serif text-[2.4rem] font-bold leading-tight tracking-tight text-[#0F2A1D]">
             {t.booking?.title}
           </h2>
-          <p className="max-w-[600px] text-[1.05rem] text-[#2C3E35] leading-relaxed mt-2">
+          <p className="mt-2 max-w-[600px] text-[1.05rem] leading-relaxed text-[#2C3E35]">
             {t.booking?.subtitle}
           </p>
-          <div className="h-px w-10 bg-[#C9A84C] mt-4" aria-hidden="true" />
+          <div className="mt-4 h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
         </header>
 
-        <div 
+        <div
           ref={gridRef}
           className={`scroll-hidden scroll-fade-up stagger-2 ${gridVisible ? "scroll-visible" : ""}`}
         >
-          <BookingFilters 
+          <BookingFilters
             lang={lang}
             typeFilter={typeFilter}
             setTypeFilter={setTypeFilter}
@@ -61,20 +86,34 @@ export const BookingSection = ({ lang, onBookClick }: BookingSectionProps) => {
             setLocationFilter={setLocationFilter}
           />
 
-          {filteredSessions.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredSessions.map(session => (
-                <SessionCard 
-                  key={session.id} 
-                  session={session} 
-                  lang={lang} 
-                  onBook={onBookClick} 
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((key) => (
+                <div
+                  key={key}
+                  className="h-72 animate-pulse rounded-xl border border-[#EDECE6] bg-white"
                 />
               ))}
             </div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center text-sm text-red-700">
+              {error}
+            </div>
+          ) : filteredSessions.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredSessions.map((session) => (
+                <SessionCard key={session.id} session={session} lang={lang} onBook={onBookClick} />
+              ))}
+            </div>
           ) : (
-            <div className="py-20 text-center text-gray-500 bg-white border border-[#EDECE6] rounded-xl">
-              No sessions found matching your filters.
+            <div className="rounded-xl border border-[#EDECE6] bg-white py-20 text-center text-gray-500">
+              {sessions.length === 0
+                ? lang === "zh"
+                  ? "暫無可預約時段。"
+                  : "No upcoming sessions available."
+                : lang === "zh"
+                  ? "沒有符合篩選條件的時段。"
+                  : "No sessions found matching your filters."}
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, Shield, User } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, Shield, User } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,16 +9,28 @@ import { Language, translations } from "../lib/translations";
 import { cn } from "../lib/utils";
 import { ProfileAvatar } from "./ProfileAvatar";
 
+type ProfileMenuPortal = "admin" | "client" | "public";
+
 interface ProfileMenuProps {
-  lang: Language;
+  lang?: Language;
   onNavigate?: () => void;
   variant?: "dark" | "light";
+  showName?: boolean;
+  portal?: ProfileMenuPortal;
+}
+
+function getProfilePath(portal: ProfileMenuPortal): string {
+  if (portal === "admin") return "/admin/profile";
+  if (portal === "client") return "/dashboard/profile";
+  return "/profile";
 }
 
 export function ProfileMenu({
-  lang,
+  lang = "en",
   onNavigate,
   variant = "dark",
+  showName = false,
+  portal = "public",
 }: ProfileMenuProps): JSX.Element {
   const t = translations[lang].nav;
   const { user, profile, signOut } = useAuth();
@@ -33,6 +45,7 @@ export function ProfileMenu({
     profile?.full_name,
   );
   const email = profile?.email ?? user?.email ?? "";
+  const profilePath = getProfilePath(portal);
 
   useEffect(() => {
     if (!open) return;
@@ -76,13 +89,16 @@ export function ProfileMenu({
       <button
         type="button"
         className={cn(
-          "flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border transition-colors",
+          "flex items-center border transition-colors",
+          showName
+            ? "h-10 max-w-[200px] gap-2 rounded-full pl-1 pr-2.5 sm:max-w-[240px] sm:pr-3"
+            : "h-9 w-9 justify-center overflow-hidden rounded-full",
           triggerClassName,
         )}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
-        aria-label={t.profileMenu}
+        aria-label={showName ? `${t.profileMenu} — ${displayName}` : t.profileMenu}
         onClick={() => setOpen((current) => !current)}
       >
         <ProfileAvatar
@@ -90,8 +106,19 @@ export function ProfileMenu({
           firstName={profile?.first_name}
           lastName={profile?.last_name}
           size="sm"
-          className="h-full w-full border-0 bg-[#C9A84C] text-[#0F2A1D]"
+          className={cn(
+            "border-0 bg-[#C9A84C] text-[#0F2A1D]",
+            showName ? "h-8 w-8" : "h-full w-full",
+          )}
         />
+        {showName ? (
+          <>
+            <span className="min-w-0 truncate text-sm font-medium">{displayName}</span>
+            <ChevronDown
+              className={cn("h-4 w-4 shrink-0 opacity-60 transition-transform", open && "rotate-180")}
+            />
+          </>
+        ) : null}
       </button>
 
       {open ? (
@@ -106,7 +133,7 @@ export function ProfileMenu({
           </div>
 
           <Link
-            to="/profile"
+            to={profilePath}
             role="menuitem"
             onClick={closeMenu}
             className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#0F2A1D] hover:bg-[#F9F9F6]"

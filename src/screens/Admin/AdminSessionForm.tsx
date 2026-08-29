@@ -1,7 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
+import { RecurrenceRulesEditor } from "../../components/RecurrenceRulesEditor";
 import { Button } from "../../components/ui/button";
+import {
+  buildRecurrenceRules,
+  defaultRecurrenceFormState,
+  parseRecurrenceFormState,
+  type RecurrenceFormState,
+} from "../../lib/recurrence-rules";
 import {
   addMinutes,
   adminInputClassName,
@@ -10,6 +17,11 @@ import {
   toDatetimeLocalValue,
   type SessionTypeWithCategory,
 } from "../../lib/session-admin";
+import {
+  getPublicSessionImageUrl,
+  removeSessionImage,
+  uploadSessionImage,
+} from "../../lib/session-image";
 import { supabase } from "../../lib/supabase";
 import type { Session } from "../../types/database";
 
@@ -24,6 +36,7 @@ export function AdminSessionForm(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
+  const draftSessionId = useMemo(() => id ?? crypto.randomUUID(), [id]);
 
   const [sessionTypes, setSessionTypes] = useState<SessionTypeWithCategory[]>([]);
   const [loading, setLoading] = useState(isEditing);
@@ -42,7 +55,10 @@ export function AdminSessionForm(): JSX.Element {
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [maxSlots, setMaxSlots] = useState(1);
   const [price, setPrice] = useState(0);
-  const [recurrenceRules, setRecurrenceRules] = useState("");
+  const [recurrence, setRecurrence] = useState<RecurrenceFormState>(defaultRecurrenceFormState());
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [isCancelled, setIsCancelled] = useState(false);
 
   const selectedSessionType = useMemo(
@@ -86,9 +102,9 @@ export function AdminSessionForm(): JSX.Element {
           setDurationMinutes(session.duration_minutes);
           setMaxSlots(session.max_slots);
           setPrice(Number(session.price));
-          setRecurrenceRules(
-            session.recurrence_rules ? JSON.stringify(session.recurrence_rules, null, 2) : "",
-          );
+          setRecurrence(parseRecurrenceFormState(session.recurrence_rules));
+          setImagePath(session.image_path ?? null);
+          setImagePreviewUrl(getPublicSessionImageUrl(session.image_path));
           setIsCancelled(session.is_cancelled);
         } else if (types.length > 0) {
           const firstType = types.find((type) => type.is_active) ?? types[0];
@@ -117,6 +133,46 @@ export function AdminSessionForm(): JSX.Element {
     setPrice(Number(selectedSessionType.default_price));
   }, [selectedSessionType, isEditing]);
 
+  useEffect(() => {
+    return () => {
+      if (pendingImageFile && imagePreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [pendingImageFile, imagePreviewUrl]);
+
+  const handleImageChange = (file: File | null) => {
+    if (imagePreviewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+
+    if (!file) {
+      setPendingImageFile(null);
+      setImagePreviewUrl(getPublicSessionImageUrl(imagePath));
+      return;
+    }
+
+    setPendingImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = async () => {
+    if (imagePath) {
+      const { error: removeError } = await removeSessionImage(imagePath);
+      if (removeError) {
+        setError(removeError);
+        return;
+      }
+    }
+
+    handleImageChange(null);
+    setImagePath(null);
+
+    if (isEditing && id) {
+      await supabase.from("sessions").update({ image_path: null }).eq("id", id);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
@@ -131,22 +187,34 @@ export function AdminSessionForm(): JSX.Element {
       return;
     }
 
-    let parsedRecurrence: Record<string, unknown> | null = null;
-    if (recurrenceRules.trim()) {
-      try {
-        parsedRecurrence = JSON.parse(recurrenceRules) as Record<string, unknown>;
-      } catch {
-        setError("Recurrence rules must be valid JSON.");
-        setSubmitting(false);
-        return;
-      }
+    if (recurrence.frequency === "weekly" && recurrence.days.length === 0) {
+      setError("Select at least one day for weekly recurrence.");
+      setSubmitting(false);
+      return;
     }
 
     const startIso = fromDatetimeLocalValue(startTime);
     const endIso = addMinutes(startIso, durationMinutes);
     const legacyType = selectedSessionType?.name ?? "General";
+    const sessionId = id ?? draftSessionId;
 
-    const payload = {
+    let nextImagePath = imagePath;
+
+    if (pendingImageFile) {
+      const { path, error: uploadError } = await uploadSessionImage(
+        sessionId,
+        pendingImageFile,
+        imagePath,
+      );
+      if (uploadError) {
+        setError(uploadError);
+        setSubmitting(false);
+        return;
+      }
+      nextImagePath = path;
+    }
+
+    const basePayload = {
       title: trimmedTitle,
       description: description.trim() || null,
       type: legacyType,
@@ -157,17 +225,22 @@ export function AdminSessionForm(): JSX.Element {
       duration_minutes: durationMinutes,
       max_slots: maxSlots,
       price,
-      recurrence_rules: parsedRecurrence,
+      recurrence_rules: buildRecurrenceRules(recurrence),
+      image_path: nextImagePath,
       updated_at: new Date().toISOString(),
     };
 
     try {
       if (isEditing && id) {
-        const { error: updateError } = await supabase.from("sessions").update(payload).eq("id", id);
+        const { error: updateError } = await supabase.from("sessions").update(basePayload).eq("id", id);
         if (updateError) throw updateError;
+        setImagePath(nextImagePath);
+        setPendingImageFile(null);
         setMessage("Session updated.");
       } else {
-        const { error: insertError } = await supabase.from("sessions").insert(payload);
+        const { error: insertError } = await supabase
+          .from("sessions")
+          .insert({ ...basePayload, id: sessionId });
         if (insertError) throw insertError;
         navigate("/admin/sessions");
         return;
@@ -233,7 +306,7 @@ export function AdminSessionForm(): JSX.Element {
           </h1>
           <p className="mt-2 text-[#0F2A1D]/70">
             {isEditing
-              ? "Update slot details, pricing, and availability rules."
+              ? "Update slot details, pricing, recurrence, and cover image."
               : "Create a bookable session slot for clients."}
           </p>
         </div>
@@ -285,6 +358,32 @@ export function AdminSessionForm(): JSX.Element {
                 rows={3}
                 className={adminInputClassName}
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="sessionImage" className="mb-1 block text-sm font-medium">
+                Cover image (optional)
+              </label>
+              {imagePreviewUrl ? (
+                <div className="mb-3 overflow-hidden rounded-lg border border-[#EDECE6]">
+                  <img src={imagePreviewUrl} alt="" className="aspect-[16/9] w-full object-cover" />
+                </div>
+              ) : null}
+              <div className="flex flex-wrap gap-3">
+                <input
+                  id="sessionImage"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => handleImageChange(event.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-[#0F2A1D]/70 file:mr-3 file:rounded-md file:border-0 file:bg-[#0F2A1D] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
+                />
+                {imagePreviewUrl ? (
+                  <Button type="button" variant="outline" onClick={() => void handleRemoveImage()}>
+                    Remove image
+                  </Button>
+                ) : null}
+              </div>
+              <p className="mt-1 text-xs text-[#0F2A1D]/60">JPEG, PNG, or WebP up to 5 MB.</p>
             </div>
 
             <div>
@@ -382,19 +481,7 @@ export function AdminSessionForm(): JSX.Element {
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="recurrenceRules" className="mb-1 block text-sm font-medium">
-                Recurrence rules (JSON, optional)
-              </label>
-              <textarea
-                id="recurrenceRules"
-                value={recurrenceRules}
-                onChange={(event) => setRecurrenceRules(event.target.value)}
-                rows={4}
-                placeholder='{"frequency":"weekly","days":["monday","wednesday"]}'
-                className={`${adminInputClassName} font-mono text-xs`}
-              />
-            </div>
+            <RecurrenceRulesEditor value={recurrence} onChange={setRecurrence} />
           </div>
 
           <div className="flex flex-wrap items-center gap-3 border-t border-[#EDECE6] pt-6">
