@@ -17,6 +17,7 @@ interface PortalLayoutProps {
   navItems: PortalNavItem[];
   profilePortal: "admin" | "client";
   quickActions?: ReactNode;
+  notificationCount?: number;
   children: ReactNode;
 }
 
@@ -25,6 +26,7 @@ export function PortalLayout({
   navItems,
   profilePortal,
   quickActions,
+  notificationCount = 0,
   children,
 }: PortalLayoutProps): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -138,15 +140,27 @@ export function PortalLayout({
                 <div className="hidden h-6 w-px bg-[#EDECE6] sm:block" aria-hidden="true" />
               ) : null}
 
-              <button
-                type="button"
-                disabled
-                title="Notifications coming soon"
-                aria-label="Notifications (coming soon)"
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#EDECE6] bg-[#F9F9F6] text-[#0F2A1D]/40"
+              <Link
+                to={profilePortal === "admin" ? "/admin/bookings" : "/dashboard/bookings"}
+                title={
+                  notificationCount > 0
+                    ? `${notificationCount} pending booking${notificationCount === 1 ? "" : "s"}`
+                    : "Notifications"
+                }
+                aria-label={
+                  notificationCount > 0
+                    ? `${notificationCount} pending bookings`
+                    : "Notifications"
+                }
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#EDECE6] bg-[#F9F9F6] text-[#0F2A1D]/70 transition-colors hover:bg-white"
               >
                 <Bell className="h-4 w-4" />
-              </button>
+                {notificationCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C9A84C] px-1 text-[10px] font-semibold text-[#0F2A1D]">
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                ) : null}
+              </Link>
 
               <ProfileMenu variant="light" showName portal={profilePortal} />
             </div>

@@ -7,6 +7,7 @@ import {
   Users,
 } from "lucide-react";
 import { type ReactNode } from "react";
+import { useAdminPendingBookingsCount } from "../hooks/useAdminPendingBookingsCount";
 import { AdminQuickActionMenu } from "./AdminQuickActionMenu";
 import { PortalLayout } from "./PortalLayout";
 
@@ -24,12 +25,15 @@ const navItems = [
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
+  const pendingCount = useAdminPendingBookingsCount();
+
   return (
     <PortalLayout
       portalLabel="Admin Console"
       navItems={navItems}
       profilePortal="admin"
       quickActions={<AdminQuickActionMenu />}
+      notificationCount={pendingCount}
     >
       {children}
     </PortalLayout>

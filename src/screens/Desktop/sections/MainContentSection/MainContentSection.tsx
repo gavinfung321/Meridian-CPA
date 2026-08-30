@@ -219,7 +219,7 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
         </div>
       </section>
 
-      <BookingSection lang={lang} onBookClick={onBookClick} />
+      <BookingSection lang={lang} />
 
       <WhyUsSection lang={lang} />
       <AuditTimelineSection lang={lang} />

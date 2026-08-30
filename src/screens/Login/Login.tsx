@@ -25,7 +25,8 @@ export function Login(): JSX.Element {
   const [submitting, setSubmitting] = useState(false);
 
   const from =
-    (location.state as { from?: string } | null)?.from ?? "/dashboard";
+    (location.state as { from?: string; bookSessionId?: string } | null)?.from ?? "/dashboard";
+  const bookSessionId = (location.state as { bookSessionId?: string } | null)?.bookSessionId;
 
   useEffect(() => {
     document.title = "Sign in | Meridian CPA";
@@ -37,7 +38,15 @@ export function Login(): JSX.Element {
   }, []);
 
   if (!loading && user && profile) {
-    return <Navigate to={getPostLoginRoute(from, profile.role)} replace />;
+    const destination = getPostLoginRoute(from, profile.role);
+    const dashboardPath = profile.role === "admin" ? "/admin/dashboard" : "/dashboard";
+    return (
+      <Navigate
+        to={destination}
+        replace
+        state={bookSessionId && destination === dashboardPath ? { bookSessionId } : undefined}
+      />
+    );
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -53,7 +62,13 @@ export function Login(): JSX.Element {
       return;
     }
 
-    navigate(getPostLoginRoute(from, result.profile?.role), { replace: true });
+    navigate(getPostLoginRoute(from, result.profile?.role), {
+      replace: true,
+      state:
+        bookSessionId && result.profile?.role !== "admin"
+          ? { bookSessionId }
+          : undefined,
+    });
   };
 
   return (
