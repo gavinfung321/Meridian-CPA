@@ -1,3 +1,4 @@
+import { assertSessionBookable } from "./client-bookings";
 import { formatSessionSchedule, formatPrice } from "./session-admin";
 import { getDisplayName } from "./profile";
 import { supabase } from "./supabase";
@@ -58,6 +59,67 @@ export type AdminBookingRow = {
     } | null;
   } | null;
 };
+
+export const ADMIN_BOOKING_SELECT = `
+  id,
+  status,
+  cancel_reason,
+  cancelled_at,
+  created_at,
+  user:profiles!bookings_user_id_fkey (
+    id,
+    first_name,
+    last_name,
+    email
+  ),
+  session:sessions!bookings_session_id_fkey (
+    id,
+    title,
+    start_time,
+    price,
+    location,
+    session_type:session_types (
+      id,
+      name,
+      category:categories ( name )
+    )
+  )
+`;
+
+export async function fetchAdminPendingBookings(limit = 8): Promise<{
+  bookings: AdminBookingRow[];
+  total: number;
+}> {
+  const { data, error, count } = await supabase
+    .from("bookings")
+    .select(ADMIN_BOOKING_SELECT, { count: "exact" })
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return {
+    bookings: (data ?? []) as AdminBookingRow[],
+    total: count ?? 0,
+  };
+}
+
+export function formatBookingRelativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60_000);
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} min ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+
+  return formatBookingCreatedDate(iso);
+}
 
 const HK_TIMEZONE = "Asia/Hong_Kong";
 
@@ -134,6 +196,21 @@ export function matchesBookingDateRange(
   return true;
 }
 
+export function matchesBookingSearch(booking: AdminBookingRow, query: string): boolean {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+
+  const name = getBookingClientName(booking).toLowerCase();
+  const email = booking.user?.email?.toLowerCase() ?? "";
+  const sessionTitle = booking.session?.title?.toLowerCase() ?? "";
+
+  return (
+    name.includes(normalized) ||
+    email.includes(normalized) ||
+    sessionTitle.includes(normalized)
+  );
+}
+
 export function filterAdminBookings(
   bookings: AdminBookingRow[],
   statusFilter: BookingStatusFilter,
@@ -141,6 +218,7 @@ export function filterAdminBookings(
   dateRange: BookingDateRangeFilter,
   customFrom: string,
   customTo: string,
+  searchQuery = "",
 ): AdminBookingRow[] {
   return bookings.filter((booking) => {
     if (statusFilter !== "all" && booking.status !== statusFilter) return false;
@@ -160,6 +238,8 @@ export function filterAdminBookings(
     ) {
       return false;
     }
+
+    if (!matchesBookingSearch(booking, searchQuery)) return false;
 
     return true;
   });
@@ -271,14 +351,81 @@ export function hasActiveBookingFilters(
   dateRange: BookingDateRangeFilter,
   customFrom: string,
   customTo: string,
+  searchQuery = "",
 ): boolean {
   return (
     statusFilter !== "all" ||
     sessionTypeFilter !== "all" ||
     dateRange !== "all" ||
     Boolean(customFrom) ||
-    Boolean(customTo)
+    Boolean(customTo) ||
+    Boolean(searchQuery.trim())
   );
+}
+
+export type ManualBookingClient = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+};
+
+export type ManualBookingSession = {
+  id: string;
+  title: string;
+  start_time: string;
+  price: number;
+  max_slots: number;
+  is_cancelled: boolean;
+  bookings: Array<{ status: string; user_id: string }> | null;
+};
+
+export async function fetchManualBookingClients(): Promise<ManualBookingClient[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email")
+    .in("role", ["user", "client"])
+    .eq("status", "active")
+    .order("first_name", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as ManualBookingClient[];
+}
+
+export async function fetchManualBookingSessions(): Promise<ManualBookingSession[]> {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select(`
+      id,
+      title,
+      start_time,
+      price,
+      max_slots,
+      is_cancelled,
+      bookings ( status, user_id )
+    `)
+    .eq("is_cancelled", false)
+    .gt("start_time", new Date().toISOString())
+    .order("start_time", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as ManualBookingSession[];
+}
+
+export async function createAdminBooking(
+  userId: string,
+  sessionId: string,
+  status: "pending" | "confirmed" = "confirmed",
+): Promise<void> {
+  await assertSessionBookable(sessionId, userId);
+
+  const { error } = await supabase.from("bookings").insert({
+    session_id: sessionId,
+    user_id: userId,
+    status,
+  });
+
+  if (error) throw error;
 }
 
 export type BookingSortColumn = "client" | "session" | "date" | "price" | "status";

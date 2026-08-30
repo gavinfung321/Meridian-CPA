@@ -86,7 +86,7 @@ export function computeClientDashboardStats(
   };
 }
 
-async function assertSessionBookable(sessionId: string, userId: string): Promise<void> {
+export async function assertSessionBookable(sessionId: string, userId: string): Promise<void> {
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
     .select(`

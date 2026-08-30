@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CancelBookingModal } from "../../components/BookSessionModal";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import { bookingStatusStyles } from "../../lib/booking-admin";
 import {
   cancelClientBooking,
@@ -15,6 +16,7 @@ import type { BookingStatus } from "../../types/database";
 
 export function DashboardBookings(): JSX.Element {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [bookings, setBookings] = useState<ClientBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +51,12 @@ export function DashboardBookings(): JSX.Element {
     try {
       await cancelClientBooking(cancelTarget.id, user.id, reason);
       setCancelTarget(null);
+      showToast("Booking cancelled.");
       await loadBookings();
     } catch (cancelErr) {
-      setCancelError(cancelErr instanceof Error ? cancelErr.message : "Cancellation failed.");
+      const message = cancelErr instanceof Error ? cancelErr.message : "Cancellation failed.";
+      setCancelError(message);
+      showToast(message, "error");
     } finally {
       setCancelling(false);
     }

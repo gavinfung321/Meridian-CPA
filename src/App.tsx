@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import { ToastViewport } from "./components/ToastViewport";
 import { Language } from "./lib/translations";
 import { AboutUs } from "./screens/AboutUs/AboutUs";
 import { AdminBookings } from "./screens/Admin/AdminBookings";
@@ -33,8 +35,9 @@ export const App = (): JSX.Element => {
 
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<Desktop lang={lang} setLang={setLang} />} />
           <Route path="/about" element={<AboutUs lang={lang} setLang={setLang} />} />
           <Route path="/login" element={<Login />} />
@@ -71,7 +74,9 @@ export const App = (): JSX.Element => {
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
         </Routes>
+        <ToastViewport />
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 };

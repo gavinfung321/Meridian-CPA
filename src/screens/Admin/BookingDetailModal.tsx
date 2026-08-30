@@ -2,6 +2,7 @@ import { Calendar, Check, Clock, MapPin, Tag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminModal } from "../../components/AdminModal";
 import { Button } from "../../components/ui/button";
+import { useToast } from "../../contexts/ToastContext";
 import {
   bookingStatusStyles,
   canManageBookingStatus,
@@ -32,6 +33,7 @@ export function BookingDetailModal({
   onViewClient,
   onUpdated,
 }: BookingDetailModalProps): JSX.Element | null {
+  const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reasonAction, setReasonAction] = useState<BookingReasonAction | null>(null);
@@ -53,6 +55,7 @@ export function BookingDetailModal({
     setError(null);
     try {
       await updateBookingStatus(booking.id, "confirmed");
+      showToast("Booking approved.");
       onUpdated(booking.id);
     } catch (updateError) {
       setError(updateError instanceof Error ? updateError.message : "Failed to approve booking.");
@@ -69,6 +72,7 @@ export function BookingDetailModal({
       const nextStatus: BookingStatus = reasonAction === "reject" ? "rejected" : "cancelled";
       await updateBookingStatus(booking.id, nextStatus, reason);
       setReasonAction(null);
+      showToast(reasonAction === "reject" ? "Booking rejected." : "Booking cancelled.");
       onUpdated(booking.id);
     } catch (updateError) {
       setError(

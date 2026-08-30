@@ -1,9 +1,12 @@
 import { Eye } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
 import { useAuth } from "../../contexts/AuthContext";
+import { useBookingNotifications } from "../../hooks/useBookingNotifications";
 import { AdminSortableTh, toggleSortDirection } from "../../components/AdminSortableTh";
 import {
+  ADMIN_BOOKING_SELECT,
   filterAdminBookings,
   formatBookingCreatedDate,
   formatBookingPrice,
@@ -29,6 +32,7 @@ import { TableSkeleton } from "./catalog/TableSkeleton";
 
 export function AdminBookings(): JSX.Element {
   const { profile: currentProfile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
   const [sessionTypes, setSessionTypes] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +43,7 @@ export function AdminBookings(): JSX.Element {
   const [dateRange, setDateRange] = useState<BookingDateRangeFilter>("all");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedBooking, setSelectedBooking] = useState<AdminBookingRow | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
@@ -48,33 +53,7 @@ export function AdminBookings(): JSX.Element {
     setError(null);
 
     const [bookingsResult, typesResult] = await Promise.all([
-      supabase
-        .from("bookings")
-        .select(`
-          id,
-          status,
-          cancel_reason,
-          cancelled_at,
-          created_at,
-          user:profiles!bookings_user_id_fkey (
-            id,
-            first_name,
-            last_name,
-            email
-          ),
-          session:sessions!bookings_session_id_fkey (
-            id,
-            title,
-            start_time,
-            price,
-            location,
-            session_type:session_types (
-              id,
-              name,
-              category:categories ( name )
-            )
-          )
-        `),
+      supabase.from("bookings").select(ADMIN_BOOKING_SELECT),
       fetchSessionTypesWithCategories(),
     ]);
 
@@ -97,6 +76,34 @@ export function AdminBookings(): JSX.Element {
       .finally(() => setLoading(false));
   }, [loadBookings]);
 
+  useBookingNotifications(
+    useCallback(() => {
+      void loadBookings().catch(() => undefined);
+    }, [loadBookings]),
+  );
+
+  const bookingIdFromUrl = searchParams.get("booking");
+
+  useEffect(() => {
+    if (!bookingIdFromUrl || loading) return;
+
+    const match = bookings.find((booking) => booking.id === bookingIdFromUrl);
+    if (match) {
+      setSelectedBooking(match);
+      return;
+    }
+
+    if (bookings.length > 0) {
+      setSearchParams(
+        (params) => {
+          params.delete("booking");
+          return params;
+        },
+        { replace: true },
+      );
+    }
+  }, [bookingIdFromUrl, bookings, loading, setSearchParams]);
+
   const filteredBookings = useMemo(
     () =>
       filterAdminBookings(
@@ -106,8 +113,9 @@ export function AdminBookings(): JSX.Element {
         dateRange,
         customFrom,
         customTo,
+        searchQuery,
       ),
-    [bookings, statusFilter, sessionTypeFilter, dateRange, customFrom, customTo],
+    [bookings, statusFilter, sessionTypeFilter, dateRange, customFrom, customTo, searchQuery],
   );
 
   const sortedBookings = useMemo(
@@ -169,7 +177,21 @@ export function AdminBookings(): JSX.Element {
     dateRange,
     customFrom,
     customTo,
+    searchQuery,
   );
+
+  const closeBookingModal = () => {
+    setSelectedBooking(null);
+    if (searchParams.has("booking")) {
+      setSearchParams(
+        (params) => {
+          params.delete("booking");
+          return params;
+        },
+        { replace: true },
+      );
+    }
+  };
 
   const openBooking = (booking: AdminBookingRow) => {
     setSelectedBooking(booking);
@@ -223,6 +245,8 @@ export function AdminBookings(): JSX.Element {
           customTo={customTo}
           sessionTypes={sessionTypes}
           resultCount={sortedBookings.length}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
           onStatusChange={setStatusFilter}
           onSessionTypeChange={setSessionTypeFilter}
           onDateRangeChange={setDateRange}
@@ -308,7 +332,7 @@ export function AdminBookings(): JSX.Element {
       <BookingDetailModal
         booking={selectedBooking}
         open={selectedBooking !== null}
-        onClose={() => setSelectedBooking(null)}
+        onClose={closeBookingModal}
         onViewClient={(userId) => {
           setSelectedBooking(null);
           void openClientProfile(userId);

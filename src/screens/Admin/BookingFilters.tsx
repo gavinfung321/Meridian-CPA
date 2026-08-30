@@ -1,4 +1,4 @@
-import { Calendar, CalendarDays, CalendarRange, Clock, Search } from "lucide-react";
+import { Calendar, CalendarDays, CalendarRange, Clock, Search as SearchIcon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
   BOOKING_DATE_RANGE_OPTIONS,
@@ -13,7 +13,7 @@ const DATE_RANGE_ICONS: Record<BookingDateRangeFilter, LucideIcon> = {
   today: CalendarDays,
   week: Clock,
   month: Calendar,
-  custom: Search,
+  custom: SearchIcon,
 };
 
 interface SessionTypeOption {
@@ -29,6 +29,8 @@ interface BookingFiltersProps {
   customTo: string;
   sessionTypes: SessionTypeOption[];
   resultCount: number;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
   onStatusChange: (value: BookingStatusFilter) => void;
   onSessionTypeChange: (value: string) => void;
   onDateRangeChange: (value: BookingDateRangeFilter) => void;
@@ -44,6 +46,8 @@ export function BookingFilters({
   customTo,
   sessionTypes,
   resultCount,
+  searchQuery,
+  onSearchChange,
   onStatusChange,
   onSessionTypeChange,
   onDateRangeChange,
@@ -90,27 +94,41 @@ export function BookingFilters({
           </label>
         </div>
 
-        <div className="inline-flex flex-wrap rounded-lg border border-[#EDECE6] bg-[#F9F9F6] p-1">
-          {BOOKING_DATE_RANGE_OPTIONS.map((option) => {
-            const Icon = DATE_RANGE_ICONS[option.id];
-            const active = dateRange === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                title={option.label}
-                onClick={() => onDateRangeChange(option.id)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-[#0F2A1D] text-white shadow-sm"
-                    : "text-[#0F2A1D]/70 hover:text-[#0F2A1D]"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{option.label}</span>
-              </button>
-            );
-          })}
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end lg:justify-end">
+          <div className="inline-flex flex-wrap rounded-lg border border-[#EDECE6] bg-[#F9F9F6] p-1">
+            {BOOKING_DATE_RANGE_OPTIONS.map((option) => {
+              const Icon = DATE_RANGE_ICONS[option.id];
+              const active = dateRange === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  title={option.label}
+                  onClick={() => onDateRangeChange(option.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-[#0F2A1D] text-white shadow-sm"
+                      : "text-[#0F2A1D]/70 hover:text-[#0F2A1D]"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="relative block w-full sm:w-64">
+            <span className="sr-only">Search bookings</span>
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0F2A1D]/40" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search bookings…"
+              className={`${adminInputClassName} pl-9`}
+            />
+          </label>
         </div>
       </div>
 

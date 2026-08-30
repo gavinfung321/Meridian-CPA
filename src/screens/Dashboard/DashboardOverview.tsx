@@ -4,6 +4,7 @@ import { BookSessionModal } from "../../components/BookSessionModal";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import { bookingStatusStyles } from "../../lib/booking-admin";
 import {
   computeClientDashboardStats,
@@ -17,6 +18,7 @@ import type { BookingStatus } from "../../types/database";
 
 export function DashboardOverview(): JSX.Element {
   const { profile, user } = useAuth();
+  const { showToast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<ClientBookingRow[]>([]);
@@ -74,10 +76,13 @@ export function DashboardOverview(): JSX.Element {
     try {
       await createClientBooking(bookSession.id, user.id);
       setBookSession(null);
+      showToast("Booking request submitted — pending firm approval.");
       await loadBookings();
       navigate("/dashboard/bookings");
     } catch (submitError) {
-      setBookError(submitError instanceof Error ? submitError.message : "Booking failed.");
+      const message = submitError instanceof Error ? submitError.message : "Booking failed.";
+      setBookError(message);
+      showToast(message, "error");
     } finally {
       setBookSubmitting(false);
     }

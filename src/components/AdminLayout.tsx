@@ -6,8 +6,9 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { type ReactNode } from "react";
-import { useAdminPendingBookingsCount } from "../hooks/useAdminPendingBookingsCount";
+import { useState, type ReactNode } from "react";
+import { ManualBookingModal } from "../screens/Admin/ManualBookingModal";
+import { AdminNotificationBell } from "./AdminNotificationBell";
 import { AdminQuickActionMenu } from "./AdminQuickActionMenu";
 import { PortalLayout } from "./PortalLayout";
 
@@ -25,17 +26,27 @@ const navItems = [
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
-  const pendingCount = useAdminPendingBookingsCount();
+  const [manualBookingOpen, setManualBookingOpen] = useState(false);
 
   return (
-    <PortalLayout
-      portalLabel="Admin Console"
-      navItems={navItems}
-      profilePortal="admin"
-      quickActions={<AdminQuickActionMenu />}
-      notificationCount={pendingCount}
-    >
-      {children}
-    </PortalLayout>
+    <>
+      <PortalLayout
+        portalLabel="Admin Console"
+        navItems={navItems}
+        profilePortal="admin"
+        quickActions={
+          <AdminQuickActionMenu onManualBooking={() => setManualBookingOpen(true)} />
+        }
+        notifications={<AdminNotificationBell />}
+      >
+        {children}
+      </PortalLayout>
+
+      <ManualBookingModal
+        open={manualBookingOpen}
+        onClose={() => setManualBookingOpen(false)}
+        onCreated={() => undefined}
+      />
+    </>
   );
 }

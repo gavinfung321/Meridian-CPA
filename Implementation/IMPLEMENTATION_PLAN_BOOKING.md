@@ -6,33 +6,43 @@ This document outlines the detailed, step-by-step technical plan to implement us
 
 ---
 
-## Implementation Status
+## Roadmap at a glance
 
-| Phase | Name | Status | GitHub | Notes |
-|-------|------|--------|--------|-------|
-| **1** | Authentication & Profiles | **Complete** | [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) (closed) | Auth, profiles, avatars, dashboard shells, base schema |
-| **2** | Session & Category Management | **Complete** | [#5](https://github.com/gavinfung321/Meridian-CPA/issues/5) | Sessions/taxonomy, landing page, recurrence UI, images |
-| **2.5** | Unified Catalog UX *(best path)* | **Complete** | — | Tabbed catalog + modals at `/admin/sessions` |
-| **4.5** | Live People Directory | **Complete** | — | Live `/admin/clients`, role filters, ClientProfileModal, table hover, sidebar toggle |
-| **3** | Booking Logic & Evolution | **Complete** | — | Live bookings admin + client flow, admin overview, bell badge |
-| **4** | History & Logging | **Next** | — | Login/session/booking audit trails |
-| **5** | Admin Controls & Reporting | Not started | — | Search, promote/demote, full detail edit, charts, `app_settings` |
+Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). The **Order** column is how to read this doc — grouped by feature domain, not always the exact day we merged each branch.
 
-> **Phase alignment:** Our earlier plan grouped work by technical layer (DB → email → auth UI → client dashboard → admin dashboard). The phases below follow the **feature-domain roadmap** (Auth → Sessions → Bookings → Logging → Admin). All prior checklist items are preserved inside the matching phase.
+| Order | Phase | Name | Status | Delivers |
+|------:|-------|------|--------|----------|
+| 1 | **1** | Authentication & Profiles | ✅ Complete | Auth, profiles, avatars, DB schema, dashboard shells |
+| 2 | **2** | Session & Category Management | ✅ Complete | Categories, types, sessions CRUD, landing page live sessions |
+| 3 | **2.5** | Unified Catalog UX | ✅ Complete | Tabbed `/admin/sessions` hub, modals, catalog polish |
+| 4 | **3** | Booking Logic & Evolution | ✅ Complete | Client book flow, admin bookings, live overviews, bell badge |
+| 5 | **4.5** | Live People Directory | ✅ Complete | Live `/admin/clients`, filters, ClientProfileModal |
+| 6 | **4** | History & Logging | **Next** | Login / session / booking audit trails |
+| 7 | **5** | Admin Controls & Reporting | Not started | Search, promote/demote, charts, `app_settings` |
 
-**Phase 1 delivered (Aug 2026):**
-- Supabase project linked; core migrations applied remotely
-- Full base schema: `profiles`, `sessions`, `bookings`, audit log tables, enums, triggers, RLS
-- Profile extensions: names, contact/address fields, `avatar_path`, `profile-pictures` storage bucket
-- Auth: signup, login, forgot/reset password, session context, role-based `ProtectedRoute`, not-authorized page
-- Profile UI: `/profile`, `/dashboard/profile`, `/admin/profile` with avatar upload and full contact/address form
-- Homepage profile avatar menu with role-based Dashboard/Admin links and context-aware logout
-- Mock client portal (`/dashboard/*`) and admin console (`/admin/*`) layout shells for routing QA
+**Why 4.5 exists:** The people directory was built early *(only needs `profiles`, not bookings)* but keeps the label **4.5** from the original plan — meaning “inserted between audit prep and Phase 5 admin controls,” not “half of Phase 4.”
 
-**Carried forward from prior plan (not yet scheduled in Phases 2–5):**
-- Supabase Edge Functions + email notifications (Resend/SendGrid) — assign to Phase 3 when booking status changes go live
-- Top-left toast system (`react-hot-toast` or custom) — polish during Phase 3 or 5
+**What's next:** Phase **4** — wire audit tables (`user_login_history`, `session_history`, `booking_history`) and admin views.
+
+### Document map
+
+| Section | Purpose |
+|---------|---------|
+| **§1–2** | Architecture, brand, layout system *(reference while building UI)* |
+| **§3** | Reference crosswalk *(Personal Trainer → Meridian CPA)* |
+| **§4** | Page routes & URL slugs |
+| **§5–6** | Database schema, RLS, triggers *(reference)* |
+| **§7** | **Implementation phases** — full checklists *(execution order)* |
+| **§8** | QA summary — one paragraph per phase |
+
+> **Phase 1 detail:** [PHASE_1_AUTH_PROFILES.md](./PHASE_1_AUTH_PROFILES.md)
+
+### Carried forward *(not blocking Phase 4)*
+
+- Supabase Edge Functions + email (Resend/SendGrid) — after Realtime/toast polish
+- Top-left toast system — optional polish
 - Production `/reset-password` redirect URL — add on deploy
+- Booking search, client notification bell — optional polish
 
 ---
 
@@ -80,10 +90,10 @@ Inspired by modern SaaS dashboards (reference: quick-action + profile cluster to
 
 - **Left (desktop):** optional page title or breadcrumb for deep routes (e.g. Edit session)
 - **Center / left-of-right:** single **Quick action** dropdown *(admin only)* — one Forest Green button opening a menu; not multiple header buttons or page-level action grids
-  - **Admin menu items:** New session *(Phase 2 ✅)*; Manual booking *(Phase 3 — disabled until live)*; Add client *(Phase 5 — disabled until live)*
+  - **Admin menu items:** New session *(Phase 2 ✅)*; Manual booking *(Phase 3 ✅)*; Add client *(Phase 5)*
   - **Client portal:** single **Book a session** link/button *(no dropdown needed — one action)*
 - **Right cluster:** `[ Quick action ▾ ] | [ 🔔 ] [ Avatar + name ▾ ]` — vertical separator between quick action and utilities
-  - **🔔 Bell:** placeholder in Phase 1–2; wired in **Phase 3** with Realtime booking notifications *(see §7 Phase 3 — Notifications)*
+  - **🔔 Bell:** pending booking count badge *(Phase 3 ✅)* — links to `/admin/bookings`
 
 #### Profile menu — shared component
 
@@ -102,8 +112,8 @@ One **Quick action** button in the admin header — Forest Green `#0F2A1D` trigg
 | Menu item | Route / behaviour | Phase |
 |-----------|-------------------|-------|
 | New session | `/admin/sessions/new` | 2 ✅ |
-| Manual booking | Disabled — “Coming in Phase 3” | 3 |
-| Add client | Disabled — “Coming in Phase 5” | 5 |
+| Manual booking | Quick action → `ManualBookingModal` | 3 ✅ |
+| Add client | Disabled — Phase 5 | 5 |
 
 **Do not duplicate** quick actions on overview pages or per-page headers. Sidebar covers navigation; header dropdown covers infrequent creates. Page-level buttons (e.g. “Manage taxonomy” on Sessions) are allowed for contextual secondary links only.
 
@@ -130,13 +140,14 @@ Remove `MockupBanner` progressively as live data ships:
 
 | Page | Remove banner when |
 |------|-------------------|
-| `/admin/sessions` | ✅ Live CRUD wired — remove banner |
-| `/admin/dashboard` | Phase 3 metrics live |
-| `/admin/bookings` | Phase 3 status actions wired |
-| `/admin/clients` | ✅ Live read-only directory from `profiles` |
-| `/dashboard/*` | Phase 3 booking data live |
+| `/admin/sessions` | ✅ Live CRUD |
+| `/admin/dashboard` | ✅ Phase 3 live metrics |
+| `/admin/bookings` | ✅ Phase 3 live list + actions |
+| `/admin/clients` | ✅ Phase 4.5 live directory |
+| `/dashboard/*` | ✅ Phase 3 live bookings |
+| `/admin/settings` | Phase 5 |
 
-> **Next focus (Phase 4):** Audit trails (`user_login_history`, `session_history`, `booking_history`). Phase 3 booking core is **complete**.
+> **Next focus:** Phase **4** — audit trails. All phases through **4.5** are complete.
 
 #### Profile data sync status *(what is live today)*
 
@@ -571,6 +582,20 @@ create trigger on_booking_change
 
 ## 7. Implementation Phases
 
+Phases below are in **execution order** (same as the roadmap table at the top). Each phase builds on the previous.
+
+| # | Phase | Status |
+|---|-------|--------|
+| 1 | [Phase 1 — Authentication & Profiles](#phase-1-authentication--profiles--complete) | ✅ |
+| 2 | [Phase 2 — Session & Category Management](#phase-2-session--category-management--complete) | ✅ |
+| 3 | [Phase 2.5 — Unified Catalog UX](#phase-25-unified-catalog-ux-best-path---complete) | ✅ |
+| 4 | [Phase 3 — Booking Logic & Evolution](#phase-3-booking-logic--evolution--complete) | ✅ |
+| 5 | [Phase 4.5 — Live People Directory](#phase-45-live-people-directory--complete) | ✅ |
+| 6 | [Phase 4 — History & Logging](#phase-4-history--logging) | **Next** |
+| 7 | [Phase 5 — Admin Controls & Reporting](#phase-5-admin-controls--reporting-after-phase-4) | Pending |
+
+---
+
 ### Phase 1: Authentication & Profiles ✅ **COMPLETE**
 
 Core auth, profile sync, avatars, dashboard shells, and base database schema.
@@ -644,7 +669,7 @@ Admin-managed taxonomy and session slots. **In scope now.** Bookings and clients
 
 ### Phase 2.5: Unified Catalog UX *(best path)* — ✅ **COMPLETE**
 
-> **Goal:** Merge the reference trainer’s **tabbed catalog + modal CRUD** pattern with Meridian’s **brand, data model, and rich session forms**. No new schema required — UI refactor only. **Complete before Phase 3** so admins have a polished catalog before booking volume grows.
+> **Goal:** Merge the reference trainer’s **tabbed catalog + modal CRUD** pattern with Meridian’s **brand, data model, and rich session forms**. No new schema required — UI refactor only. ✅ **Completed before Phase 3** so admins had a polished catalog before booking volume grew.
 
 #### Design principles
 
@@ -671,9 +696,9 @@ Admin-managed taxonomy and session slots. **In scope now.** Bookings and clients
 
 Replace current `/admin/sessions` table with catalog-styled layout:
 
-- [ ] Section title: **Upcoming Schedule** with live count
-- [ ] Table columns: **Session** (title + type), **Date & Time**, **Capacity** (booked/max), **Price**, **Status** (Active / Cancelled pill)
-- [ ] Row actions: **Edit** → `/admin/sessions/edit/:id`; **Cancel** / **Reactivate** inline *(reason modal on cancel)*
+- [x] Section title: **Upcoming Schedule** with live count
+- [x] Table columns: **Session** (title + type), **Date & Time**, **Capacity** (booked/max), **Price**, **Status** (Active / Cancelled pill)
+- [x] Row actions: **Edit** → `/admin/sessions/edit/:id`; **Cancel** / **Reactivate** inline *(reason modal on cancel)*
 - [x] Primary CTA: **+ New Session** in tab toolbar only *(header Quick action is separate global shortcut)*
 - [x] Empty state: *Use **+ New Session** above to create your first bookable slot.* — copy only, no second CTA
 - [x] Loading skeleton rows
@@ -751,14 +776,14 @@ Absorb `/admin/taxonomy` categories column:
 
 #### Components to build *(implementation checklist)*
 
-- [ ] `AdminCatalogPage` — shell with title, subtitle, tab bar, tab panel outlet
-- [ ] `CatalogSessionsTab` — refactor from `AdminSessions.tsx`
-- [ ] `CatalogSessionTypesTab` — extract from `AdminTaxonomy.tsx` + modal
-- [ ] `CatalogCategoriesTab` — extract from `AdminTaxonomy.tsx` + modal
-- [ ] `CategoryFormModal`, `SessionTypeFormModal` — shared modal pattern
-- [ ] `SessionCancelModal` — reuse/adapt from edit-page cancel flow for inline row action
-- [ ] Route redirect `/admin/taxonomy` in `App.tsx`
-- [ ] Deprecate standalone `AdminTaxonomy.tsx` after migration
+- [x] `AdminCatalogPage` — shell with title, subtitle, tab bar, tab panel outlet
+- [x] `CatalogSessionsTab` — refactor from `AdminSessions.tsx`
+- [x] `CatalogSessionTypesTab` — extract from `AdminTaxonomy.tsx` + modal
+- [x] `CatalogCategoriesTab` — extract from `AdminTaxonomy.tsx` + modal
+- [x] `CategoryFormModal`, `SessionTypeFormModal` — shared modal pattern
+- [x] `SessionCancelModal` — reuse/adapt from edit-page cancel flow for inline row action
+- [x] Route redirect `/admin/taxonomy` in `App.tsx`
+- [x] Deprecate standalone `AdminTaxonomy.tsx` after migration
 
 #### Catalog UX polish *(Phase 2.5 follow-up)* — ✅ **COMPLETE**
 
@@ -788,16 +813,95 @@ Absorb `/admin/taxonomy` categories column:
 
 ---
 
+### Phase 3: Booking Logic & Evolution — ✅ **COMPLETE**
+
+Client booking flow, business rules, live dashboard data, and admin bookings management.
+
+#### Step 0 — Enable Realtime on `bookings` *(Phase 3 kickoff — infra only)*
+
+> **Do this first** when Phase 3 begins — before frontend listeners or bell UI. **Not Phase 2** *(no booking events to consume yet)*.
+
+Migration adds `bookings` to the Supabase Realtime publication. RLS from Phase 1 already governs who may **receive** row events.
+
+```sql
+-- supabase/migrations/YYYYMMDDHHMMSS_bookings_realtime.sql
+alter publication supabase_realtime add table public.bookings;
+```
+
+**Step 0 checklist:**
+- [x] Create migration: `alter publication supabase_realtime add table public.bookings`
+- [ ] Apply via `supabase db push` (or equivalent) — migration file committed *(run locally; CLI not in PATH on dev machine)*
+- [ ] Verify in Supabase Dashboard → Database → Replication
+
+**Then proceed** with booking CRUD, client book flow, `useBookingNotifications`, and bell/toast UI in the same phase so end-to-end QA is possible.
+
+#### Admin `/admin/bookings` scope
+
+Bookings are **status-managed**, not fully editable records:
+
+| Operation | Scope |
+|-----------|--------|
+| **Create** | Clients via booking flow; optional admin manual booking for walk-ins |
+| **Read** | Live list with joins (`profiles`, `sessions`); filter by status; search client |
+| **Update** | **Approve**, **Reject**, **Cancel** with required reason modal |
+| **Delete** | Avoid hard delete; use `cancelled` / `rejected` status |
+
+**UI checklist:**
+- [x] Live Supabase list (replace mock rows)
+- [x] Status filter dropdown *(All | Pending | Confirmed | Cancelled | Rejected)*
+- [x] Session type filter dropdown
+- [x] Date range filter *(All | Today | Week | Month | Custom with from/to)*
+- [x] **Row click** → `BookingDetailModal` (view booking; **View client** opens `ClientProfileModal`)
+- [x] Column sorting on all data columns *(client-side)*
+- [x] Search by client name/email *(also matches session title)*
+- [x] Row actions: **View** (eye icon) in table; **Approve / Reject / Cancel** in booking modal
+- [x] Reason modal on Reject and Cancel
+- [x] **Booking detail modal** — row click opens inspector; **View client** opens `ClientProfileModal`
+- [x] Remove `MockupBanner` from `/admin/bookings`
+- [x] Manual booking quick action *(admin header → `ManualBookingModal`)*
+- [ ] Optional: `/admin/bookings/:id` detail view
+
+#### Notifications *(Phase 3 — partial)*
+
+| Channel | When | Implementation |
+|---------|------|----------------|
+| **In-app realtime** | New booking submitted; admin approves/rejects/cancels; client booking status changes | Supabase **Realtime** via `useBookingNotifications` *(requires migration applied)* |
+| **Header bell badge** | Admin: pending booking count + dropdown list | ✅ Dropdown with pending items → `/admin/bookings?booking=<id>` |
+| **Toast messages** | After user actions *(book, cancel, admin approve)* | ✅ `ToastProvider` top-left *(Forest Green / Gold)* |
+| **Email** | Booking confirmation, rejection, cancellation | Edge Function + Resend/SendGrid — deferred |
+
+**Notification checklist** *(bell + toasts + Realtime hook shipped; email deferred)*:
+- [x] `useBookingNotifications` hook — Realtime subscription on `bookings`
+- [x] Header 🔔: pending booking count badge *(admin)*
+- [x] Toast provider for booking action feedback
+- [ ] Edge Function + email templates for status changes
+
+#### Other Phase 3 items
+
+- [x] Implement Booking flow for clients (homepage `#booking` → submit pending booking)
+- [x] Logic: First booking promotion (`user` → `client`) *(DB trigger — verify on next signup test)*
+- [x] Constraint: Reject booking when session `max_slots` is full *(client-side check on book)*
+- [x] Admin Dashboard: Overview widgets (occupancy, revenue, active clients, pending bookings)
+- [x] Admin Dashboard: Popular categories + recent activity from live bookings
+- [x] Client `/dashboard` landing: upcoming/pending counts + next session card
+- [x] Client `/dashboard/bookings`: live table + cancel with reason
+- [ ] Constraint: Check `app_settings.max_booking_days_advance` *(needs Phase 5 `app_settings`)*
+- [ ] Configure production **Authentication → Redirect URLs** for `/reset-password`
+
+**Mock UI replaced:** `/dashboard`, `/dashboard/bookings`, `/admin/dashboard`, `/admin/bookings`
+
 ---
 
 ### Phase 4.5: Live People Directory — ✅ **COMPLETE**
 
-> **Goal:** Sync `/admin/clients` with live Supabase `profiles` so admins see **real registered users** (e.g. Gavin Fung) instead of mock samples (`marcus@example.com`). **No bookings dependency** — RLS already allows admins to read all profiles.
+> **Goal:** Sync `/admin/clients` with live Supabase `profiles` so admins see **real registered users** instead of mock samples. **No bookings dependency** — RLS already allows admins to read all profiles.
 
-#### Why now (before Phase 3)
+#### Why we shipped this before Phase 3 *(historical)*
+
+We built the people directory after Phase 2.5 and **before** booking go-live because it only needed `profiles` — not booking data. Phase numbers **4.5** vs **3** reflect original planning labels, not build order.
 
 - Profile schema, signup trigger, and admin RLS exist since Phase 1
-- Admin profile pages and header menu already read live data — only the **Clients directory** is still mock
+- Admin profile pages and header menu already read live data — only the **Clients directory** was still mock
 - Low risk: read-only list swap; basic lifecycle (ban/reinstate, edit) added in Phase 4.5 polish; promote/demote deferred to Phase 5
 
 #### Step 0 checklist — wire `/admin/clients`
@@ -826,109 +930,25 @@ Shared hover styles in `src/lib/table-styles.ts`:
 
 - [x] **Clients** — hover + cursor-pointer on interactive rows
 - [x] **Sessions** (catalog Active Sessions tab) — hover highlight
-- [x] **Bookings** — hover highlight *(mock list until Phase 3)*
+- [x] **Bookings** — hover highlight *(live list — Phase 3 ✅)*
 
 #### Out of scope for Phase 4.5
 
 - Search and banned status filter *(Phase 5)*
 - Promote / demote `user` ↔ `client` *(Phase 5)*
 - Admin avatar upload on client profiles *(Phase 5 — storage policy)*
-- Booking count column *(Phase 3/5 — needs live bookings)*
+- Booking count column *(Phase 5 — optional enhancement)*
 - Login audit tab *(Phase 4)*
 
 **QA (Phase 4.5):**
 - Signing up a new user → row appears on `/admin/clients` after refresh
-- Admin account (e.g. Gavin Fung) visible with `admin` role badge
-- Mockup banner gone; no `example.com` placeholder emails
+- Admin account visible with `admin` role badge
+- Mockup banner gone; no placeholder emails
 - Profile pages (`/admin/profile`, etc.) unchanged and still live
 - **Role tabs** filter list correctly (All / Users / Clients / Admins)
 - **Row click** opens ClientProfileModal; **Edit** icon opens edit mode; **Ban** icon opens confirm dialog
 - **Sidebar chevron** visible on mobile when drawer closed; desktop collapse/expand works
 - **Table rows** show cream hover on sessions, bookings, clients tables
-
----
-
-### Phase 3: Booking Logic & Evolution — ✅ **COMPLETE**
-
-Client booking flow, business rules, live dashboard data, and admin bookings management.
-
-#### Step 0 — Enable Realtime on `bookings` *(Phase 3 kickoff — infra only)*
-
-> **Do this first** when Phase 3 begins — before frontend listeners or bell UI. **Not Phase 2** *(no booking events to consume yet)*.
-
-Migration adds `bookings` to the Supabase Realtime publication. RLS from Phase 1 already governs who may **receive** row events.
-
-```sql
--- supabase/migrations/YYYYMMDDHHMMSS_bookings_realtime.sql
-alter publication supabase_realtime add table public.bookings;
-```
-
-**Step 0 checklist:**
-- [x] Create migration: `alter publication supabase_realtime add table public.bookings`
-- [ ] Apply via `supabase db push` (or equivalent) — migration file committed
-- [ ] Verify in Supabase Dashboard → Database → Replication
-
-**Then proceed** with booking CRUD, client book flow, `useBookingNotifications`, and bell/toast UI in the same phase so end-to-end QA is possible.
-
-#### Admin `/admin/bookings` scope
-
-Bookings are **status-managed**, not fully editable records:
-
-| Operation | Scope |
-|-----------|--------|
-| **Create** | Clients via booking flow; optional admin manual booking for walk-ins |
-| **Read** | Live list with joins (`profiles`, `sessions`); filter by status; search client |
-| **Update** | **Approve**, **Reject**, **Cancel** with required reason modal |
-| **Delete** | Avoid hard delete; use `cancelled` / `rejected` status |
-
-**UI checklist:**
-- [x] Live Supabase list (replace mock rows)
-- [x] Status filter dropdown *(All | Pending | Confirmed | Cancelled | Rejected)*
-- [x] Session type filter dropdown
-- [x] Date range filter *(All | Today | Week | Month | Custom with from/to)*
-- [x] **Row click** → `BookingDetailModal` (view booking; **View client** opens `ClientProfileModal`)
-- [x] Column sorting on all data columns *(client-side)*
-- [ ] Search by client name/email
-- [x] Row actions: **View** (eye icon) in table; **Approve / Reject / Cancel** in booking modal
-- [x] Reason modal on Reject and Cancel
-- [x] **Booking detail modal** — row click opens inspector; **View client** opens `ClientProfileModal`
-- [x] Remove `MockupBanner` from `/admin/bookings`
-- [ ] Context-aware header: enable Manual booking item when Phase 3 ships; enable Add client when Phase 5 ships
-- [ ] Optional: `/admin/bookings/:id` detail view
-
-#### Notifications *(Phase 3 — not Phase 2)*
-
-> **Scope:** All notification work ships with **bookings**, when there is something to notify about. Phase 2/2.5 deliver catalog CRUD only; the header bell remains a non-functional placeholder until Phase 3.
-
-| Channel | When | Implementation |
-|---------|------|----------------|
-| **In-app realtime** | New booking submitted; admin approves/rejects/cancels; client booking status changes | Supabase **Realtime** subscription on `bookings` *(+ optional `postgres_changes` filter by `user_id` / admin)* |
-| **Header bell badge** | Admin: pending booking count; Client: unread status updates | Poll or Realtime-driven count; dropdown list of recent booking events *(Phase 3)* |
-| **Toast messages** | After user actions *(book, cancel, admin approve)* | Top-left toast provider *(Forest Green/Gold)* — `react-hot-toast` or custom *(Phase 3)* |
-| **Email** | Booking confirmation, rejection, cancellation | Supabase Edge Function `booking-notifier` + **Resend** / **SendGrid** *(async — not realtime, but part of notification stack)* |
-
-**Phase 3 notification checklist** *(partial — bell badge shipped; Realtime/toast/email deferred)*:
-- [ ] `useBookingNotifications` hook — full Realtime subscription
-- [x] Header 🔔: pending booking count badge *(admin; links to `/admin/bookings`)*
-- [ ] Toast provider for booking action feedback
-- [ ] Edge Function + email templates for status changes
-
-#### Other Phase 3 items
-
-- [x] Implement Booking flow for clients (homepage `#booking` → submit pending booking)
-- [x] Logic: First booking promotion (`user` → `client`) *(DB trigger — verify on next signup test)*
-- [x] Constraint: Reject booking when session `max_slots` is full *(client-side check on book)*
-- [x] Admin Dashboard: Overview widgets (occupancy, revenue, active clients, pending bookings)
-- [x] Admin Dashboard: Popular categories + recent activity from live bookings
-- [x] Client `/dashboard` landing: upcoming/pending counts + next session card
-- [x] Client `/dashboard/bookings`: live table + cancel with reason
-- [ ] Constraint: Check `app_settings.max_booking_days_advance` *(needs Phase 5 `app_settings`)*
-- [ ] Configure production **Authentication → Redirect URLs** for `/reset-password`
-- [ ] Manual booking quick action *(admin header)*
-
-*(Notification items — Realtime, bell, toasts, email — are listed in **§ Notifications** above.)*
-
-**Existing mock UI to replace:** `/dashboard`, `/dashboard/bookings`, `/admin/dashboard`, `/admin/bookings` ✅ *Phase 1*
 
 ---
 
@@ -1025,11 +1045,25 @@ Items from the old layer-based phases map to the feature phases above:
 | Edge Functions & Email | **Phase 3** |
 | Public Routing & Authentication | **Phase 1** ✅ (+ toast polish in **Phase 3**) |
 | Client Dashboard (`/dashboard/*`) | **Phase 3** (profile done in **Phase 1** ✅) |
-| Admin Dashboard (`/admin/*`) | **Phase 2** ✅ (sessions), **Phase 2.5** ✅ (catalog), **Phase 4.5** ✅ (clients read-only), **Phase 3** (bookings/overview), **Phase 4** (audit), **Phase 5** (clients management/reporting/settings) |
+| Admin Dashboard (`/admin/*`) | **Phase 2** ✅ (sessions), **Phase 2.5** ✅ (catalog), **Phase 3** ✅ (bookings/overview), **Phase 4.5** ✅ (clients), **Phase 4** (audit), **Phase 5** (management/reporting/settings) |
 
 ---
 
 ## 8. Verification & QA Plan
+
+Short pass/fail summary per phase. Full checklists live in **§7** above.
+
+| Phase | §7 section |
+|-------|------------|
+| 1 | [Phase 1](#phase-1-authentication--profiles--complete) |
+| 2 | [Phase 2](#phase-2-session--category-management--complete) |
+| 2.5 | [Phase 2.5](#phase-25-unified-catalog-ux-best-path---complete) |
+| 3 | [Phase 3](#phase-3-booking-logic--evolution--complete) |
+| 4.5 | [Phase 4.5](#phase-45-live-people-directory--complete) |
+| 4 | [Phase 4](#phase-4-history--logging) |
+| 5 | [Phase 5](#phase-5-admin-controls--reporting-after-phase-4) |
+
+---
 
 ### Phase 1 — Verified ✅
 - ✅ **Auth flows:** Sign up, login, forgot/reset password, logout (context-aware)
@@ -1056,6 +1090,16 @@ Items from the old layer-based phases map to the feature phases above:
 - **Redirects:** `/admin/taxonomy` → types tab; full pages kept for session new/edit
 - **Polish:** Category table with descriptions; Actions headers; seed type names + base prices (HKD)
 
+### Phase 3 — Booking Logic & Evolution ✅
+- **Admin bookings:** Live list, filters, sort, search, view modal, approve/reject/cancel with reason
+- **Admin overview:** Live occupancy, projected revenue, active clients, pending count, category chart, recent activity
+- **Client booking:** Homepage session cards → login → book → pending status
+- **Client dashboard:** Live stats, next session, bookings list with cancel
+- **Bell badge:** Admin pending bookings count in header *(Realtime + fallback poll)*
+- **Toasts:** Top-left feedback on book, cancel, and admin status actions
+- **Manual booking:** Admin quick action → create booking for client
+- **Deferred:** Email edge function, `app_settings` window, production reset URL
+
 ### Phase 4.5 — Live People Directory ✅
 - **Live `/admin/clients`:** Live list from `profiles`; mock samples removed
 - **All roles:** `user`, `client`, `admin` with avatar, name, email, role, status, joined
@@ -1065,14 +1109,6 @@ Items from the old layer-based phases map to the feature phases above:
 - **Sidebar toggle:** Expand/collapse chevron fixed outside sidebar edge (mobile + desktop)
 - **Detail page:** `/admin/clients/:id` read-only fallback for deep links
 - **Deferred to Phase 5:** Search, promote/demote, full Option B detail page + avatar upload
-
-### Phase 3 — Booking Logic & Evolution ✅
-- **Admin bookings:** Live list, filters, sort, view modal, approve/reject/cancel with reason
-- **Admin overview:** Live occupancy, projected revenue, active clients, pending count, category chart, recent activity
-- **Client booking:** Homepage session cards → login → book → pending status
-- **Client dashboard:** Live stats, next session, bookings list with cancel
-- **Bell badge:** Admin pending bookings count in header
-- **Deferred:** Realtime push, toasts, email edge function, booking search, manual booking, `app_settings` window
 
 ### Phase 4 — History & Logging (next)
 - **Login audit:** Successful sign-in writes to `user_login_history`

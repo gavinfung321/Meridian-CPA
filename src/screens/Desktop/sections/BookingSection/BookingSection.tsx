@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookSessionModal } from "../../../../components/BookSessionModal";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useToast } from "../../../../contexts/ToastContext";
 import { createClientBooking } from "../../../../lib/client-bookings";
 import { translations, Language } from "../../../../lib/translations";
 import { fetchPublicSessions, type PublicSessionCard } from "../../../../lib/public-sessions";
@@ -15,6 +16,7 @@ interface BookingSectionProps {
 
 export const BookingSection = ({ lang }: BookingSectionProps) => {
   const { user, profile } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [typeFilter, setTypeFilter] = useState<SessionTypeFilter>("all");
   const [locationFilter, setLocationFilter] = useState<SessionLocationFilter>("all");
@@ -82,15 +84,18 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
     try {
       await createClientBooking(bookSession.id, user.id);
       setBookSession(null);
-      setBookSuccess(
+      const message =
         lang === "zh"
           ? "預約請求已提交，等待審批。"
-          : "Booking request submitted — pending firm approval.",
-      );
+          : "Booking request submitted — pending firm approval.";
+      setBookSuccess(message);
+      showToast(message);
       const data = await fetchPublicSessions(locale);
       setSessions(data);
     } catch (submitError) {
-      setBookError(submitError instanceof Error ? submitError.message : "Booking failed.");
+      const message = submitError instanceof Error ? submitError.message : "Booking failed.";
+      setBookError(message);
+      showToast(message, "error");
     } finally {
       setBookSubmitting(false);
     }

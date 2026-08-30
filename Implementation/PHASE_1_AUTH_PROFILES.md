@@ -148,7 +148,7 @@ Legacy single `phone` column replaced by `phone_prefix` + `phone_number` in migr
 - [x] User can remove their profile picture
 - [x] Avatar shows initials when no profile picture is set
 - [x] User cannot access another user's profile picture URL (private bucket)
-- [ ] Admin can view any user's profile picture (for future admin client views) — *RLS in place; admin client UI not built yet*
+- [x] Admin can view any user's profile picture — *via `/admin/clients` + `ClientProfileModal` (Phase 4.5)*
 - [x] Profile form saves first name, last name, phone prefix/number, and address fields
 - [x] Log out from homepage dropdown clears session and **stays on homepage** (header shows Login, not avatar)
 - [x] Sidebar footer shows display name (e.g. "Gavin Fung"), not stale `full_name` like "New User"

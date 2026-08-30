@@ -18,9 +18,10 @@ interface QuickActionItem {
   disabled?: boolean;
   disabledReason?: string;
   onNavigate?: () => void;
+  onClick?: () => void;
 }
 
-const adminQuickActions: QuickActionItem[] = [
+const buildAdminQuickActions = (onManualBooking?: () => void): QuickActionItem[] => [
   {
     label: "New session",
     to: "/admin/sessions/new",
@@ -38,12 +39,16 @@ const adminQuickActions: QuickActionItem[] = [
     label: "Manual booking",
     icon: ClipboardPlus,
     iconClassName: "bg-[#C9A84C]/20 text-[#0F2A1D]",
-    disabled: true,
-    disabledReason: "Coming in Phase 3",
+    onClick: onManualBooking,
   },
 ];
 
-export function AdminQuickActionMenu(): JSX.Element {
+interface AdminQuickActionMenuProps {
+  onManualBooking?: () => void;
+}
+
+export function AdminQuickActionMenu({ onManualBooking }: AdminQuickActionMenuProps): JSX.Element {
+  const adminQuickActions = buildAdminQuickActions(onManualBooking);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -117,7 +122,7 @@ export function AdminQuickActionMenu(): JSX.Element {
               </>
             );
 
-            if (item.disabled || !item.to) {
+            if (item.disabled || (!item.to && !item.onClick)) {
               return (
                 <div
                   key={item.label}
@@ -130,10 +135,27 @@ export function AdminQuickActionMenu(): JSX.Element {
               );
             }
 
+            if (item.onClick) {
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    item.onClick?.();
+                    closeMenu();
+                  }}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-[#0F2A1D] hover:bg-[#F9F9F6]"
+                >
+                  {content}
+                </button>
+              );
+            }
+
             return (
               <Link
                 key={item.label}
-                to={item.to}
+                to={item.to!}
                 role="menuitem"
                 onClick={closeMenu}
                 className="flex items-center gap-3 px-3 py-2.5 text-[#0F2A1D] hover:bg-[#F9F9F6]"
