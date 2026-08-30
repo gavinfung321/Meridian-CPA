@@ -111,6 +111,7 @@ export function AdminSessionForm(): JSX.Element {
           setSessionTypeId(firstType.id);
           setDurationMinutes(firstType.default_duration_minutes);
           setPrice(Number(firstType.default_price));
+          setMaxSlots(firstType.default_max_slots ?? 1);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -131,6 +132,7 @@ export function AdminSessionForm(): JSX.Element {
     if (!selectedSessionType || isEditing) return;
     setDurationMinutes(selectedSessionType.default_duration_minutes);
     setPrice(Number(selectedSessionType.default_price));
+    setMaxSlots(selectedSessionType.default_max_slots ?? 1);
   }, [selectedSessionType, isEditing]);
 
   useEffect(() => {

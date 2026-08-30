@@ -7,6 +7,7 @@ interface AdminModalProps {
   description?: string;
   children: ReactNode;
   footer: ReactNode;
+  wide?: boolean;
 }
 
 export function AdminModal({
@@ -16,6 +17,7 @@ export function AdminModal({
   description,
   children,
   footer,
+  wide = false,
 }: AdminModalProps): JSX.Element | null {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,9 @@ export function AdminModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-md rounded-xl border border-[#EDECE6] bg-white p-6 shadow-lg"
+        className={`w-full rounded-xl border border-[#EDECE6] bg-white p-6 shadow-lg ${
+          wide ? "max-w-lg" : "max-w-md"
+        }`}
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id={titleId} className="font-serif text-xl font-semibold text-[#0F2A1D]">

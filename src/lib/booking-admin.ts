@@ -3,6 +3,7 @@ import { formatSessionSchedule, formatPrice } from "./session-admin";
 import { getDisplayName } from "./profile";
 import { supabase } from "./supabase";
 import type { BookingStatus } from "../types/database";
+import { logBookingCreated, logBookingStatusChange } from "./booking-history";
 
 export type BookingStatusFilter = "all" | BookingStatus;
 
@@ -306,8 +307,16 @@ export function formatBookingLongSessionDate(startTime: string | undefined): str
 export async function updateBookingStatus(
   bookingId: string,
   status: BookingStatus,
-  reason?: string,
+  options?: { reason?: string; changedBy?: string },
 ): Promise<void> {
+  const { data: existing, error: fetchError } = await supabase
+    .from("bookings")
+    .select("status")
+    .eq("id", bookingId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
   const payload: {
     status: BookingStatus;
     updated_at: string;
@@ -319,7 +328,7 @@ export async function updateBookingStatus(
   };
 
   if (status === "rejected" || status === "cancelled") {
-    payload.cancel_reason = reason?.trim() || null;
+    payload.cancel_reason = options?.reason?.trim() || null;
     payload.cancelled_at = new Date().toISOString();
   } else if (status === "confirmed") {
     payload.cancel_reason = null;
@@ -328,10 +337,36 @@ export async function updateBookingStatus(
 
   const { error } = await supabase.from("bookings").update(payload).eq("id", bookingId);
   if (error) throw error;
+
+  if (options?.changedBy) {
+    await logBookingStatusChange(
+      bookingId,
+      options.changedBy,
+      existing.status as BookingStatus,
+      status,
+      options.reason ?? null,
+    );
+  }
 }
+
+export { logBookingCreated } from "./booking-history";
 
 export function canManageBookingStatus(status: BookingStatus): boolean {
   return status === "pending" || status === "confirmed";
+}
+
+export function canReinstateBooking(status: BookingStatus): boolean {
+  return status === "cancelled" || status === "rejected";
+}
+
+export async function reinstateAdminBooking(
+  bookingId: string,
+  sessionId: string,
+  userId: string,
+  adminId: string,
+): Promise<void> {
+  await assertSessionBookable(sessionId, userId);
+  await updateBookingStatus(bookingId, "confirmed", { changedBy: adminId });
 }
 
 export function getBookingActionHint(status: BookingStatus): string {
@@ -340,6 +375,9 @@ export function getBookingActionHint(status: BookingStatus): string {
       return "Approve · Reject";
     case "confirmed":
       return "Cancel";
+    case "cancelled":
+    case "rejected":
+      return "Reinstate in modal";
     default:
       return "—";
   }
@@ -415,17 +453,25 @@ export async function fetchManualBookingSessions(): Promise<ManualBookingSession
 export async function createAdminBooking(
   userId: string,
   sessionId: string,
+  adminId: string,
   status: "pending" | "confirmed" = "confirmed",
 ): Promise<void> {
   await assertSessionBookable(sessionId, userId);
 
-  const { error } = await supabase.from("bookings").insert({
-    session_id: sessionId,
-    user_id: userId,
-    status,
-  });
+  const { data, error } = await supabase
+    .from("bookings")
+    .insert({
+      session_id: sessionId,
+      user_id: userId,
+      status,
+    })
+    .select("id")
+    .single();
 
   if (error) throw error;
+  if (data?.id) {
+    await logBookingCreated(data.id, adminId, status);
+  }
 }
 
 export type BookingSortColumn = "client" | "session" | "date" | "price" | "status";

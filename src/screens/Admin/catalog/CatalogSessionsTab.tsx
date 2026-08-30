@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { Pencil, RotateCcw, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import {
@@ -6,10 +7,16 @@ import {
   formatPrice,
   formatSessionSchedule,
 } from "../../../lib/session-admin";
-import { adminTableRowClassName } from "../../../lib/table-styles";
+import {
+  adminTableDangerIconButtonClassName,
+  adminTableGoldIconButtonClassName,
+  adminTableIconButtonClassName,
+  adminTableRowInteractiveClassName,
+} from "../../../lib/table-styles";
 import { supabase } from "../../../lib/supabase";
 import type { Session } from "../../../types/database";
 import { SessionCancelModal } from "./SessionCancelModal";
+import { SessionFormModal, type SessionFormSavePayload } from "./SessionFormModal";
 import { TableSkeleton } from "./TableSkeleton";
 
 type SessionRow = Session & {
@@ -21,6 +28,9 @@ export function CatalogSessionsTab(): JSX.Element {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<SessionRow | null>(null);
+  const [saving, setSaving] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<SessionRow | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [reactivatingId, setReactivatingId] = useState<string | null>(null);
@@ -52,6 +62,46 @@ export function CatalogSessionsTab(): JSX.Element {
       .finally(() => setLoading(false));
   }, [loadSessions]);
 
+  const openEdit = (session: SessionRow) => {
+    setEditTarget(session);
+  };
+
+  const openEditFromAction = (session: SessionRow, event: MouseEvent) => {
+    event.stopPropagation();
+    openEdit(session);
+  };
+
+  const closeEditModal = () => {
+    setEditTarget(null);
+  };
+
+  const handleSave = async (payload: SessionFormSavePayload) => {
+    if (!editTarget) return;
+
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    const { error: updateError } = await supabase
+      .from("sessions")
+      .update({
+        ...payload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editTarget.id);
+
+    setSaving(false);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+
+    setMessage("Session updated.");
+    closeEditModal();
+    await loadSessions();
+  };
+
   const handleCancelConfirm = async (reason: string) => {
     if (!cancelTarget || !reason.trim()) return;
 
@@ -79,8 +129,9 @@ export function CatalogSessionsTab(): JSX.Element {
     await loadSessions();
   };
 
-  const handleReactivate = async (sessionId: string) => {
-    setReactivatingId(sessionId);
+  const handleReactivate = async (session: SessionRow, event?: MouseEvent) => {
+    event?.stopPropagation();
+    setReactivatingId(session.id);
     setError(null);
 
     const { error: reactivateError } = await supabase
@@ -91,7 +142,7 @@ export function CatalogSessionsTab(): JSX.Element {
         cancelled_at: null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", sessionId);
+      .eq("id", session.id);
 
     setReactivatingId(null);
 
@@ -102,6 +153,22 @@ export function CatalogSessionsTab(): JSX.Element {
 
     await loadSessions();
   };
+
+  const openCancel = (session: SessionRow, event: MouseEvent) => {
+    event.stopPropagation();
+    setCancelTarget(session);
+  };
+
+  const tableHeader = (
+    <tr>
+      <th className="px-4 py-3 font-medium">Session</th>
+      <th className="px-4 py-3 font-medium">Date & Time</th>
+      <th className="px-4 py-3 font-medium">Capacity</th>
+      <th className="px-4 py-3 font-medium">Price</th>
+      <th className="px-4 py-3 font-medium">Status</th>
+      <th className="px-4 py-3 text-right font-medium">Actions</th>
+    </tr>
+  );
 
   return (
     <>
@@ -125,18 +192,17 @@ export function CatalogSessionsTab(): JSX.Element {
         </div>
       ) : null}
 
+      {message ? (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {message}
+        </div>
+      ) : null}
+
       <div className="overflow-hidden rounded-xl border border-[#EDECE6] bg-white shadow-sm">
         {loading ? (
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[#EDECE6] bg-[#F9F9F6] text-[#0F2A1D]/60">
-              <tr>
-                <th className="px-4 py-3 font-medium">Session</th>
-                <th className="px-4 py-3 font-medium">Date & Time</th>
-                <th className="px-4 py-3 font-medium">Capacity</th>
-                <th className="px-4 py-3 font-medium">Price</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
-              </tr>
+              {tableHeader}
             </thead>
             <tbody>
               <TableSkeleton columns={6} />
@@ -152,14 +218,7 @@ export function CatalogSessionsTab(): JSX.Element {
         ) : (
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[#EDECE6] bg-[#F9F9F6] text-[#0F2A1D]/60">
-              <tr>
-                <th className="px-4 py-3 font-medium">Session</th>
-                <th className="px-4 py-3 font-medium">Date & Time</th>
-                <th className="px-4 py-3 font-medium">Capacity</th>
-                <th className="px-4 py-3 font-medium">Price</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
-              </tr>
+              {tableHeader}
             </thead>
             <tbody>
               {sessions.map((session) => {
@@ -170,7 +229,11 @@ export function CatalogSessionsTab(): JSX.Element {
                     : session.type;
 
                 return (
-                  <tr key={session.id} className={adminTableRowClassName}>
+                  <tr
+                    key={session.id}
+                    className={adminTableRowInteractiveClassName}
+                    onClick={() => openEdit(session)}
+                  >
                     <td className="px-4 py-4">
                       <p className="font-medium text-[#0F2A1D]">{session.title}</p>
                       <p className="mt-0.5 text-xs text-[#0F2A1D]/60">{typeLabel}</p>
@@ -191,30 +254,40 @@ export function CatalogSessionsTab(): JSX.Element {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <Link
-                          to={`/admin/sessions/edit/${session.id}`}
-                          className="font-medium text-[#0F2A1D] hover:underline"
+                    <td
+                      className="px-4 py-4 text-right"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          title="Edit session"
+                          aria-label={`Edit ${session.title}`}
+                          onClick={(event) => openEditFromAction(session, event)}
+                          className={adminTableIconButtonClassName}
                         >
-                          Edit
-                        </Link>
+                          <Pencil className="h-4 w-4" />
+                        </button>
                         {session.is_cancelled ? (
                           <button
                             type="button"
+                            title="Reactivate session"
+                            aria-label={`Reactivate ${session.title}`}
                             disabled={reactivatingId === session.id}
-                            onClick={() => void handleReactivate(session.id)}
-                            className="font-medium text-[#C9A84C] hover:underline disabled:opacity-50"
+                            onClick={(event) => void handleReactivate(session, event)}
+                            className={adminTableGoldIconButtonClassName}
                           >
-                            {reactivatingId === session.id ? "Reactivating…" : "Reactivate"}
+                            <RotateCcw className="h-4 w-4" />
                           </button>
                         ) : (
                           <button
                             type="button"
-                            onClick={() => setCancelTarget(session)}
-                            className="font-medium text-red-700 hover:underline"
+                            title="Cancel session"
+                            aria-label={`Cancel ${session.title}`}
+                            onClick={(event) => openCancel(session, event)}
+                            className={adminTableDangerIconButtonClassName}
                           >
-                            Cancel
+                            <XCircle className="h-4 w-4" />
                           </button>
                         )}
                       </div>
@@ -226,6 +299,14 @@ export function CatalogSessionsTab(): JSX.Element {
           </table>
         )}
       </div>
+
+      <SessionFormModal
+        open={editTarget !== null}
+        session={editTarget}
+        saving={saving}
+        onClose={closeEditModal}
+        onSave={(payload) => void handleSave(payload)}
+      />
 
       <SessionCancelModal
         open={cancelTarget !== null}

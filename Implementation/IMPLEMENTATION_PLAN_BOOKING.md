@@ -10,15 +10,15 @@ This document outlines the detailed, step-by-step technical plan to implement us
 
 Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). The **Order** column is how to read this doc — grouped by feature domain, not always the exact day we merged each branch.
 
-| Order | Phase | Name | Status | Delivers |
-|------:|-------|------|--------|----------|
-| 1 | **1** | Authentication & Profiles | ✅ Complete | Auth, profiles, avatars, DB schema, dashboard shells |
-| 2 | **2** | Session & Category Management | ✅ Complete | Categories, types, sessions CRUD, landing page live sessions |
-| 3 | **2.5** | Unified Catalog UX | ✅ Complete | Tabbed `/admin/sessions` hub, modals, catalog polish |
-| 4 | **3** | Booking Logic & Evolution | ✅ Complete | Client book flow, admin bookings, live overviews, bell badge |
-| 5 | **4.5** | Live People Directory | ✅ Complete | Live `/admin/clients`, filters, ClientProfileModal |
-| 6 | **4** | History & Logging | **Next** | Login / session / booking audit trails |
-| 7 | **5** | Admin Controls & Reporting | Not started | Search, promote/demote, charts, `app_settings` |
+| Order | Phase | Name | Status | GitHub | Delivers |
+|------:|-------|------|--------|--------|----------|
+| 1 | **1** | Authentication & Profiles | ✅ Complete | [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) | Auth, profiles, avatars, DB schema, dashboard shells |
+| 2 | **2** | Session & Category Management | ✅ Complete | [#5](https://github.com/gavinfung321/Meridian-CPA/issues/5) | Categories, types, sessions CRUD, landing page live sessions |
+| 3 | **2.5** | Unified Catalog UX | ✅ Complete | *(UI refactor under #5 scope)* | Tabbed hub, row-click modals, capacity, catalog consistency |
+| 4 | **3** | Booking Logic & Evolution | ✅ Complete | | Bookings, overview UX, bell, toasts, reinstate |
+| 5 | **4.5** | Live People Directory | ✅ Complete | | Live `/admin/clients`, filters, ClientProfileModal |
+| 6 | **4** | History & Logging | **Next** | | Login / session / booking audit trails |
+| 7 | **5** | Admin Controls & Reporting | Not started | | Search, promote/demote, charts, `app_settings` |
 
 **Why 4.5 exists:** The people directory was built early *(only needs `profiles`, not bookings)* but keeps the label **4.5** from the original plan — meaning “inserted between audit prep and Phase 5 admin controls,” not “half of Phase 4.”
 
@@ -39,10 +39,11 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 
 ### Carried forward *(not blocking Phase 4)*
 
-- Supabase Edge Functions + email (Resend/SendGrid) — after Realtime/toast polish
-- Top-left toast system — optional polish
+- Supabase Edge Functions + email (Resend/SendGrid) — deferred post-Phase 3
 - Production `/reset-password` redirect URL — add on deploy
-- Booking search, client notification bell — optional polish
+- Client notification bell — optional polish *(admin bell ✅ Phase 3)*
+
+**Completed since roadmap draft:** top-left toast system ✅, admin booking search ✅, dashboard metric helpers ✅, catalog row-click edit modals ✅, session type default capacity ✅, admin sidebar reorder (Bookings below Overview) ✅
 
 ---
 
@@ -80,7 +81,7 @@ Both `/dashboard/*` and `/admin/*` share a **sidebar + top header** shell. The r
 
 | Zone | Purpose | Brand notes |
 |------|---------|-------------|
-| **Left sidebar** | Primary navigation (Overview, Sessions, Bookings, etc.) | Forest Green `#0F2A1D` background; Gold `#C9A84C` active item; **expand/collapse chevron fixed outside sidebar edge** *(mobile open tab + desktop collapse)* |
+| **Left sidebar** | Primary navigation — **Overview → Bookings → Sessions → Clients → Profile → Settings** | Forest Green `#0F2A1D` background; Gold `#C9A84C` active item; **expand/collapse chevron fixed outside sidebar edge** *(mobile open tab + desktop collapse)* |
 | **Top header bar** | Context, quick actions, utilities | White/cream bar, `border-[#EDECE6]`; visible on desktop and mobile |
 | **Main content** | Page title, cards, tables, forms | Cream page ground `#F9F9F6`; white cards with thin borders |
 
@@ -128,6 +129,34 @@ One **Quick action** button in the admin header — Forest Green `#0F2A1D` trigg
 
 This keeps one place to maintain the top bar and profile menu.
 
+#### Admin sidebar nav order *(Phase 3 polish)* ✅
+
+Ops-first ordering — daily triage before catalog setup:
+
+| Order | Item | Route |
+|------:|------|-------|
+| 1 | Overview | `/admin/dashboard` |
+| 2 | **Bookings** | `/admin/bookings` |
+| 3 | Sessions | `/admin/sessions` *(Catalog Management hub)* |
+| 4 | Clients | `/admin/clients` |
+| 5 | Profile | `/admin/profile` |
+| 6 | Settings | `/admin/settings` |
+
+> **Rationale:** Pending bookings and overview metrics are checked most often; catalog (sessions/types/categories) is configuration, not daily ops.
+
+#### Admin table interaction pattern *(Phase 3 / 2.5 polish)* ✅
+
+All live admin management tables share one interaction model *(bookings, clients, catalog tabs)*:
+
+| Pattern | Behaviour |
+|---------|-----------|
+| **Row click** | Opens primary inspector/edit modal |
+| **Row hover** | Cream highlight + `cursor-pointer` via `adminTableRowInteractiveClassName` |
+| **Actions column** | Icon buttons (Pencil, Ban/Power, Cancel, etc.) with `stopPropagation` |
+| **Destructive actions** | Stay in Actions column — never triggered by row click alone |
+
+Shared styles live in `src/lib/table-styles.ts`.
+
 #### Sidebar expand/collapse *(Phase 4.5 polish)* ✅
 
 - **Mobile:** When the drawer is closed, a **chevron tab** sits fixed on the **left viewport edge** *(outside the sidebar)* so admins can reopen nav without hunting in the header. Header hamburger remains as a secondary affordance.
@@ -157,10 +186,10 @@ Remove `MockupBanner` progressively as live data ships:
 | `/profile`, `/dashboard/profile`, `/admin/profile` | `profiles` CRUD + avatar upload | ✅ Live |
 | Header avatar + name (`ProfileMenu`) | `AuthContext` → `profiles` | ✅ Live |
 | **`/admin/clients` people directory** | `profiles` via Supabase | ✅ **Live — Phase 4.5** |
-| `/admin/dashboard` client/booking metrics | Hard-coded metrics | ✅ Live — **Phase 3** |
-| `/dashboard`, `/dashboard/bookings` | Hard-coded rows | ✅ Live — **Phase 3** |
+| `/admin/dashboard` client/booking metrics | Live Supabase aggregates | ✅ Live — **Phase 3** |
+| `/dashboard`, `/dashboard/bookings` | Live `bookings` + `sessions` | ✅ Live — **Phase 3** |
 
-> **Clarification:** Individual profile pages are already synced with Supabase. The gap is the **admin Clients list** still showing placeholder names (`marcus@example.com`, etc.) instead of real `profiles` rows (e.g. Gavin Fung).
+> **Clarification:** Individual profile pages and the **admin Clients directory** are live from Supabase. Remaining mock surface is **`/admin/settings`** *(Phase 5)*.
 
 #### Accessibility & mobile
 
@@ -181,15 +210,15 @@ Reference uses a **3-level tabbed catalog**: Categories → Session Templates �
 | Reference feature | Personal trainer example | Meridian CPA mapping | Status |
 |-------------------|-------------------------|----------------------|--------|
 | **Categories** | Strength, Yoga | Tax Planning, Audit & Compliance, Payroll & MPF, Advisory | ✅ Live — **Phase 2.5:** Categories tab + modal |
-| **Session templates** | HIIT Cardio, Private Training *(base price + description)* | `session_types` *(default_duration, default_price, description)* | ✅ Live — **Phase 2.5:** Session Types tab + modal |
+| **Session templates** | HIIT Cardio, Private Training *(base price + description)* | `session_types` *(default_duration, default_price, default_max_slots, description)* | ✅ Live — **Phase 2.5** + capacity polish |
 | **Active sessions** | Scheduled slots | `sessions` — bookable consultation/appointment slots | ✅ Live — **Phase 2.5:** Active Sessions tab (enhanced table) |
-| **Tabbed catalog UI** | All 3 levels in one tabbed page | Split across `/admin/sessions` + `/admin/taxonomy` today | 🔄 **Phase 2.5** — unified Catalog hub at `/admin/sessions` |
-| **Category/type modals** | Add/Edit in overlay dialogs | Inline forms on `/admin/taxonomy` page today | 🔄 **Phase 2.5** — modal CRUD on Types & Categories tabs |
+| **Tabbed catalog UI** | All 3 levels in one tabbed page | Unified Catalog hub at `/admin/sessions` | ✅ Live — **Phase 2.5** |
+| **Category/type modals** | Add/Edit in overlay dialogs | Modal CRUD on Types & Categories tabs | ✅ Live — **Phase 2.5** |
 | **Template defaults prefill** | Base pricing on new slot | Session type selection prefills duration + price on new session | ✅ Live |
 | **Price override per slot** | Custom price for one slot | `price` field on session form independent of template default | ✅ Live |
 | **Capacity control** | Max participants | `max_slots` *(1 = private consultation)* | ✅ Live |
 | **Advanced scheduling** | Date/time pickers, auto duration | `datetime-local` start + duration → auto `end_time` | ✅ Live |
-| **One-click Cancel/Activate** | Toggle on list row | Cancel via edit page + reason modal; no inline reactivate | 🔄 **Phase 2.5** — inline toggle + reason modal on Active Sessions tab |
+| **One-click Cancel/Activate** | Toggle on list row | Inline cancel/reactivate on Active Sessions tab | ✅ Live — **Phase 2.5** |
 | **Cover image** | *(not in reference)* | Optional `image_path` on session; shown on landing cards | ✅ Live — CPA-specific |
 | **Recurrence metadata** | *(not in reference)* | Weekly recurrence editor → JSONB *(slot generation deferred)* | ✅ Live — CPA-specific |
 
@@ -212,7 +241,7 @@ Reference uses a **3-level tabbed catalog**: Categories → Session Templates �
 | **Engagement tracking** | Contact + status at a glance | Avatar, role/status badges, booking count, joined date | ✅ Avatar + joined **Phase 4.5**; booking count **Phase 3/5** |
 | **Admin edit client profile** | Implied in reference | **Option B:** admin can edit contact/address/name on detail | ✅ Edit in **ClientProfileModal** *(Phase 4.5 polish)*; full Option B + avatar on `/admin/clients/:id` **Phase 5** |
 | **Create client in admin** | “Add client” quick action | Users self-register via `/signup` | 🚫 **By design** — quick action stays disabled |
-| **Link from bookings** | Client name in ledger | Booking row → client profile modal or `/admin/clients/:id` | ❌ Not built → **Phase 3** cross-link |
+| **Link from bookings** | Client name in ledger | Booking row → client profile modal or `/admin/clients/:id` | ✅ **Phase 3** — View client in `BookingDetailModal` |
 
 **CPA interpretation:** Sidebar label stays **Clients** per brand/Figma, but the page subtitle clarifies *“All registered users, clients, and firm admins.”* Firm staff manage lifecycle (ban, promote after engagement), not create auth accounts. Admin rows are for visibility only.
 
@@ -240,7 +269,7 @@ Reference uses a **3-level tabbed catalog**: Categories → Session Templates �
 | **Admin-only writes on catalog** | ✅ Live |
 | **Admin read on global histories** | ✅ RLS ready; UI wiring Phase 4 |
 | **Glassmorphism / dark admin theme** | 🚫 **Not adopted** — cream/white surfaces, Forest Green sidebar per brand guide |
-| **Loader2 / skeleton loading states** | ⚠️ **Partial** — landing booking section + some admin pages; extend in Phase 3 |
+| **Loader2 / skeleton loading states** | ⚠️ **Partial** — catalog tabs, bookings, clients; extend as needed |
 | **Fade-in animations** | ⚠️ **Partial** — landing page scroll animations only |
 
 ---
@@ -261,7 +290,7 @@ Reference uses a **3-level tabbed catalog**: Categories → Session Templates �
 
 ## 3. Page Mapping & URL Slugs
 
-Use **dedicated pages** for deep flows (session create/edit, client detail, profile). Use **modals** only inside the unified Catalog hub for lightweight taxonomy CRUD *(Phase 2.5)*.
+Use **dedicated pages** for deep flows *(session create, recurrence + image edit, client detail, profile)*. Use **modals** inside the Catalog hub for quick row-click edits *(types, categories, session slot fields)* — link to full session editor for recurrence/image.
 
 ### Authentication & Public Pages
 - `/login` - Login with email/password. ✅ *Phase 1*
@@ -456,6 +485,7 @@ create table public.session_types (
   description text,
   default_duration_minutes integer not null,
   default_price numeric(10, 2) default 0.00 not null,
+  default_max_slots integer default 1 not null,
   is_active boolean default true not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -480,6 +510,7 @@ create table public.app_settings (
 |-----------|---------|
 | `20250828183000_session_categories_and_types.sql` | `categories`, `session_types`, `sessions.session_type_id`, `recurrence_rules`, RLS, seed data |
 | `20250829100000_session_images.sql` | `sessions.image_path`, public `session-images` storage bucket |
+| `20250830160000_session_type_default_max_slots.sql` | `session_types.default_max_slots` — prefills `sessions.max_slots` on new slots |
 
 ---
 
@@ -627,41 +658,32 @@ Core auth, profile sync, avatars, dashboard shells, and base database schema.
 
 ### Phase 2: Session & Category Management ✅ **COMPLETE**
 
-Admin-managed taxonomy and session slots. **In scope now.** Bookings and clients admin pages stay mock until Phase 3 / Phase 5. **Catalog UX polish** *(tabbed hub, modals)* → **Phase 2.5**.
+> **GitHub:** [#5](https://github.com/gavinfung321/Meridian-CPA/issues/5) — schema, admin CRUD, landing live sessions, dashboard UX shell.
 
-**Remaining to close Phase 2:**
-- [x] Landing page: read active, non-cancelled sessions from Supabase *(replace `MOCK_SESSIONS` in booking section)*
-- [x] Remove `MockupBanner` from `/admin/sessions` *(live data)*
-- [x] Session recurrence UI: structured weekly editor *(replaces raw JSON textarea)*
-- [x] Session cover images: `image_path` + `session-images` storage bucket + admin upload
+Admin-managed taxonomy and session slots. **Catalog UX polish** *(tabbed hub, modals)* shipped in **Phase 2.5** (same milestone scope as #5).
 
-**Completed:**
-- [x] CRUD for `categories`
-- [x] CRUD for `session_types`
-- [x] CRUD for `sessions` (wire to existing `sessions` table; link to `session_types` when ready)
-- [x] Implement Availability Rules using JSONB recurrence rules *(structured weekly UI + JSON storage)*
-- [x] Admin UI for Session management (List, Create, Edit)
-- [x] Routes: `/admin/sessions/new`, `/admin/sessions/edit/:id`, `/admin/taxonomy`
+**Delivered *(all complete)*:**
+- [x] Migration: `categories`, `session_types`, `sessions.session_type_id`, `recurrence_rules` JSONB, RLS
+- [x] CRUD for `categories`, `session_types`, `sessions`
+- [x] Routes: `/admin/sessions/new`, `/admin/sessions/edit/:id`; `/admin/taxonomy` → redirect *(Phase 2.5)*
 - [x] Form fields: slot limits, datetime pickers, type/category selections, locations, pricing
-- [x] Cancel session slot (reason input; existing bookings unchanged in this step)
-- [x] RLS policies for new `categories` / `session_types` tables *(migration Step 1)*
+- [x] Cancel session slot with reason input
+- [x] Landing page: live active, non-cancelled sessions from Supabase
+- [x] Session recurrence UI: structured weekly editor
+- [x] Session cover images: `image_path` + `session-images` storage bucket
+- [x] Remove `MockupBanner` from `/admin/sessions`
 
 **Dashboard UX polish *(Phase 2)*:**
 - [x] Shared top header bar on `AdminLayout` + `DashboardLayout` (quick actions + profile cluster)
 - [x] Extend `ProfileMenu`: avatar + display name trigger, `variant="light"`, optional `lang`, context-aware profile path
 - [x] Refactor to shared `PortalLayout` to DRY admin + client shells
-- [x] Admin overview: metrics-only layout *(quick actions live in header dropdown only)*
 - [x] `AdminQuickActionMenu` — single header dropdown (New session + future items)
-- [x] Remove `MockupBanner` from `/admin/sessions`
 - [x] Sidebar footer: dedupe user block once header profile menu is live
 
-**Explicitly deferred *(not Phase 2)*:**
-- `/admin/bookings` — mock list; wire in **Phase 3**
-- `/admin/clients` — mock list → **Phase 4.5** read-only, **Phase 5** full management
-- Admin overview live metrics — **Phase 3**
-- **Real-time / in-app notifications** — header bell badge, Supabase Realtime listeners, booking toasts — **Phase 3** *(see §7 Phase 3 — Notifications)*
-
-> **Clarification:** Phase 2 is **catalog + sessions only**. The header 🔔 icon is a **placeholder** (Phase 1 shell). Do not implement Supabase Realtime on `bookings` until Phase 3 when bookings CRUD and the client booking flow are live.
+**Originally deferred — now shipped in later phases:**
+- `/admin/bookings` → **Phase 3** ✅
+- `/admin/clients` → **Phase 4.5** ✅
+- Admin overview live metrics, bell badge, Realtime → **Phase 3** ✅
 
 **Existing mock UI replaced:** `/admin/sessions`, `/admin/taxonomy` ✅
 
@@ -669,14 +691,14 @@ Admin-managed taxonomy and session slots. **In scope now.** Bookings and clients
 
 ### Phase 2.5: Unified Catalog UX *(best path)* — ✅ **COMPLETE**
 
-> **Goal:** Merge the reference trainer’s **tabbed catalog + modal CRUD** pattern with Meridian’s **brand, data model, and rich session forms**. No new schema required — UI refactor only. ✅ **Completed before Phase 3** so admins had a polished catalog before booking volume grew.
+> **Goal:** Merge the reference trainer’s **tabbed catalog + modal CRUD** pattern with Meridian’s **brand, data model, and rich session forms**. ✅ **Completed before Phase 3** so admins had a polished catalog before booking volume grew. *(Later polish added `default_max_slots` — migration `20250830160000`.)*
 
 #### Design principles
 
 | From reference (adopt) | From Meridian (keep) |
 |----------------------|----------------------|
 | Single **Catalog Management** hub with 3 tabs | Forest Green / Gold / Cream — **no** dark/orange theme |
-| Modals for **Category** and **Session type** create/edit | Full **pages** for session new/edit *(recurrence, image, cancel reason)* |
+| Modals for **Category**, **Session type**, and **quick session edit** | Full **pages** for session new/edit *(recurrence, image, cancel reason)* |
 | Table columns: Session, Date & Time, Capacity, Price, Status | Existing Supabase CRUD + RLS *(no logic rewrite)* |
 | Empty states with friendly copy *(no duplicate primary buttons)* | Sidebar + Quick action dropdown unchanged |
 | Inline status actions on session rows | Session cover images + recurrence editor on full form |
@@ -687,7 +709,7 @@ Admin-managed taxonomy and session slots. **In scope now.** Bookings and clients
 |------|------|
 | **Primary route** | `/admin/sessions` — page title **Catalog Management**; subtitle *Orchestrate your sessions, types, and categories.* |
 | **Tabs** | `?tab=sessions` (default) \| `?tab=types` \| `?tab=categories` — persist tab in URL for share/bookmark |
-| **Sidebar** | Keep **Sessions** nav item → lands on Active Sessions tab |
+| **Sidebar** | **Overview → Bookings → Sessions → Clients** — Sessions lands on Active Sessions tab |
 | **Redirect** | `/admin/taxonomy` → `/admin/sessions?tab=types` |
 | **Quick action** | “New session” → `/admin/sessions/new` *(unchanged)* |
 | **Remove** | “Manage taxonomy” link from session list header *(tabs replace it)* |
@@ -698,7 +720,9 @@ Replace current `/admin/sessions` table with catalog-styled layout:
 
 - [x] Section title: **Upcoming Schedule** with live count
 - [x] Table columns: **Session** (title + type), **Date & Time**, **Capacity** (booked/max), **Price**, **Status** (Active / Cancelled pill)
-- [x] Row actions: **Edit** → `/admin/sessions/edit/:id`; **Cancel** / **Reactivate** inline *(reason modal on cancel)*
+- [x] **Row click** → `SessionFormModal` *(quick edit: title, type, datetime, duration, capacity, price, location)*
+- [x] Modal link: **Open full editor** → `/admin/sessions/edit/:id` *(recurrence, cover image, cancel reason)*
+- [x] Row actions: **Pencil** (edit modal); **Cancel** / **Reactivate** inline *(reason modal on cancel)* — icon buttons with `stopPropagation`
 - [x] Primary CTA: **+ New Session** in tab toolbar only *(header Quick action is separate global shortcut)*
 - [x] Empty state: *Use **+ New Session** above to create your first bookable slot.* — copy only, no second CTA
 - [x] Loading skeleton rows
@@ -707,11 +731,12 @@ Replace current `/admin/sessions` table with catalog-styled layout:
 
 Absorb `/admin/taxonomy` session-types column:
 
-- [x] Table: Name, Category, Default duration, Base price (HKD), Status (active/inactive)
+- [x] Table: Name, Category, Default duration, **Capacity**, Base price (HKD), Status (active/inactive)
 - [x] **Actions** column header on all catalog tables
 - [x] **+ New Session Type** opens **modal** *(reference pattern)*
-- [x] Modal fields: Name, Category (select), Base price, Default duration, Description
+- [x] Modal fields: Name, Category (select), Base price, Default duration, **Default capacity**, Description
 - [x] Info hint: *Base prices can be overridden for specific scheduled sessions.* *(cream info box)*
+- [x] **Row click** → edit modal; **Pencil** / **Power** icon actions in Actions column
 - [x] Edit / Deactivate via row actions → same modal in edit mode
 - [x] Empty state: copy-only — points to toolbar **+ New Session Type** button
 - [x] Loading skeleton
@@ -752,6 +777,7 @@ Absorb `/admin/taxonomy` categories column:
 - [x] Table: **Name**, **Description**, **Status**, **Actions** — hide **Slug** and **Sort order** from list
 - [x] **+ New Category** opens **modal**
 - [x] Modal: **Name**, **Description**, **Sort order** *(edit only)*; **Slug** auto-generated *(read-only preview)*
+- [x] **Row click** → edit modal; **Pencil** / **Power** icon actions in Actions column
 - [x] Edit / Deactivate via row actions
 - [x] Empty state: copy-only — points to toolbar **+ New Category** button
 - [x] Loading skeleton
@@ -781,6 +807,7 @@ Absorb `/admin/taxonomy` categories column:
 - [x] `CatalogSessionTypesTab` — extract from `AdminTaxonomy.tsx` + modal
 - [x] `CatalogCategoriesTab` — extract from `AdminTaxonomy.tsx` + modal
 - [x] `CategoryFormModal`, `SessionTypeFormModal` — shared modal pattern
+- [x] `SessionFormModal` — quick edit modal for Active Sessions tab *(links to full page for recurrence/image)*
 - [x] `SessionCancelModal` — reuse/adapt from edit-page cancel flow for inline row action
 - [x] Route redirect `/admin/taxonomy` in `App.tsx`
 - [x] Deprecate standalone `AdminTaxonomy.tsx` after migration
@@ -792,6 +819,17 @@ Absorb `/admin/taxonomy` categories column:
 - [x] **Seed data migration:** Rename default `session_types` to product names — `20250829120000_rename_seed_session_types.sql`
 - [x] **Category descriptions:** Add `categories.description` column + seed copy — `20250829130000_category_descriptions_and_prices.sql`
 - [x] **Session type base prices:** Seed HKD default prices on session types *(see pricing table above)*
+
+#### Catalog consistency polish *(post-2.5 — Phase 3)* — ✅ **COMPLETE**
+
+Align catalog tabs with bookings/clients interaction model:
+
+- [x] **Row-click edit** on all three catalog tabs *(Active Sessions, Session Types, Categories)*
+- [x] **Shared table styles:** `adminTableRowInteractiveClassName`, icon button classes in `table-styles.ts`
+- [x] **Session type capacity:** `default_max_slots` column + table column + modal field — migration `20250830160000_session_type_default_max_slots.sql`
+- [x] **New session prefill:** `/admin/sessions/new` reads `default_max_slots` from selected session type
+- [x] **`AdminModal` wide variant** for session type + session quick-edit forms
+- [ ] Apply `default_max_slots` migration remotely: `npx supabase db push`
 
 #### Schema note
 
@@ -806,9 +844,11 @@ Absorb `/admin/taxonomy` categories column:
 **QA (Phase 2.5):**
 - All three tabs load live Supabase data
 - Category/type modals create, edit, deactivate without page reload
+- **Row click** opens edit modal on all catalog tabs; icon actions do not double-trigger
+- Session type **Capacity** column and modal field persist after save
 - `/admin/taxonomy` redirect works; old bookmarks land on Types tab
 - Inline session cancel/reactivate updates list and hides/shows on landing page
-- Session new/edit full pages unchanged and still reachable
+- Session new/edit full pages unchanged and still reachable via **+ New Session** and **Open full editor**
 - Meridian brand colors only — no trainer orange theme
 
 ---
@@ -859,6 +899,8 @@ Bookings are **status-managed**, not fully editable records:
 - [x] **Booking detail modal** — row click opens inspector; **View client** opens `ClientProfileModal`
 - [x] Remove `MockupBanner` from `/admin/bookings`
 - [x] Manual booking quick action *(admin header → `ManualBookingModal`)*
+- [x] **Reinstate** cancelled/rejected bookings as confirmed *(with capacity check)*
+- [x] URL deep links: `?booking=<id>` opens modal; `?status=pending` applies filter
 - [ ] Optional: `/admin/bookings/:id` detail view
 
 #### Notifications *(Phase 3 — partial)*
@@ -866,15 +908,26 @@ Bookings are **status-managed**, not fully editable records:
 | Channel | When | Implementation |
 |---------|------|----------------|
 | **In-app realtime** | New booking submitted; admin approves/rejects/cancels; client booking status changes | Supabase **Realtime** via `useBookingNotifications` *(requires migration applied)* |
-| **Header bell badge** | Admin: pending booking count + dropdown list | ✅ Dropdown with pending items → `/admin/bookings?booking=<id>` |
+| **Header bell badge** | Admin: pending booking count + dropdown list | ✅ Dropdown with pending items → `/admin/bookings?booking=<id>`; footer **View all** |
 | **Toast messages** | After user actions *(book, cancel, admin approve)* | ✅ `ToastProvider` top-left *(Forest Green / Gold)* |
 | **Email** | Booking confirmation, rejection, cancellation | Edge Function + Resend/SendGrid — deferred |
 
 **Notification checklist** *(bell + toasts + Realtime hook shipped; email deferred)*:
 - [x] `useBookingNotifications` hook — Realtime subscription on `bookings`
-- [x] Header 🔔: pending booking count badge *(admin)*
+- [x] Header 🔔: pending booking count badge *(admin)* + dropdown list of pending bookings
 - [x] Toast provider for booking action feedback
 - [ ] Edge Function + email templates for status changes
+
+#### Admin overview UX polish *(Phase 3)* — ✅ **COMPLETE**
+
+- [x] **Personalized greeting** — time-of-day + admin first name; one-line summary under title
+- [x] **Attention banner** when pending > 0 — **Review now** → `/admin/bookings?status=pending`
+- [x] **Metric cards** — Lucide icons; gold highlight on pending card when count > 0; equal-height cards
+- [x] **Metric helpers** — hint lines + `(i)` tooltips on occupancy, revenue, pending *(Active clients hint only)*
+- [x] **Revenue metric** — confirmed bookings only *(not pending)*
+- [x] **Recent activity feed** — structured events with avatars, relative time, All \| User \| Admin filter with counts
+- [x] **Activity rows** clickable → `/admin/bookings?booking=<id>`
+- [x] **Category bars** — gold top rank; count + % labels
 
 #### Other Phase 3 items
 
@@ -882,7 +935,8 @@ Bookings are **status-managed**, not fully editable records:
 - [x] Logic: First booking promotion (`user` → `client`) *(DB trigger — verify on next signup test)*
 - [x] Constraint: Reject booking when session `max_slots` is full *(client-side check on book)*
 - [x] Admin Dashboard: Overview widgets (occupancy, revenue, active clients, pending bookings)
-- [x] Admin Dashboard: Popular categories + recent activity from live bookings
+- [x] Admin Dashboard: Popular categories + recent activity from live bookings *(+ synthesized history for legacy rows)*
+- [x] Admin sidebar: **Bookings** nav item moved below **Overview** *(ops-first order)*
 - [x] Client `/dashboard` landing: upcoming/pending counts + next session card
 - [x] Client `/dashboard/bookings`: live table + cancel with reason
 - [ ] Constraint: Check `app_settings.max_booking_days_advance` *(needs Phase 5 `app_settings`)*
@@ -929,8 +983,8 @@ We built the people directory after Phase 2.5 and **before** booking go-live bec
 Shared hover styles in `src/lib/table-styles.ts`:
 
 - [x] **Clients** — hover + cursor-pointer on interactive rows
-- [x] **Sessions** (catalog Active Sessions tab) — hover highlight
-- [x] **Bookings** — hover highlight *(live list — Phase 3 ✅)*
+- [x] **Bookings** — hover + row click → `BookingDetailModal` *(Phase 3 ✅)*
+- [x] **Catalog tabs** — Active Sessions, Session Types, Categories — interactive rows + icon actions *(Phase 3 polish ✅)*
 
 #### Out of scope for Phase 4.5
 
@@ -948,7 +1002,8 @@ Shared hover styles in `src/lib/table-styles.ts`:
 - **Role tabs** filter list correctly (All / Users / Clients / Admins)
 - **Row click** opens ClientProfileModal; **Edit** icon opens edit mode; **Ban** icon opens confirm dialog
 - **Sidebar chevron** visible on mobile when drawer closed; desktop collapse/expand works
-- **Table rows** show cream hover on sessions, bookings, clients tables
+- **Table rows** show cream hover on bookings, clients, and all catalog tabs
+- **Catalog row click** opens edit modal; cancel/reactivate/deactivate via icon actions only
 
 ---
 
@@ -958,12 +1013,14 @@ Audit trails for compliance and admin visibility.
 
 - [ ] Auth Hook: Save entry in `user_login_history` on successful login *(table exists — wire auth hook)*
 - [ ] Database Triggers (or service logic) for `session_history` on session CREATE / UPDATE / CANCEL
-- [ ] Database Triggers (or service logic) for `booking_history` on booking CREATE / STATUS_CHANGE / USER_CANCEL
-- [ ] Master Booking history view for Admin
+- [x] **Partial:** `booking_history` inserts on admin/client status changes via `booking-history.ts` *(dashboard activity feed consumes this)*
+- [ ] Master Booking history view for Admin *(timeline in booking modal — Phase 4)*
 - [ ] Admin `/admin/clients`: audit view displaying `user_login_history` for selected users
 - [ ] Admin session change log viewer (from `session_history`)
 
 **Tables already migrated in Phase 1:** `user_login_history`, `session_history`, `booking_history` (RLS: admin read only)
+
+**Partial migration:** `20250830150000_booking_history_insert_policy.sql` — allows authenticated inserts for activity logging
 
 ---
 
@@ -1075,6 +1132,7 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 - ⏳ **Production reset URL:** Add production domain to Supabase Auth redirect allow-list on deploy
 
 ### Phase 2 — Session & Category Management ✅
+- **GitHub:** [#5](https://github.com/gavinfung321/Meridian-CPA/issues/5)
 - **Category/Type CRUD:** Admin can create, edit, deactivate categories and session types
 - **Session CRUD:** Admin can create/edit/cancel sessions; changes persist and respect RLS
 - **Recurrence:** Structured weekly editor; stored as JSONB *(auto slot generation deferred)*
@@ -1084,21 +1142,24 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 
 ### Phase 2.5 — Unified Catalog UX ✅
 - **Tabbed hub:** Active Sessions | Session Types | Categories at `/admin/sessions`
-- **Modals:** Category and session type create/edit *(Meridian-styled)*
+- **Modals:** Category and session type create/edit; **SessionFormModal** for quick session edits
+- **Row-click edit:** All catalog tabs — matches bookings/clients pattern
+- **Session types:** **Capacity** column + `default_max_slots` field *(migration `20250830160000`)*
 - **Sessions tab:** Status column, inline cancel/reactivate, loading skeletons
 - **Empty states:** Toolbar primary CTA only; empty panel uses copy pointing to toolbar button
-- **Redirects:** `/admin/taxonomy` → types tab; full pages kept for session new/edit
+- **Redirects:** `/admin/taxonomy` → types tab; full pages kept for session new/edit + recurrence/image
 - **Polish:** Category table with descriptions; Actions headers; seed type names + base prices (HKD)
 
 ### Phase 3 — Booking Logic & Evolution ✅
-- **Admin bookings:** Live list, filters, sort, search, view modal, approve/reject/cancel with reason
-- **Admin overview:** Live occupancy, projected revenue, active clients, pending count, category chart, recent activity
+- **Admin bookings:** Live list, filters, sort, search, view modal, approve/reject/cancel/reinstate with reason
+- **Admin overview:** Live metrics, attention banner, metric helpers, category chart, activity timeline with filters
 - **Client booking:** Homepage session cards → login → book → pending status
 - **Client dashboard:** Live stats, next session, bookings list with cancel
-- **Bell badge:** Admin pending bookings count in header *(Realtime + fallback poll)*
+- **Bell badge:** Pending count + dropdown list → booking modal deep links
 - **Toasts:** Top-left feedback on book, cancel, and admin status actions
 - **Manual booking:** Admin quick action → create booking for client
-- **Deferred:** Email edge function, `app_settings` window, production reset URL
+- **Sidebar:** Overview → Bookings → Sessions → Clients
+- **Deferred:** Email edge function, `app_settings` window, production reset URL, `/admin/bookings/:id` page
 
 ### Phase 4.5 — Live People Directory ✅
 - **Live `/admin/clients`:** Live list from `profiles`; mock samples removed
@@ -1113,8 +1174,8 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 ### Phase 4 — History & Logging (next)
 - **Login audit:** Successful sign-in writes to `user_login_history`
 - **Session audit:** Session create/update/cancel writes to `session_history`
-- **Booking audit:** Status changes write to `booking_history`
-- **Admin views:** Master booking history and per-user login log visible to admins
+- **Booking audit:** Status changes write to `booking_history` *(partial — app-layer logging ✅; full admin views pending)*
+- **Admin views:** Master booking history timeline in modal; per-user login log visible to admins
 
 ### Phase 5 — Admin Controls & Reporting (pending)
 - **People management:** Search, promote/demote, full Option B detail page + avatar upload *(basic edit/ban shipped in Phase 4.5 modal)*

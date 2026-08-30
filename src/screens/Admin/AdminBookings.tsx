@@ -83,6 +83,19 @@ export function AdminBookings(): JSX.Element {
   );
 
   const bookingIdFromUrl = searchParams.get("booking");
+  const statusFromUrl = searchParams.get("status");
+
+  useEffect(() => {
+    if (!statusFromUrl) return;
+    if (
+      statusFromUrl === "pending" ||
+      statusFromUrl === "confirmed" ||
+      statusFromUrl === "cancelled" ||
+      statusFromUrl === "rejected"
+    ) {
+      setStatusFilter(statusFromUrl);
+    }
+  }, [statusFromUrl]);
 
   useEffect(() => {
     if (!bookingIdFromUrl || loading) return;

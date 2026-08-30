@@ -40,6 +40,7 @@ export interface SessionType {
   description: string | null;
   default_duration_minutes: number;
   default_price: number;
+  default_max_slots: number;
   is_active: boolean;
   created_at: string;
 }
@@ -150,6 +151,7 @@ export interface Database {
           description?: string | null;
           default_duration_minutes: number;
           default_price?: number;
+          default_max_slots?: number;
           is_active?: boolean;
           created_at?: string;
         };
@@ -159,6 +161,7 @@ export interface Database {
           description?: string | null;
           default_duration_minutes?: number;
           default_price?: number;
+          default_max_slots?: number;
           is_active?: boolean;
         };
         Relationships: [];

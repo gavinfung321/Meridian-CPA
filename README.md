@@ -53,13 +53,21 @@ The application features the following routing architecture:
 - `/` - Main landing page ([Desktop.tsx](file:///c:/Users/gavin/OneDrive/Desktop/Coding/figma-bolt-Meridian-CPA/src/screens/Desktop/Desktop.tsx))
 - `/about` - Corporate overview ([AboutUs.tsx](file:///c:/Users/gavin/OneDrive/Desktop/Coding/figma-bolt-Meridian-CPA/src/screens/AboutUs/AboutUs.tsx))
 
-### Planned Implementation
-A complete backend system with Supabase integration is currently designed for:
-- User Authentication (Login / Signup)
-- Protected Client Dashboards (`/dashboard/*`)
-- Protected Admin Management Console (`/admin/*`)
+### Implementation status
 
-For full schema details, triggers, RLS policies, and view maps, consult the [Booking Implementation Plan](file:///c:/Users/gavin/OneDrive/Desktop/Coding/figma-bolt-Meridian-CPA/Implementation/IMPLEMENTATION_PLAN_BOOKING.md).
+Phases **1**, **2**, **2.5**, **3**, and **4.5** are complete. Phase **4** (audit/history logging) is next.
+
+| Phase | Status |
+|-------|--------|
+| 1 — Auth & profiles | ✅ [#3](https://github.com/gavinfung321/Meridian-CPA/issues/3), [#4](https://github.com/gavinfung321/Meridian-CPA/issues/4) |
+| 2 — Sessions & categories | ✅ [#5](https://github.com/gavinfung321/Meridian-CPA/issues/5) |
+| 2.5 — Catalog UX | ✅ |
+| 3 — Bookings | ✅ |
+| 4.5 — People directory | ✅ |
+| 4 — History & logging | **Next** |
+| 5 — Admin reporting | Pending |
+
+For full schema, triggers, RLS policies, and phase checklists, see the [Booking Implementation Plan](Implementation/IMPLEMENTATION_PLAN_BOOKING.md).
 
 ---
 

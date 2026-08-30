@@ -1,6 +1,7 @@
 import { countActiveBookings } from "./session-admin";
 import { supabase } from "./supabase";
 import type { BookingStatus } from "../types/database";
+import { logBookingCreated, logBookingStatusChange } from "./booking-history";
 
 export type ClientBookingRow = {
   id: string;
@@ -130,13 +131,20 @@ export async function createClientBooking(
 ): Promise<void> {
   await assertSessionBookable(sessionId, userId);
 
-  const { error } = await supabase.from("bookings").insert({
-    session_id: sessionId,
-    user_id: userId,
-    status: "pending",
-  });
+  const { data, error } = await supabase
+    .from("bookings")
+    .insert({
+      session_id: sessionId,
+      user_id: userId,
+      status: "pending",
+    })
+    .select("id")
+    .single();
 
   if (error) throw error;
+  if (data?.id) {
+    await logBookingCreated(data.id, userId, "pending");
+  }
 }
 
 export async function cancelClientBooking(
@@ -144,6 +152,14 @@ export async function cancelClientBooking(
   userId: string,
   reason: string,
 ): Promise<void> {
+  const { data: existing, error: fetchError } = await supabase
+    .from("bookings")
+    .select("status")
+    .eq("id", bookingId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
   const { error } = await supabase
     .from("bookings")
     .update({
@@ -157,6 +173,14 @@ export async function cancelClientBooking(
     .in("status", ["pending", "confirmed"]);
 
   if (error) throw error;
+
+  await logBookingStatusChange(
+    bookingId,
+    userId,
+    existing.status as BookingStatus,
+    "cancelled",
+    reason.trim(),
+  );
 }
 
 export async function fetchSessionTitle(sessionId: string): Promise<string | null> {

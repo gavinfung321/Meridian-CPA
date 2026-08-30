@@ -20,6 +20,7 @@ interface SessionTypeFormModalProps {
     description: string | null;
     default_duration_minutes: number;
     default_price: number;
+    default_max_slots: number;
   }) => void;
 }
 
@@ -36,6 +37,7 @@ export function SessionTypeFormModal({
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState(60);
   const [price, setPrice] = useState(0);
+  const [maxSlots, setMaxSlots] = useState(1);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +46,7 @@ export function SessionTypeFormModal({
     setDescription(sessionType?.description ?? "");
     setDuration(sessionType?.default_duration_minutes ?? 60);
     setPrice(Number(sessionType?.default_price ?? 0));
+    setMaxSlots(sessionType?.default_max_slots ?? 1);
   }, [open, sessionType, categories]);
 
   const handleSubmit = (event: FormEvent) => {
@@ -56,6 +59,7 @@ export function SessionTypeFormModal({
       description: description.trim() || null,
       default_duration_minutes: duration,
       default_price: price,
+      default_max_slots: maxSlots,
     });
   };
 
@@ -63,6 +67,7 @@ export function SessionTypeFormModal({
     <AdminModal
       open={open}
       onClose={onClose}
+      wide
       title={sessionType ? "Edit session type" : "New session type"}
       footer={
         <>
@@ -132,7 +137,7 @@ export function SessionTypeFormModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label htmlFor="type-duration" className="block text-sm font-medium text-[#0F2A1D]">
               Default duration (mins)
@@ -144,6 +149,20 @@ export function SessionTypeFormModal({
               step={15}
               value={duration}
               onChange={(event) => setDuration(Number(event.target.value))}
+              className={`${adminInputClassName} mt-1`}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="type-capacity" className="block text-sm font-medium text-[#0F2A1D]">
+              Default capacity
+            </label>
+            <input
+              id="type-capacity"
+              type="number"
+              min={1}
+              value={maxSlots}
+              onChange={(event) => setMaxSlots(Number(event.target.value))}
               className={`${adminInputClassName} mt-1`}
               required
             />

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminModal } from "../../components/AdminModal";
 import { Button } from "../../components/ui/button";
 import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   createAdminBooking,
   fetchManualBookingClients,
@@ -23,6 +24,7 @@ export function ManualBookingModal({
   onClose,
   onCreated,
 }: ManualBookingModalProps): JSX.Element | null {
+  const { profile } = useAuth();
   const { showToast } = useToast();
   const [clients, setClients] = useState<ManualBookingClient[]>([]);
   const [sessions, setSessions] = useState<ManualBookingSession[]>([]);
@@ -71,7 +73,7 @@ export function ManualBookingModal({
     setError(null);
 
     try {
-      await createAdminBooking(clientId, sessionId, status);
+      await createAdminBooking(clientId, sessionId, profile?.id ?? clientId, status);
       showToast(
         status === "confirmed" ? "Booking created and confirmed." : "Booking request created.",
       );

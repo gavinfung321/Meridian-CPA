@@ -2,16 +2,19 @@ import { Calendar, Check, Clock, MapPin, Tag, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminModal } from "../../components/AdminModal";
 import { Button } from "../../components/ui/button";
+import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import {
   bookingStatusStyles,
   canManageBookingStatus,
+  canReinstateBooking,
   formatBookingCreatedDate,
   formatBookingId,
   formatBookingLongSessionDate,
   formatBookingPrice,
   getBookingClientName,
   getBookingSessionTypeLabel,
+  reinstateAdminBooking,
   updateBookingStatus,
   type AdminBookingRow,
 } from "../../lib/booking-admin";
@@ -33,6 +36,7 @@ export function BookingDetailModal({
   onViewClient,
   onUpdated,
 }: BookingDetailModalProps): JSX.Element | null {
+  const { profile } = useAuth();
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,16 +53,44 @@ export function BookingDetailModal({
   const clientName = getBookingClientName(booking);
   const status = booking.status as BookingStatus;
   const showManageStatus = canManageBookingStatus(status);
+  const showReinstate = canReinstateBooking(status);
 
   const handleApprove = async () => {
     setSaving(true);
     setError(null);
     try {
-      await updateBookingStatus(booking.id, "confirmed");
+      await updateBookingStatus(booking.id, "confirmed", {
+        changedBy: profile?.id,
+      });
       showToast("Booking approved.");
       onUpdated(booking.id);
     } catch (updateError) {
       setError(updateError instanceof Error ? updateError.message : "Failed to approve booking.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReinstate = async () => {
+    const sessionId = booking.session?.id;
+    const userId = booking.user?.id;
+    if (!sessionId || !userId) {
+      setError("Missing session or client on this booking.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await reinstateAdminBooking(booking.id, sessionId, userId, profile?.id ?? userId);
+      showToast("Booking reinstated as confirmed.");
+      onUpdated(booking.id);
+    } catch (reinstateError) {
+      setError(
+        reinstateError instanceof Error
+          ? reinstateError.message
+          : "Failed to reinstate booking.",
+      );
     } finally {
       setSaving(false);
     }
@@ -70,7 +102,10 @@ export function BookingDetailModal({
     setError(null);
     try {
       const nextStatus: BookingStatus = reasonAction === "reject" ? "rejected" : "cancelled";
-      await updateBookingStatus(booking.id, nextStatus, reason);
+      await updateBookingStatus(booking.id, nextStatus, {
+        reason,
+        changedBy: profile?.id,
+      });
       setReasonAction(null);
       showToast(reasonAction === "reject" ? "Booking rejected." : "Booking cancelled.");
       onUpdated(booking.id);
@@ -229,6 +264,28 @@ export function BookingDetailModal({
                 Cancel booking
               </Button>
             ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {showReinstate ? (
+        <div className="mt-6 border-t border-[#EDECE6] pt-4">
+          <p className="text-sm font-medium text-[#0F2A1D]">Reinstate booking</p>
+          <p className="mt-1 text-sm text-[#0F2A1D]/60">
+            {status === "rejected"
+              ? "Approve this request again if the issue is resolved and the session slot is still available."
+              : "Confirm this booking again if the client is returning to the same session slot."}
+          </p>
+          <div className="mt-3">
+            <Button
+              type="button"
+              disabled={saving}
+              className="border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+              onClick={() => void handleReinstate()}
+            >
+              <Check className="mr-1.5 h-4 w-4" />
+              {saving ? "Reinstating…" : "Reinstate as confirmed"}
+            </Button>
           </div>
         </div>
       ) : null}
