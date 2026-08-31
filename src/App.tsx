@@ -14,6 +14,7 @@ import { AdminCatalogPage } from "./screens/Admin/AdminCatalogPage";
 import { AdminSessionForm } from "./screens/Admin/AdminSessionForm";
 import { AdminProfile } from "./screens/Admin/AdminProfile";
 import { AdminSettings } from "./screens/Admin/AdminSettings";
+import { DashboardBookSession } from "./screens/Dashboard/DashboardBookSession";
 import { DashboardBookings } from "./screens/Dashboard/DashboardBookings";
 import { DashboardOverview } from "./screens/Dashboard/DashboardOverview";
 import { DashboardProfile } from "./screens/Dashboard/DashboardProfile";
@@ -53,6 +54,7 @@ export const App = (): JSX.Element => {
 
           <Route element={<ProtectedRoute access="dashboard" />}>
             <Route path="/dashboard" element={<DashboardOverview />} />
+            <Route path="/dashboard/book" element={<DashboardBookSession />} />
             <Route path="/dashboard/bookings" element={<DashboardBookings />} />
             <Route path="/dashboard/profile" element={<DashboardProfile />} />
           </Route>

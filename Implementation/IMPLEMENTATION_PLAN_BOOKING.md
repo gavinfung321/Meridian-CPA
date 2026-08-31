@@ -34,6 +34,7 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 | **§5–6** | Database schema, RLS, triggers *(reference)* |
 | **§7** | **Implementation phases** — full checklists *(execution order)* |
 | **§8** | QA summary — one paragraph per phase |
+| **Client portal UX:** [IMPLEMENTATION_USER.md](./IMPLEMENTATION_USER.md) |
 
 > **Phase 1 detail:** [PHASE_1_AUTH_PROFILES.md](./PHASE_1_AUTH_PROFILES.md)
 
@@ -41,7 +42,8 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 
 - Supabase Edge Functions + email (Resend/SendGrid) — deferred post-Phase 3
 - Production `/reset-password` redirect URL — add on deploy
-- Client notification bell — optional polish *(admin bell ✅ Phase 3)*
+- Client notification bell — optional polish *(admin bell ✅ Phase 3)* → **client bell ✅ [#7](https://github.com/gavinfung321/Meridian-CPA/issues/7)**
+- Client **Book a session** page (`/dashboard/book`) — list + calendar *(Option C)*
 
 **Completed since roadmap draft:** top-left toast system ✅, admin booking search ✅, dashboard metric helpers ✅, catalog row-click edit modals ✅, session type default capacity ✅, admin sidebar reorder (Bookings below Overview) ✅
 

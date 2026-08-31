@@ -3,11 +3,26 @@ import { supabase } from "./supabase";
 import type { BookingStatus } from "../types/database";
 import { logBookingCreated, logBookingStatusChange } from "./booking-history";
 
+export type ClientBookingStatusFilter = "all" | "upcoming" | "pending" | "past" | "cancelled";
+
+export const CLIENT_BOOKING_STATUS_FILTER_OPTIONS: Array<{
+  id: ClientBookingStatusFilter;
+  label: string;
+}> = [
+  { id: "all", label: "All" },
+  { id: "upcoming", label: "Upcoming" },
+  { id: "pending", label: "Pending" },
+  { id: "past", label: "Past" },
+  { id: "cancelled", label: "Cancelled" },
+];
+
 export type ClientBookingRow = {
   id: string;
   status: BookingStatus;
   cancel_reason: string | null;
+  cancelled_at: string | null;
   created_at: string;
+  updated_at: string;
   session: {
     id: string;
     title: string;
@@ -33,7 +48,9 @@ export async function fetchClientBookings(userId: string): Promise<ClientBooking
       id,
       status,
       cancel_reason,
+      cancelled_at,
       created_at,
+      updated_at,
       session:sessions!bookings_session_id_fkey (
         id,
         title,
@@ -51,6 +68,59 @@ export async function fetchClientBookings(userId: string): Promise<ClientBooking
   return (data ?? []) as ClientBookingRow[];
 }
 
+function isFutureSession(startTime: string | undefined): boolean {
+  if (!startTime) return false;
+  return new Date(startTime).getTime() >= Date.now();
+}
+
+/** Past confirmed sessions plus cancelled/rejected — matches overview "Past / closed" metric. */
+export function isPastClosedBooking(
+  booking: ClientBookingRow,
+  nowMs: number = Date.now(),
+): boolean {
+  if (booking.status === "cancelled" || booking.status === "rejected") return true;
+  if (booking.status === "confirmed") {
+    const start = booking.session?.start_time;
+    return start ? new Date(start).getTime() < nowMs : false;
+  }
+  return false;
+}
+
+export function matchesClientBookingStatusFilter(
+  booking: ClientBookingRow,
+  filter: ClientBookingStatusFilter,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "pending") return booking.status === "pending";
+  if (filter === "cancelled") {
+    return booking.status === "cancelled" || booking.status === "rejected";
+  }
+  if (filter === "upcoming") {
+    return (
+      (booking.status === "pending" || booking.status === "confirmed") &&
+      isFutureSession(booking.session?.start_time)
+    );
+  }
+  if (filter === "past") {
+    return isPastClosedBooking(booking);
+  }
+  return true;
+}
+
+export function filterClientBookingsList(
+  bookings: ClientBookingRow[],
+  statusFilter: ClientBookingStatusFilter,
+  searchQuery: string,
+): ClientBookingRow[] {
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  return bookings.filter((booking) => {
+    if (!matchesClientBookingStatusFilter(booking, statusFilter)) return false;
+    if (!normalizedQuery) return true;
+    const title = booking.session?.title?.toLowerCase() ?? "";
+    return title.includes(normalizedQuery);
+  });
+}
+
 export function computeClientDashboardStats(
   bookings: ClientBookingRow[],
 ): ClientDashboardStats {
@@ -64,13 +134,7 @@ export function computeClientDashboardStats(
 
   const pendingCount = bookings.filter((booking) => booking.status === "pending").length;
 
-  const completedCount = bookings.filter((booking) => {
-    if (booking.status === "confirmed") {
-      const start = booking.session?.start_time;
-      return start ? new Date(start).getTime() < now : false;
-    }
-    return booking.status === "cancelled" || booking.status === "rejected";
-  }).length;
+  const completedCount = bookings.filter((booking) => isPastClosedBooking(booking, now)).length;
 
   const nextBooking =
     [...upcoming].sort(

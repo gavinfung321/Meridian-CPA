@@ -39,14 +39,11 @@ export function Login(): JSX.Element {
 
   if (!loading && user && profile) {
     const destination = getPostLoginRoute(from, profile.role);
-    const dashboardPath = profile.role === "admin" ? "/admin/dashboard" : "/dashboard";
-    return (
-      <Navigate
-        to={destination}
-        replace
-        state={bookSessionId && destination === dashboardPath ? { bookSessionId } : undefined}
-      />
-    );
+    const bookDestination =
+      bookSessionId && profile.role !== "admin"
+        ? `/dashboard/book?session=${bookSessionId}`
+        : destination;
+    return <Navigate to={bookDestination} replace />;
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -62,13 +59,12 @@ export function Login(): JSX.Element {
       return;
     }
 
-    navigate(getPostLoginRoute(from, result.profile?.role), {
-      replace: true,
-      state:
-        bookSessionId && result.profile?.role !== "admin"
-          ? { bookSessionId }
-          : undefined,
-    });
+    const destination = getPostLoginRoute(from, result.profile?.role);
+    const bookDestination =
+      bookSessionId && result.profile?.role !== "admin"
+        ? `/dashboard/book?session=${bookSessionId}`
+        : destination;
+    navigate(bookDestination, { replace: true });
   };
 
   return (

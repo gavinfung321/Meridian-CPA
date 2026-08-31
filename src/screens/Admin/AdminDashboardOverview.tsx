@@ -16,6 +16,7 @@ import {
 import { bookingStatusStyles, formatBookingRelativeTime } from "../../lib/booking-admin";
 import { formatSessionTimeShort } from "../../lib/session-admin";
 import { cn } from "../../lib/utils";
+import { getGreeting } from "../../lib/greeting";
 import type { BookingStatus } from "../../types/database";
 
 const ACTIVITY_FILTER_OPTIONS: Array<{ id: ActivityActorFilter; label: string }> = [
@@ -23,13 +24,6 @@ const ACTIVITY_FILTER_OPTIONS: Array<{ id: ActivityActorFilter; label: string }>
   { id: "user", label: "User" },
   { id: "admin", label: "Admin" },
 ];
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 function MetricInfoTip({ text }: { text: string }): JSX.Element {
   return (

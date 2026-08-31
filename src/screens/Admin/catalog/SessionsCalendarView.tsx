@@ -23,6 +23,7 @@ interface SessionsCalendarViewProps {
   weekStart: Date;
   onWeekStartChange: (date: Date) => void;
   onSessionClick: (session: CalendarSessionRow) => void;
+  showAddOnEmptyDay?: boolean;
 }
 
 function dayKey(date: Date): string {
@@ -37,6 +38,7 @@ export function SessionsCalendarView({
   weekStart,
   onWeekStartChange,
   onSessionClick,
+  showAddOnEmptyDay = true,
 }: SessionsCalendarViewProps): JSX.Element {
   const today = new Date();
   const weekDays = Array.from({ length: 7 }, (_, index) => addCalendarDays(weekStart, index));
@@ -122,17 +124,19 @@ export function SessionsCalendarView({
                 {daySessions.length === 0 ? (
                   <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-[#EDECE6] bg-[#F9F9F6]/60 px-2 py-6 text-center">
                     <p className="text-xs text-[#0F2A1D]/45">No sessions</p>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="mt-2 h-8 text-[#0F2A1D]/60 hover:text-[#0F2A1D]"
-                    >
-                      <Link to="/admin/sessions/new">
-                        <Plus className="mr-1 h-3.5 w-3.5" />
-                        Add
-                      </Link>
-                    </Button>
+                    {showAddOnEmptyDay ? (
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 h-8 text-[#0F2A1D]/60 hover:text-[#0F2A1D]"
+                      >
+                        <Link to="/admin/sessions/new">
+                          <Plus className="mr-1 h-3.5 w-3.5" />
+                          Add
+                        </Link>
+                      </Button>
+                    ) : null}
                   </div>
                 ) : (
                   daySessions.map((session) => {
