@@ -5,7 +5,12 @@ import { BookSessionModal } from "../../components/BookSessionModal";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
-import { createClientBooking } from "../../lib/client-bookings";
+import {
+  buildUserSessionBookingMap,
+  createClientBooking,
+  fetchClientBookings,
+  type UserSessionBooking,
+} from "../../lib/client-bookings";
 import { fetchClientCalendarSessions } from "../../lib/client-sessions";
 import { countActiveBookings, startOfWeek } from "../../lib/session-admin";
 import { fetchPublicSessions, type PublicSessionCard } from "../../lib/public-sessions";
@@ -23,6 +28,19 @@ import { SessionCard } from "../Desktop/sections/BookingSection/SessionCard";
 
 type BookViewMode = "list" | "calendar";
 
+function sessionMatchesFilters(
+  session: PublicSessionCard,
+  typeFilter: SessionTypeFilter,
+  locationFilter: SessionLocationFilter,
+  searchQuery: string,
+): boolean {
+  if (typeFilter !== "all" && session.typeFilter !== typeFilter) return false;
+  if (locationFilter !== "all" && session.locationFilter !== locationFilter) return false;
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  if (normalizedQuery && !session.title.toLowerCase().includes(normalizedQuery)) return false;
+  return true;
+}
+
 export function DashboardBookSession(): JSX.Element {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -35,6 +53,9 @@ export function DashboardBookSession(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
   const [sessions, setSessions] = useState<PublicSessionCard[]>([]);
   const [calendarSessions, setCalendarSessions] = useState<CalendarSessionRow[]>([]);
+  const [userSessionBookings, setUserSessionBookings] = useState<Map<string, UserSessionBooking>>(
+    () => new Map(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
@@ -43,60 +64,79 @@ export function DashboardBookSession(): JSX.Element {
   const [bookError, setBookError] = useState<string | null>(null);
 
   const loadSessions = useCallback(async () => {
+    if (!user) return;
     setError(null);
-    const [cards, calendar] = await Promise.all([
+    const [cards, calendar, bookings] = await Promise.all([
       fetchPublicSessions("en-HK"),
       fetchClientCalendarSessions(),
+      fetchClientBookings(user.id),
     ]);
     setSessions(cards);
     setCalendarSessions(calendar as CalendarSessionRow[]);
-  }, []);
+    setUserSessionBookings(buildUserSessionBookingMap(bookings));
+  }, [user]);
 
   useEffect(() => {
     document.title = "Book a session | Meridian CPA";
   }, []);
 
   useEffect(() => {
+    if (!user) return;
     void loadSessions()
       .catch((loadError) => {
         setError(loadError instanceof Error ? loadError.message : "Failed to load sessions.");
       })
       .finally(() => setLoading(false));
-  }, [loadSessions]);
+  }, [loadSessions, user]);
 
   const sessionIdFromUrl = searchParams.get("session");
 
   useEffect(() => {
     if (!sessionIdFromUrl || loading) return;
     const match = sessions.find((session) => session.id === sessionIdFromUrl);
-    if (match) {
-      setBookSession(match);
-      setBookError(null);
+    if (!match) return;
+
+    const existing = userSessionBookings.get(match.id);
+    if (existing) {
+      navigate(`/dashboard/bookings?booking=${existing.bookingId}`, { replace: true });
+      return;
     }
-  }, [sessionIdFromUrl, sessions, loading]);
+
+    setBookSession(match);
+    setBookError(null);
+  }, [sessionIdFromUrl, sessions, loading, userSessionBookings, navigate]);
 
   const filteredSessions = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
     return sessions.filter((session) => {
+      if (!sessionMatchesFilters(session, typeFilter, locationFilter, searchQuery)) return false;
       const spotsLeft = session.capacity.total - session.capacity.booked;
-      if (spotsLeft <= 0) return false;
-      if (typeFilter !== "all" && session.typeFilter !== typeFilter) return false;
-      if (locationFilter !== "all" && session.locationFilter !== locationFilter) return false;
-      if (normalizedQuery && !session.title.toLowerCase().includes(normalizedQuery)) return false;
-      return true;
+      const isRegistered = userSessionBookings.has(session.id);
+      return isRegistered || spotsLeft > 0;
     });
-  }, [sessions, typeFilter, locationFilter, searchQuery]);
+  }, [sessions, typeFilter, locationFilter, searchQuery, userSessionBookings]);
 
   const filteredCalendarSessions = useMemo(() => {
-    const bookableIds = new Set(filteredSessions.map((session) => session.id));
+    const visibleIds = new Set(filteredSessions.map((session) => session.id));
     return calendarSessions.filter((session) => {
-      if (!bookableIds.has(session.id)) return false;
+      if (!visibleIds.has(session.id)) return false;
+      const isRegistered = userSessionBookings.has(session.id);
+      if (isRegistered) return true;
       const active = countActiveBookings(session.bookings);
       return active < session.max_slots;
     });
-  }, [calendarSessions, filteredSessions]);
+  }, [calendarSessions, filteredSessions, userSessionBookings]);
+
+  const viewUserBooking = (bookingId: string) => {
+    navigate(`/dashboard/bookings?booking=${bookingId}`);
+  };
 
   const openBookModal = (session: PublicSessionCard) => {
+    const existing = userSessionBookings.get(session.id);
+    if (existing) {
+      viewUserBooking(existing.bookingId);
+      return;
+    }
+
     setBookError(null);
     setBookSession(session);
     setSearchParams(
@@ -231,6 +271,7 @@ export function DashboardBookSession(): JSX.Element {
                 onWeekStartChange={setWeekStart}
                 onSessionClick={handleCalendarSessionClick}
                 showAddOnEmptyDay={false}
+                userSessionBookings={userSessionBookings}
               />
             )}
           </div>
@@ -254,6 +295,8 @@ export function DashboardBookSession(): JSX.Element {
                 key={session.id}
                 session={session}
                 lang="en"
+                userBooking={userSessionBookings.get(session.id) ?? null}
+                onViewBooking={viewUserBooking}
                 onBook={() => openBookModal(session)}
               />
             ))}

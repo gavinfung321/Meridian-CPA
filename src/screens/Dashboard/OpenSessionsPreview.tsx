@@ -1,21 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { buildUserSessionBookingMap, fetchClientBookings } from "../../lib/client-bookings";
 import { selectAvailableSessions } from "../../lib/client-dashboard";
 import { fetchPublicSessions, type PublicSessionCard } from "../../lib/public-sessions";
-import { formatSessionSchedule } from "../../lib/session-admin";
 
 const PREVIEW_LIMIT = 3;
 
-export function OpenSessionsPreview(): JSX.Element | null {
+type OpenSessionsPreviewProps = {
+  variant?: "default" | "compact";
+};
+
+export function OpenSessionsPreview({
+  variant = "default",
+}: OpenSessionsPreviewProps): JSX.Element | null {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<PublicSessionCard[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
 
-    void fetchPublicSessions("en-HK")
-      .then((data) => {
-        if (!cancelled) setSessions(selectAvailableSessions(data, PREVIEW_LIMIT));
+    void Promise.all([fetchPublicSessions("en-HK"), fetchClientBookings(user.id)])
+      .then(([publicSessions, bookings]) => {
+        if (cancelled) return;
+        const registeredIds = new Set(buildUserSessionBookingMap(bookings).keys());
+        const available = selectAvailableSessions(publicSessions, PREVIEW_LIMIT + registeredIds.size)
+          .filter((session) => !registeredIds.has(session.id))
+          .slice(0, PREVIEW_LIMIT);
+        setSessions(available);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -24,7 +38,7 @@ export function OpenSessionsPreview(): JSX.Element | null {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -40,12 +54,20 @@ export function OpenSessionsPreview(): JSX.Element | null {
 
   if (sessions.length === 0) return null;
 
+  const isCompact = variant === "compact";
+
   return (
     <section className="mt-8 rounded-xl border border-[#EDECE6] bg-white p-6 shadow-sm">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-serif text-xl font-semibold text-[#0F2A1D]">Open sessions</h2>
-          <p className="mt-1 text-sm text-[#0F2A1D]/60">A few consultations you can book right now.</p>
+          <h2 className="font-serif text-xl font-semibold text-[#0F2A1D]">
+            {isCompact ? "Browse more sessions" : "Open sessions"}
+          </h2>
+          <p className="mt-1 text-sm text-[#0F2A1D]/60">
+            {isCompact
+              ? "Book another consultation from our open schedule."
+              : "A few consultations you can book right now."}
+          </p>
         </div>
         <Link
           to="/dashboard/book"
@@ -58,7 +80,10 @@ export function OpenSessionsPreview(): JSX.Element | null {
         {sessions.map((session) => {
           const spotsLeft = session.capacity.total - session.capacity.booked;
           return (
-            <li key={session.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <li
+              key={session.id}
+              className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="min-w-0">
                 <p className="truncate font-medium text-[#0F2A1D]">{session.title}</p>
                 <p className="truncate text-sm text-[#0F2A1D]/60">

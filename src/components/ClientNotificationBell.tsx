@@ -147,6 +147,14 @@ export function ClientNotificationBell(): JSX.Element {
 
           <div className="border-t border-[#EDECE6] py-1">
             <Link
+              to="/dashboard#activity"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-sm font-medium text-[#0F2A1D] hover:bg-[#F9F9F6]"
+            >
+              View all activity →
+            </Link>
+            <Link
               to="/dashboard/bookings"
               role="menuitem"
               onClick={() => setOpen(false)}

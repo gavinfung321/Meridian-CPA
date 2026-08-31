@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight, Clock, Plus, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
+import { bookingStatusStyles } from "../../../lib/booking-admin";
+import type { UserSessionBooking } from "../../../lib/client-bookings";
 import {
   addCalendarDays,
   formatPrice,
@@ -24,6 +26,7 @@ interface SessionsCalendarViewProps {
   onWeekStartChange: (date: Date) => void;
   onSessionClick: (session: CalendarSessionRow) => void;
   showAddOnEmptyDay?: boolean;
+  userSessionBookings?: Map<string, UserSessionBooking>;
 }
 
 function dayKey(date: Date): string {
@@ -39,6 +42,7 @@ export function SessionsCalendarView({
   onWeekStartChange,
   onSessionClick,
   showAddOnEmptyDay = true,
+  userSessionBookings,
 }: SessionsCalendarViewProps): JSX.Element {
   const today = new Date();
   const weekDays = Array.from({ length: 7 }, (_, index) => addCalendarDays(weekStart, index));
@@ -145,6 +149,9 @@ export function SessionsCalendarView({
                       session.max_slots > 0
                         ? Math.min(100, Math.round((counts.reserved / session.max_slots) * 100))
                         : 0;
+                    const userBooking = userSessionBookings?.get(session.id);
+                    const registeredLabel =
+                      userBooking?.status === "pending" ? "Awaiting approval" : "Registered";
 
                     return (
                       <button
@@ -155,9 +162,23 @@ export function SessionsCalendarView({
                           "rounded-lg border px-2.5 py-2 text-left transition-colors hover:border-[#C9A84C]/40 hover:bg-[#C9A84C]/5",
                           session.is_cancelled
                             ? "border-red-200 bg-red-50/40 opacity-75"
-                            : "border-[#EDECE6] bg-[#F9F9F6]",
+                            : userBooking
+                              ? userBooking.status === "pending"
+                                ? "border-l-[3px] border-[#EDECE6] border-l-[#C9A84C] bg-[#C9A84C]/10"
+                                : "border-l-[3px] border-[#EDECE6] border-l-emerald-500 bg-emerald-50/60"
+                              : "border-[#EDECE6] bg-[#F9F9F6]",
                         )}
                       >
+                        {userBooking ? (
+                          <span
+                            className={cn(
+                              "mb-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize",
+                              bookingStatusStyles[userBooking.status],
+                            )}
+                          >
+                            {registeredLabel}
+                          </span>
+                        ) : null}
                         <p className="line-clamp-2 text-xs font-semibold leading-snug text-[#0F2A1D]">
                           {session.title}
                         </p>

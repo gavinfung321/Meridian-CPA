@@ -566,7 +566,10 @@ export function DashboardOverview(): JSX.Element {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#EDECE6] bg-white p-6 shadow-sm lg:col-span-7">
+          <div
+            id="activity"
+            className="rounded-xl border border-[#EDECE6] bg-white p-6 shadow-sm lg:col-span-7 scroll-mt-6"
+          >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="font-serif text-xl font-semibold">Recent activity</h2>
@@ -634,7 +637,11 @@ export function DashboardOverview(): JSX.Element {
           </div>
         </div>
 
-        {!loading && summary && summary.upcomingCount === 0 ? <OpenSessionsPreview /> : null}
+        {!loading && profile?.status !== "banned" ? (
+          <OpenSessionsPreview
+            variant={summary && summary.upcomingCount > 0 ? "compact" : "default"}
+          />
+        ) : null}
       </div>
 
       <ClientBookingDetailModal

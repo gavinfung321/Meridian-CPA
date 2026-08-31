@@ -31,8 +31,10 @@ Elevate the **client portal** (`/dashboard/*`) to match the polish and utility o
 | 1 | Scope | Improve **both** `/dashboard` and `/dashboard/bookings` in this phase |
 | 2 | Notifications | **Bell + activity feed** on overview (mirror admin pattern, client-filtered data) |
 | 3 | New users | **Book first**, profile second — primary CTA is booking; **non-blocking** banner when `phone_number` is empty |
-| 4 | In-portal booking | **Option C** — dedicated `/dashboard/book` (list + calendar); header always → Book page; Overview preview only when no upcoming |
-| 5 | Header CTA | Always **Book a session** → `/dashboard/book`; consistent outline styling *(no label or variant change when user has upcoming)* |
+| 4 | In-portal booking | **Option C** — dedicated `/dashboard/book` (list + calendar); header always → Book page; overview browse strip always visible |
+| 5 | Header CTA | Always **Book a session** → `/dashboard/book`; consistent outline styling *(no “Book now” / “Book another” variant flip)* |
+| 6 | Registered sessions | Book page highlights sessions user already booked — **Awaiting approval** (gold) / **Registered** (green); CTA → View booking |
+| 7 | Notifications page | **Deferred v1** — bell dropdown + overview activity feed; bell footer links to `#activity`; full `/dashboard/notifications` in v2 with read state |
 
 ### New-user UX by state
 
@@ -40,15 +42,15 @@ Elevate the **client portal** (`/dashboard/*`) to match the polish and utility o
 |------------|---------------|-----------|
 | `user`, 0 bookings | Book / browse sessions (hero) | Profile banner if no phone |
 | Has pending booking | Attention strip: awaiting firm approval | Complete phone if missing |
-| `client` with upcoming | Next session card + upcoming list | Profile nudge only; **no** book hero on Overview — use header/sidebar |
+| `client` with upcoming | Next session card + upcoming list | Browse-more strip + header/sidebar; profile nudge secondary |
 
 ### Booking path (Option C)
 
 ```
 Sidebar "Book a session"     →  /dashboard/book
 Header "Book a session"      →  /dashboard/book  (outline, same label always)
-Overview welcome / preview   →  /dashboard/book  (only when upcomingCount === 0)
-Book page                    →  List | Calendar toggle, filters, BookSessionModal
+Overview welcome / preview   →  /dashboard/book  (browse strip always; compact copy when upcoming)
+Book page                    →  List | Calendar; registered sessions highlighted; ?session= redirects to booking if already registered
 Homepage #booking            →  public catalog (logged-out + marketing escape hatch)
 ```
 
@@ -58,12 +60,20 @@ Homepage #booking            →  public catalog (logged-out + marketing escape 
 Overview  |  Book a session  |  Bookings  |  Profile
 ```
 
+### Dashboard content priority
+
+```
+1. Pending approval banner     →  action needed
+2. Next session + upcoming     →  core value for active clients
+3. Profile phone nudge         →  non-blocking, never above pending
+4. Browse sessions strip       →  primary for new users; compact for returning clients
+```
+
 ### Layout header CTA
 
-- Label: **Book a session** — always, regardless of upcoming bookings
+- Label: **Book a session** — always *(not “Book now” — CPA tone; matches nav + page title)*
 - Style: outline (`border-[#0F2A1D]`, forest green text)
 - Target: `/dashboard/book`
-- Rationale: matches sidebar label; avoids load-time label flash and variant flip
 
 ---
 
@@ -71,8 +81,8 @@ Overview  |  Book a session  |  Bookings  |  Profile
 
 | Area | Today | Gap |
 |------|-------|-----|
-| `/dashboard/book` | **New** — list + calendar, filters, book modal | ✅ Phase 7 |
-| `/dashboard` overview | No full session grid when user has upcoming | Compact preview when `upcomingCount === 0` only |
+| `/dashboard/book` | List + calendar; registered-session highlighting | ✅ Phase 7 |
+| `/dashboard` overview | Next session, upcoming, activity; browse strip (default / compact) | ✅ Phase 7 |
 | `/dashboard/bookings` | Live table + cancel with reason | No status tabs/filters, no search, no pagination, no detail modal |
 | `DashboardLayout` | Sidebar + header **Book a session** → `/dashboard/book`; notification bell | ✅ Phase 7 |
 | Admin bell | `AdminNotificationBell` + `useBookingNotifications` | Client equivalent not built |
@@ -86,14 +96,14 @@ Overview  |  Book a session  |  Bookings  |  Profile
 | File | Action |
 |------|--------|
 | `src/lib/client-dashboard.ts` | **New** — stats helpers, activity feed, notification queries |
-| `src/lib/client-bookings.ts` | Extend — filtered fetch, booking detail shape if needed |
+| `src/lib/client-bookings.ts` | Extend — filters, `buildUserSessionBookingMap`, booking detail |
 | `src/components/ClientNotificationBell.tsx` | **New** — client bell dropdown |
 | `src/components/DashboardLayout.tsx` | Nav, header CTA → `/dashboard/book`, bell in `PortalLayout` |
 | `src/screens/Dashboard/DashboardOverview.tsx` | Major refresh |
 | `src/screens/Dashboard/DashboardBookings.tsx` | Filters, search, pagination, detail |
 | `src/screens/Dashboard/ClientBookingDetailModal.tsx` | **New** *(or shared modal)* — read-only booking detail |
 | `src/screens/Dashboard/DashboardBookSession.tsx` | **New** — Book a session page (list + calendar) |
-| `src/screens/Dashboard/OpenSessionsPreview.tsx` | **New** — compact overview preview (no upcoming only) |
+| `src/screens/Dashboard/OpenSessionsPreview.tsx` | Browse strip — default (new users) / compact (has upcoming); excludes already-registered sessions |
 | `src/screens/Dashboard/AvailableSessionsSection.tsx` | **Removed from Overview** — logic moved to Book page |
 | `Implementation/IMPLEMENTATION_PLAN_BOOKING.md` | Update carried-forward + client checklist when complete |
 
@@ -172,12 +182,14 @@ Apply [IMPLEMENTATION_PLAN_BOOKING.md §2](./IMPLEMENTATION_PLAN_BOOKING.md) wit
 - [ ] **Recent activity** feed from `booking_history` scoped to current user’s bookings
 - [ ] Filter tabs: **All | You | Firm** *(maps to actor: user vs admin — same as admin All/User/Admin)*
 - [ ] Rows clickable → open booking detail modal or `/dashboard/bookings?booking=<id>`
+- [x] Section id `#activity` — bell footer **View all activity →** deep link target
 
-#### Open sessions preview *(only when `upcomingCount === 0`)*
+#### Browse sessions strip *(always visible when open sessions exist)*
 
-- [ ] Compact strip: up to **3** rows — title, schedule, spots left, **Book** link
-- [ ] Footer: **Browse all sessions →** `/dashboard/book`
-- [ ] **Hidden** when user has upcoming bookings *(header + sidebar are enough)*
+- [x] Up to **3** rows — title, schedule, spots left, **Book** link
+- [x] **Open sessions** title when `upcomingCount === 0`; **Browse more sessions** when user has upcoming
+- [x] Excludes sessions user already registered for
+- [x] Footer: **Browse all sessions →** `/dashboard/book`
 
 #### Empty / welcome state *(0 upcoming)*
 
@@ -198,14 +210,22 @@ Apply [IMPLEMENTATION_PLAN_BOOKING.md §2](./IMPLEMENTATION_PLAN_BOOKING.md) wit
 
 #### Views
 
-- [ ] Toggle: **List | Calendar** *(same segmented control as admin catalog)*
-- [ ] **List:** `SessionCard` grid + type/location filters + search
-- [ ] **Calendar:** weekly grid reusing `SessionsCalendarView` *(client variant — no admin Add)*; click session → `BookSessionModal`
+- [x] Toggle: **List | Calendar** *(same segmented control as admin catalog)*
+- [x] **List:** `SessionCard` grid + type/location filters + search
+- [x] **Calendar:** weekly grid reusing `SessionsCalendarView` *(client variant — no admin Add)*
+
+#### Registered sessions *(user already booked)*
+
+- [x] **Pending** — gold left border + “Awaiting approval” badge; button → **View booking**
+- [x] **Confirmed** — green left border + “Registered” badge; button → **View booking**
+- [x] Rejected/cancelled — no highlight; re-book allowed if session open
+- [x] Registered sessions remain visible even when session is full
+- [x] `?session=<id>` redirects to booking detail if user already registered
 
 #### Booking flow
 
 - [ ] `BookSessionModal` + `createClientBooking` → toast → optional navigate to `/dashboard/bookings`
-- [ ] URL `?session=<id>` opens book modal on load *(login redirect support)*
+- [ ] URL `?session=<id>` opens book modal on load *(login redirect support — unless already registered)*
 
 ---
 
@@ -263,7 +283,9 @@ Mirror `AdminNotificationBell` structure; **different query and copy**.
 | Badge count | Pending bookings firm-wide | **Needs attention** on my bookings |
 | Dropdown items | Pending client requests | Recent status changes on my bookings |
 | Primary link | `/admin/bookings?booking=` | `/dashboard/bookings?booking=` |
-| Footer | View all bookings | View my bookings |
+| Footer | View all bookings | **View all activity →** `#activity` + **View my bookings →** |
+
+**v1 — no dedicated notifications page.** Bell dropdown + overview activity feed cover booking updates. Full `/dashboard/notifications` deferred until read/unread persistence is scoped.
 
 **Suggested “attention” events for badge count:**
 
@@ -277,7 +299,8 @@ Mirror `AdminNotificationBell` structure; **different query and copy**.
 - “Pending — awaiting firm approval”
 
 - [ ] `useBookingNotifications` subscription — same hook as admin
-- [ ] Wire in `DashboardLayout` → `PortalLayout notifications={...}`
+- [x] Wire in `DashboardLayout` → `PortalLayout notifications={...}`
+- [x] Footer links: **View all activity →** `/dashboard#activity`, **View my bookings →**
 
 ### Activity feed *(overview)*
 
@@ -467,9 +490,18 @@ Step 7  QA + update IMPLEMENTATION_PLAN_BOOKING.md
 - [ ] Activity feed updates after admin confirms booking *(realtime or refresh)*
 - [ ] “Book a session” header links to `/dashboard/book`
 
-### Booking widget
+### Book page
 
-- [ ] Full session shows disabled/booked state
+- [ ] Registered session shows gold/green highlight + status badge
+- [ ] **View booking** CTA opens booking detail (not book modal)
+- [ ] Calendar view shows same registered styling
+- [ ] `?session=` on already-registered session → booking detail
+
+### Booking widget / browse strip
+
+- [ ] New user sees **Open sessions** strip
+- [ ] User with upcoming sees **Browse more sessions** compact strip
+- [ ] Strip excludes sessions user already registered for
 - [ ] Successful book → pending status + toast
 - [ ] Duplicate book blocked with error toast
 - [ ] View all → homepage `#booking`
@@ -488,6 +520,7 @@ Step 7  QA + update IMPLEMENTATION_PLAN_BOOKING.md
 - [ ] Bell badge reflects pending/attention count
 - [ ] Dropdown lists recent items
 - [ ] Click item → booking detail
+- [ ] **View all activity →** scrolls to overview `#activity`
 - [ ] Realtime: admin action updates bell without full page reload
 
 ### Regression
@@ -533,6 +566,7 @@ Step 7  QA + update IMPLEMENTATION_PLAN_BOOKING.md
 | Email on status change | Edge Function + templates |
 | Add to calendar (.ics) | Confirmed sessions only |
 | In-app “mark notification read” | Requires `notification_reads` table or localStorage cursor |
+| `/dashboard/notifications` | Full notifications page — mark all read, clear all; v2 when read state is scoped |
 | `/dashboard/sessions` | Full in-portal catalog with filters |
 | Session prep checklist | Per session type static content |
 | Profile completeness score | Beyond phone — address optional |

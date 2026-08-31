@@ -41,6 +41,28 @@ export type ClientDashboardStats = {
   nextBooking: ClientBookingRow | null;
 };
 
+/** Active client booking on a session (pending or confirmed). */
+export type UserSessionBooking = {
+  bookingId: string;
+  status: "pending" | "confirmed";
+};
+
+export function buildUserSessionBookingMap(
+  bookings: ClientBookingRow[],
+): Map<string, UserSessionBooking> {
+  const map = new Map<string, UserSessionBooking>();
+  for (const booking of bookings) {
+    if (booking.status !== "pending" && booking.status !== "confirmed") continue;
+    const sessionId = booking.session?.id;
+    if (!sessionId) continue;
+    map.set(sessionId, {
+      bookingId: booking.id,
+      status: booking.status,
+    });
+  }
+  return map;
+}
+
 export async function fetchClientBookings(userId: string): Promise<ClientBookingRow[]> {
   const { data, error } = await supabase
     .from("bookings")

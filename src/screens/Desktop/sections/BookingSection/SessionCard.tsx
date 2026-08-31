@@ -1,11 +1,16 @@
 import { Clock, MapPin } from "lucide-react";
+import { bookingStatusStyles } from "../../../../lib/booking-admin";
+import type { UserSessionBooking } from "../../../../lib/client-bookings";
 import { translations, Language } from "../../../../lib/translations";
 import type { PublicSessionCard } from "../../../../lib/public-sessions";
+import { cn } from "../../../../lib/utils";
 
 type SessionCardProps = {
   session: PublicSessionCard;
   lang: Language;
   onBook: () => void;
+  userBooking?: UserSessionBooking | null;
+  onViewBooking?: (bookingId: string) => void;
 };
 
 const resolvePath = (obj: Record<string, unknown>, path: string): unknown => {
@@ -17,7 +22,13 @@ const resolvePath = (obj: Record<string, unknown>, path: string): unknown => {
   }, obj);
 };
 
-export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
+export const SessionCard = ({
+  session,
+  lang,
+  onBook,
+  userBooking = null,
+  onViewBooking,
+}: SessionCardProps) => {
   const t = translations[lang];
   const minLabel = resolvePath(t as Record<string, unknown>, "booking.card.min") as string;
   const privateLabel = resolvePath(t as Record<string, unknown>, "booking.card.privateSession") as string;
@@ -33,9 +44,27 @@ export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
 
   const progressPercent = total > 0 ? Math.min(100, Math.max(0, (booked / total) * 100)) : 0;
   const isFull = spotsLeft <= 0;
+  const isRegistered = Boolean(userBooking);
+  const registeredLabel =
+    userBooking?.status === "pending"
+      ? lang === "zh"
+        ? "待審批"
+        : "Awaiting approval"
+      : lang === "zh"
+        ? "已登記"
+        : "Registered";
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-[#EDECE6] bg-white transition-shadow duration-300 hover:shadow-lg">
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden rounded-xl border bg-white transition-shadow duration-300 hover:shadow-lg",
+        isRegistered
+          ? userBooking?.status === "pending"
+            ? "border-l-4 border-[#EDECE6] border-l-[#C9A84C] ring-1 ring-[#C9A84C]/20"
+            : "border-l-4 border-[#EDECE6] border-l-emerald-500 ring-1 ring-emerald-500/15"
+          : "border-[#EDECE6]",
+      )}
+    >
       {session.imageUrl ? (
         <div className="aspect-[16/9] w-full overflow-hidden bg-[#EDECE6]">
           <img src={session.imageUrl} alt="" className="h-full w-full object-cover" />
@@ -47,9 +76,21 @@ export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
           <h3 className="font-serif text-xl font-medium leading-tight text-[#0F2A1D]">
             {session.title}
           </h3>
-          <div className="flex shrink-0 items-center whitespace-nowrap rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">
-            <MapPin className="mr-1 h-3 w-3" />
-            {session.location}
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {isRegistered && userBooking ? (
+              <span
+                className={cn(
+                  "inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+                  bookingStatusStyles[userBooking.status],
+                )}
+              >
+                {registeredLabel}
+              </span>
+            ) : null}
+            <div className="flex items-center whitespace-nowrap rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">
+              <MapPin className="mr-1 h-3 w-3" />
+              {session.location}
+            </div>
           </div>
         </div>
 
@@ -97,14 +138,24 @@ export const SessionCard = ({ session, lang, onBook }: SessionCardProps) => {
       </div>
 
       <div className="border-t border-[#EDECE6] bg-[#F9F9F6] p-4">
-        <button
-          type="button"
-          onClick={onBook}
-          disabled={isFull}
-          className="w-full rounded-lg bg-[#0F2A1D] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0F2A1D]/90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isFull ? (lang === "zh" ? "已滿" : "Full") : defaultCta}
-        </button>
+        {isRegistered && userBooking && onViewBooking ? (
+          <button
+            type="button"
+            onClick={() => onViewBooking(userBooking.bookingId)}
+            className="w-full rounded-lg border border-[#0F2A1D] bg-white px-4 py-2.5 text-sm font-medium text-[#0F2A1D] transition-colors hover:bg-[#0F2A1D]/5"
+          >
+            {lang === "zh" ? "查看預約" : "View booking"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onBook}
+            disabled={isFull}
+            className="w-full rounded-lg bg-[#0F2A1D] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0F2A1D]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isFull ? (lang === "zh" ? "已滿" : "Full") : defaultCta}
+          </button>
+        )}
       </div>
     </div>
   );
