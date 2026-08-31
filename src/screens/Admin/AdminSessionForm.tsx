@@ -112,6 +112,7 @@ export function AdminSessionForm(): JSX.Element {
           setDurationMinutes(firstType.default_duration_minutes);
           setPrice(Number(firstType.default_price));
           setMaxSlots(firstType.default_max_slots ?? 1);
+          setDescription(firstType.description ?? "");
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -133,7 +134,18 @@ export function AdminSessionForm(): JSX.Element {
     setDurationMinutes(selectedSessionType.default_duration_minutes);
     setPrice(Number(selectedSessionType.default_price));
     setMaxSlots(selectedSessionType.default_max_slots ?? 1);
+    setDescription(selectedSessionType.description ?? "");
   }, [selectedSessionType, isEditing]);
+
+  const applySessionTypeDefaults = (typeId: string) => {
+    setSessionTypeId(typeId);
+    const type = sessionTypes.find((item) => item.id === typeId);
+    if (!type) return;
+    setDurationMinutes(type.default_duration_minutes);
+    setPrice(Number(type.default_price));
+    setMaxSlots(type.default_max_slots ?? 1);
+    setDescription(type.description ?? "");
+  };
 
   useEffect(() => {
     return () => {
@@ -395,7 +407,7 @@ export function AdminSessionForm(): JSX.Element {
               <select
                 id="sessionType"
                 value={sessionTypeId}
-                onChange={(event) => setSessionTypeId(event.target.value)}
+                onChange={(event) => applySessionTypeDefaults(event.target.value)}
                 className={adminInputClassName}
                 required
               >

@@ -1,20 +1,27 @@
-import { Pencil, Power } from "lucide-react";
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { Eye } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Button } from "../../../components/ui/button";
 import { formatPrice } from "../../../lib/session-admin";
 import {
-  adminTableDangerIconButtonClassName,
-  adminTableIconButtonClassName,
   adminTableRowInteractiveClassName,
+  adminTableViewButtonClassName,
 } from "../../../lib/table-styles";
 import { supabase } from "../../../lib/supabase";
 import type { Category, SessionType } from "../../../types/database";
+import {
+  CatalogStatusFilterBar,
+  filterByCatalogItemStatus,
+  type CatalogItemStatusFilter,
+} from "./CatalogStatusFilterBar";
 import { SessionTypeFormModal } from "./SessionTypeFormModal";
 import { TableSkeleton } from "./TableSkeleton";
-
 type SessionTypeRow = SessionType & {
   category: Pick<Category, "name"> | null;
 };
+
+function formatDescription(text: string | null): string {
+  return text?.trim() ? text.trim() : "—";
+}
 
 export function CatalogSessionTypesTab(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -25,9 +32,10 @@ export function CatalogSessionTypesTab(): JSX.Element {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingType, setEditingType] = useState<SessionTypeRow | null>(null);
   const [saving, setSaving] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [toggling, setToggling] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<CatalogItemStatusFilter>("active");
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (): Promise<SessionTypeRow[]> => {
     setError(null);
 
     const [categoriesResult, typesResult] = await Promise.all([
@@ -35,14 +43,16 @@ export function CatalogSessionTypesTab(): JSX.Element {
       supabase
         .from("session_types")
         .select("*, category:categories(name)")
-        .order("name"),
+        .order("is_active", { ascending: true })
+        .order("name", { ascending: true }),
     ]);
-
     if (categoriesResult.error) throw categoriesResult.error;
     if (typesResult.error) throw typesResult.error;
 
     setCategories(categoriesResult.data ?? []);
-    setSessionTypes((typesResult.data ?? []) as SessionTypeRow[]);
+    const types = (typesResult.data ?? []) as SessionTypeRow[];
+    setSessionTypes(types);
+    return types;
   }, []);
 
   useEffect(() => {
@@ -53,19 +63,23 @@ export function CatalogSessionTypesTab(): JSX.Element {
       .finally(() => setLoading(false));
   }, [loadData]);
 
-  const openCreate = () => {
-    setEditingType(null);
+  const filteredSessionTypes = useMemo(
+    () => filterByCatalogItemStatus(sessionTypes, statusFilter),
+    [sessionTypes, statusFilter],
+  );
+
+  const openCreate = () => {    setEditingType(null);
     setModalOpen(true);
   };
 
-  const openEdit = (sessionType: SessionTypeRow) => {
+  const openView = (sessionType: SessionTypeRow) => {
     setEditingType(sessionType);
     setModalOpen(true);
   };
 
-  const openEditFromAction = (sessionType: SessionTypeRow, event: MouseEvent) => {
+  const openViewFromAction = (sessionType: SessionTypeRow, event: MouseEvent) => {
     event.stopPropagation();
-    openEdit(sessionType);
+    openView(sessionType);
   };
 
   const closeModal = () => {
@@ -101,30 +115,35 @@ export function CatalogSessionTypesTab(): JSX.Element {
     await loadData();
   };
 
-  const toggleActive = async (sessionType: SessionTypeRow, event?: MouseEvent) => {
-    event?.stopPropagation();
-    setTogglingId(sessionType.id);
+  const handleToggleActive = async () => {
+    if (!editingType) return;
+
+    setToggling(true);
     setError(null);
     setMessage(null);
 
     const { error: updateError } = await supabase
       .from("session_types")
-      .update({ is_active: !sessionType.is_active })
-      .eq("id", sessionType.id);
+      .update({ is_active: !editingType.is_active })
+      .eq("id", editingType.id);
 
-    setTogglingId(null);
+    setToggling(false);
 
     if (updateError) {
       setError(updateError.message);
       return;
     }
 
-    await loadData();
+    setMessage(editingType.is_active ? "Session type deactivated." : "Session type activated.");
+    const types = await loadData();
+    const updated = types.find((type) => type.id === editingType.id);
+    if (updated) setEditingType(updated);
   };
 
   const tableHeader = (
     <tr>
       <th className="px-4 py-3 font-medium">Name</th>
+      <th className="px-4 py-3 font-medium">Description</th>
       <th className="px-4 py-3 font-medium">Category</th>
       <th className="px-4 py-3 font-medium">Duration</th>
       <th className="px-4 py-3 font-medium">Capacity</th>
@@ -141,11 +160,10 @@ export function CatalogSessionTypesTab(): JSX.Element {
           Session Types
           {!loading ? (
             <span className="ml-2 text-base font-normal text-[#0F2A1D]/50">
-              ({sessionTypes.length})
+              ({filteredSessionTypes.length})
             </span>
           ) : null}
-        </h2>
-        <Button
+        </h2>        <Button
           type="button"
           onClick={openCreate}
           disabled={loading || categories.length === 0}
@@ -155,8 +173,9 @@ export function CatalogSessionTypesTab(): JSX.Element {
         </Button>
       </div>
 
-      {categories.length === 0 && !loading ? (
-        <div className="mb-4 rounded-lg border border-[#EDECE6] bg-[#F9F9F6] px-4 py-3 text-sm text-[#0F2A1D]/70">
+      <CatalogStatusFilterBar value={statusFilter} onChange={setStatusFilter} />
+
+      {categories.length === 0 && !loading ? (        <div className="mb-4 rounded-lg border border-[#EDECE6] bg-[#F9F9F6] px-4 py-3 text-sm text-[#0F2A1D]/70">
           Create a category first before adding session types.
         </div>
       ) : null}
@@ -180,14 +199,24 @@ export function CatalogSessionTypesTab(): JSX.Element {
               {tableHeader}
             </thead>
             <tbody>
-              <TableSkeleton columns={7} />
+              <TableSkeleton columns={8} />
             </tbody>
           </table>
-        ) : sessionTypes.length === 0 ? (
+        ) : filteredSessionTypes.length === 0 ? (
           <div className="px-4 py-12 text-center">
             <p className="text-[#0F2A1D]/70">
-              Use <span className="font-medium text-[#0F2A1D]">+ New Session Type</span> above to
-              define your first consultation product.
+              {sessionTypes.length === 0 ? (
+                <>
+                  Use <span className="font-medium text-[#0F2A1D]">+ New Session Type</span> above to
+                  define your first consultation product.
+                </>
+              ) : statusFilter === "active" ? (
+                "No active session types."
+              ) : statusFilter === "inactive" ? (
+                "No inactive session types."
+              ) : (
+                "No session types match this filter."
+              )}
             </p>
           </div>
         ) : (
@@ -196,13 +225,15 @@ export function CatalogSessionTypesTab(): JSX.Element {
               {tableHeader}
             </thead>
             <tbody>
-              {sessionTypes.map((sessionType) => (
-                <tr
+              {filteredSessionTypes.map((sessionType) => (                <tr
                   key={sessionType.id}
                   className={adminTableRowInteractiveClassName}
-                  onClick={() => openEdit(sessionType)}
+                  onClick={() => openView(sessionType)}
                 >
                   <td className="px-4 py-4 font-medium text-[#0F2A1D]">{sessionType.name}</td>
+                  <td className="max-w-xs px-4 py-4 text-[#0F2A1D]/80">
+                    {formatDescription(sessionType.description)}
+                  </td>
                   <td className="px-4 py-4">{sessionType.category?.name ?? "—"}</td>
                   <td className="px-4 py-4">{sessionType.default_duration_minutes} min</td>
                   <td className="px-4 py-4">{sessionType.default_max_slots ?? 1}</td>
@@ -222,31 +253,15 @@ export function CatalogSessionTypesTab(): JSX.Element {
                     className="px-4 py-4 text-right"
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        title="Edit session type"
-                        aria-label={`Edit ${sessionType.name}`}
-                        onClick={(event) => openEditFromAction(sessionType, event)}
-                        className={adminTableIconButtonClassName}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        title={sessionType.is_active ? "Deactivate" : "Activate"}
-                        aria-label={
-                          sessionType.is_active
-                            ? `Deactivate ${sessionType.name}`
-                            : `Activate ${sessionType.name}`
-                        }
-                        disabled={togglingId === sessionType.id}
-                        onClick={(event) => void toggleActive(sessionType, event)}
-                        className={adminTableDangerIconButtonClassName}
-                      >
-                        <Power className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      title="View session type"
+                      aria-label={`View ${sessionType.name}`}
+                      onClick={(event) => openViewFromAction(sessionType, event)}
+                      className={adminTableViewButtonClassName}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -262,8 +277,10 @@ export function CatalogSessionTypesTab(): JSX.Element {
           (category) => category.is_active || category.id === editingType?.category_id,
         )}
         saving={saving}
+        toggling={toggling}
         onClose={closeModal}
         onSave={(payload) => void handleSave(payload)}
+        onToggleActive={editingType ? () => void handleToggleActive() : undefined}
       />
     </>
   );

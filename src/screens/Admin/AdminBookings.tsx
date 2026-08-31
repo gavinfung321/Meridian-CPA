@@ -2,6 +2,10 @@ import { Eye } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
+import {
+  AdminTablePagination,
+  DEFAULT_TABLE_PAGE_SIZE,
+} from "../../components/AdminTablePagination";
 import { useAuth } from "../../contexts/AuthContext";
 import { useBookingNotifications } from "../../hooks/useBookingNotifications";
 import { AdminSortableTh, toggleSortDirection } from "../../components/AdminSortableTh";
@@ -44,10 +48,13 @@ export function AdminBookings(): JSX.Element {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sessionFilter, setSessionFilter] = useState("all");
 
   const [selectedBooking, setSelectedBooking] = useState<AdminBookingRow | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [sort, setSort] = useState(getDefaultBookingSort);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
 
   const loadBookings = useCallback(async (): Promise<AdminBookingRow[]> => {
     setError(null);
@@ -84,6 +91,7 @@ export function AdminBookings(): JSX.Element {
 
   const bookingIdFromUrl = searchParams.get("booking");
   const statusFromUrl = searchParams.get("status");
+  const sessionFromUrl = searchParams.get("session");
 
   useEffect(() => {
     if (!statusFromUrl) return;
@@ -96,6 +104,10 @@ export function AdminBookings(): JSX.Element {
       setStatusFilter(statusFromUrl);
     }
   }, [statusFromUrl]);
+
+  useEffect(() => {
+    setSessionFilter(sessionFromUrl ?? "all");
+  }, [sessionFromUrl]);
 
   useEffect(() => {
     if (!bookingIdFromUrl || loading) return;
@@ -127,14 +139,53 @@ export function AdminBookings(): JSX.Element {
         customFrom,
         customTo,
         searchQuery,
+        sessionFilter,
       ),
-    [bookings, statusFilter, sessionTypeFilter, dateRange, customFrom, customTo, searchQuery],
+    [bookings, statusFilter, sessionTypeFilter, dateRange, customFrom, customTo, searchQuery, sessionFilter],
   );
+
+  const sessionFilterTitle = useMemo(() => {
+    if (sessionFilter === "all") return null;
+    const match = bookings.find((booking) => booking.session?.id === sessionFilter);
+    return match?.session?.title ?? "Selected session";
+  }, [bookings, sessionFilter]);
 
   const sortedBookings = useMemo(
     () => sortAdminBookings(filteredBookings, sort.column, sort.direction),
     [filteredBookings, sort.column, sort.direction],
   );
+
+  const totalPages = Math.max(1, Math.ceil(sortedBookings.length / pageSize));
+
+  const paginatedBookings = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedBookings.slice(start, start + pageSize);
+  }, [sortedBookings, page, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [
+    statusFilter,
+    sessionTypeFilter,
+    dateRange,
+    customFrom,
+    customTo,
+    searchQuery,
+    sessionFilter,
+    sort.column,
+    sort.direction,
+  ]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const handlePageSizeChange = (nextPageSize: number) => {
+    setPageSize(nextPageSize);
+    setPage(1);
+  };
 
   const handleSortColumn = (column: BookingSortColumn) => {
     setSort((current) => ({
@@ -191,7 +242,19 @@ export function AdminBookings(): JSX.Element {
     customFrom,
     customTo,
     searchQuery,
+    sessionFilter,
   );
+
+  const clearSessionFilter = () => {
+    setSessionFilter("all");
+    setSearchParams(
+      (params) => {
+        params.delete("session");
+        return params;
+      },
+      { replace: true },
+    );
+  };
 
   const closeBookingModal = () => {
     setSelectedBooking(null);
@@ -250,6 +313,20 @@ export function AdminBookings(): JSX.Element {
           </p>
         </div>
 
+        {sessionFilter !== "all" && sessionFilterTitle ? (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[#EDECE6] bg-[#F9F9F6] px-3 py-2.5 text-sm">
+            <span className="text-[#0F2A1D]/60">Showing bookings for</span>
+            <span className="font-medium text-[#0F2A1D]">{sessionFilterTitle}</span>
+            <button
+              type="button"
+              onClick={clearSessionFilter}
+              className="ml-auto text-xs font-medium text-[#0F2A1D]/70 underline-offset-2 hover:text-[#0F2A1D] hover:underline"
+            >
+              Clear session filter
+            </button>
+          </div>
+        ) : null}
+
         <BookingFilters
           statusFilter={statusFilter}
           sessionTypeFilter={sessionTypeFilter}
@@ -284,60 +361,73 @@ export function AdminBookings(): JSX.Element {
           ) : sortedBookings.length === 0 ? (
             <div className="px-4 py-12 text-center">
               <p className="text-[#0F2A1D]/70">
-                {filtersActive ? "No bookings match your filters." : "No bookings yet."}
+                {filtersActive
+                  ? sessionFilter !== "all"
+                    ? "No bookings for this session match your filters."
+                    : "No bookings match your filters."
+                  : "No bookings yet."}
               </p>
             </div>
           ) : (
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-[#EDECE6] bg-[#F9F9F6]">{bookingTableHeader}</thead>
-              <tbody>
-                {sortedBookings.map((booking) => (
-                  <tr
-                    key={booking.id}
-                    className={adminTableRowInteractiveClassName}
-                    onClick={() => openBooking(booking)}
-                  >
-                    <td className="px-4 py-4">
-                      <p className="font-medium text-[#0F2A1D]">{getBookingClientName(booking)}</p>
-                      <p className="mt-0.5 text-xs text-[#0F2A1D]/60">{booking.user?.email ?? "—"}</p>
-                    </td>
-                    <td className="px-4 py-4">{booking.session?.title ?? "—"}</td>
-                    <td className="px-4 py-4">
-                      <p>{formatBookingShortDate(booking.session?.start_time ?? booking.created_at)}</p>
-                      <p className="mt-0.5 text-xs text-[#0F2A1D]/50">
-                        Booked {formatBookingCreatedDate(booking.created_at)}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      {formatBookingPrice(booking.session?.price)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                          bookingStatusStyles[booking.status as BookingStatus]
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-4 py-4 text-right"
-                      onClick={(event) => event.stopPropagation()}
+            <>
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-[#EDECE6] bg-[#F9F9F6]">{bookingTableHeader}</thead>
+                <tbody>
+                  {paginatedBookings.map((booking) => (
+                    <tr
+                      key={booking.id}
+                      className={adminTableRowInteractiveClassName}
+                      onClick={() => openBooking(booking)}
                     >
-                      <button
-                        type="button"
-                        title="View booking"
-                        aria-label={`View booking for ${getBookingClientName(booking)}`}
-                        onClick={(event) => openBookingFromAction(booking, event)}
-                        className="rounded-md p-2 text-[#0F2A1D]/70 transition-colors hover:bg-[#EDECE6] hover:text-[#0F2A1D]"
+                      <td className="px-4 py-4">
+                        <p className="font-medium text-[#0F2A1D]">{getBookingClientName(booking)}</p>
+                        <p className="mt-0.5 text-xs text-[#0F2A1D]/60">{booking.user?.email ?? "—"}</p>
+                      </td>
+                      <td className="px-4 py-4">{booking.session?.title ?? "—"}</td>
+                      <td className="px-4 py-4">
+                        <p>{formatBookingShortDate(booking.session?.start_time ?? booking.created_at)}</p>
+                        <p className="mt-0.5 text-xs text-[#0F2A1D]/50">
+                          Booked {formatBookingCreatedDate(booking.created_at)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        {formatBookingPrice(booking.session?.price)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                            bookingStatusStyles[booking.status as BookingStatus]
+                          }`}
+                        >
+                          {booking.status}
+                        </span>
+                      </td>
+                      <td
+                        className="px-4 py-4 text-right"
+                        onClick={(event) => event.stopPropagation()}
                       >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <button
+                          type="button"
+                          title="View booking"
+                          aria-label={`View booking for ${getBookingClientName(booking)}`}
+                          onClick={(event) => openBookingFromAction(booking, event)}
+                          className="rounded-md p-2 text-[#0F2A1D]/70 transition-colors hover:bg-[#EDECE6] hover:text-[#0F2A1D]"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <AdminTablePagination
+                totalCount={sortedBookings.length}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </>
           )}
         </div>
       </div>

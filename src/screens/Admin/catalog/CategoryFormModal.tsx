@@ -1,41 +1,41 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AdminModal } from "../../../components/AdminModal";
 import { Button } from "../../../components/ui/button";
-import { adminInputClassName, slugify } from "../../../lib/session-admin";
+import { adminInputClassName } from "../../../lib/session-admin";
 import type { Category } from "../../../types/database";
+
+export type CategoryFormSavePayload = {
+  name: string;
+  description: string | null;
+};
 
 interface CategoryFormModalProps {
   open: boolean;
   category: Category | null;
-  nextSortOrder: number;
   saving: boolean;
+  toggling?: boolean;
   onClose: () => void;
-  onSave: (payload: {
-    name: string;
-    slug: string;
-    description: string | null;
-    sort_order: number;
-  }) => void;
+  onSave: (payload: CategoryFormSavePayload) => void;
+  onToggleActive?: () => void;
 }
 
 export function CategoryFormModal({
   open,
   category,
-  nextSortOrder,
   saving,
+  toggling = false,
   onClose,
   onSave,
+  onToggleActive,
 }: CategoryFormModalProps): JSX.Element {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [sortOrder, setSortOrder] = useState(nextSortOrder);
 
   useEffect(() => {
     if (!open) return;
     setName(category?.name ?? "");
     setDescription(category?.description ?? "");
-    setSortOrder(category?.sort_order ?? nextSortOrder);
-  }, [open, category, nextSortOrder]);
+  }, [open, category]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -43,13 +43,9 @@ export function CategoryFormModal({
     if (!trimmed) return;
     onSave({
       name: trimmed,
-      slug: slugify(trimmed),
       description: description.trim() || null,
-      sort_order: sortOrder,
     });
   };
-
-  const slugPreview = name.trim() ? slugify(name.trim()) : "—";
 
   return (
     <AdminModal
@@ -58,8 +54,29 @@ export function CategoryFormModal({
       title={category ? "Edit category" : "New category"}
       footer={
         <>
+          <div className="mr-auto flex gap-2">
+            {category && onToggleActive ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={toggling}
+                className={
+                  category.is_active
+                    ? "text-red-700 hover:bg-red-50 hover:text-red-800"
+                    : undefined
+                }
+                onClick={onToggleActive}
+              >
+                {toggling
+                  ? "Updating…"
+                  : category.is_active
+                    ? "Deactivate category"
+                    : "Activate category"}
+              </Button>
+            ) : null}
+          </div>
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {category ? "Close" : "Cancel"}
           </Button>
           <Button
             type="submit"
@@ -99,26 +116,6 @@ export function CategoryFormModal({
             placeholder="Brief summary of this service line for admins and public filters."
           />
         </div>
-        {category ? (
-          <div>
-            <label htmlFor="category-sort" className="block text-sm font-medium text-[#0F2A1D]">
-              Sort order{" "}
-              <span className="font-normal text-[#0F2A1D]/50">(display order on public site)</span>
-            </label>
-            <input
-              id="category-sort"
-              type="number"
-              min={0}
-              value={sortOrder}
-              onChange={(event) => setSortOrder(Number(event.target.value))}
-              className={`${adminInputClassName} mt-1`}
-            />
-          </div>
-        ) : null}
-        <p className="text-xs text-[#0F2A1D]/60">
-          URL slug: <span className="font-mono">{slugPreview}</span>
-          {!category ? " — generated automatically" : null}
-        </p>
       </form>
     </AdminModal>
   );

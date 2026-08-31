@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useMemo, useState, type ElementType } from "react";
-import { BellRing, CalendarDays, DollarSign, Info, Users } from "lucide-react";
+import { BellRing, CalendarDays, DollarSign, Info, Users, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
 import { ProfileAvatar } from "../../components/ProfileAvatar";
 import { useAuth } from "../../contexts/AuthContext";
+import { useProfileAvatarUrl } from "../../hooks/useProfileAvatarUrl";
 import {
   fetchAdminDashboardMetrics,
   filterRecentActivity,
   type ActivityActorFilter,
   type AdminRecentActivity,
-  type CategoryBookingShare,
+  type AdminUpcomingBookingRow,
   type AdminDashboardMetrics,
 } from "../../lib/admin-dashboard";
 import { bookingStatusStyles, formatBookingRelativeTime } from "../../lib/booking-admin";
+import { formatSessionTimeShort } from "../../lib/session-admin";
 import { cn } from "../../lib/utils";
 import type { BookingStatus } from "../../types/database";
 
@@ -137,6 +139,68 @@ function AttentionBanner({ pendingCount }: { pendingCount: number }): JSX.Elemen
   );
 }
 
+function DashboardClientAvatar({
+  avatarPath,
+  firstName,
+  lastName,
+}: {
+  avatarPath?: string | null;
+  firstName?: string;
+  lastName?: string;
+}): JSX.Element {
+  const avatarUrl = useProfileAvatarUrl(avatarPath);
+
+  return (
+    <ProfileAvatar
+      avatarUrl={avatarUrl}
+      firstName={firstName}
+      lastName={lastName}
+      className="h-8 w-8 text-[10px]"
+    />
+  );
+}
+
+function UpcomingBookingRow({ item }: { item: AdminUpcomingBookingRow }): JSX.Element {
+  return (
+    <li>
+      <Link
+        to={`/admin/bookings?booking=${item.bookingId}`}
+        className="group flex gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-[#F9F9F6]"
+      >
+        <DashboardClientAvatar
+          avatarPath={item.clientAvatarPath}
+          firstName={item.clientFirstName}
+          lastName={item.clientLastName}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-[#0F2A1D]">{item.clientName}</p>
+          <p className="truncate text-sm text-[#0F2A1D]/65">
+            {item.sessionTypeLabel} · {formatSessionTimeShort(item.startTime)} ·{" "}
+            <span className="inline-flex items-center gap-0.5">
+              <Users className="inline h-3 w-3 shrink-0 opacity-60" aria-hidden />
+              {item.capacityLabel}
+            </span>
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 self-start pt-0.5">
+          <span
+            className={cn(
+              "inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+              bookingStatusStyles[item.status as BookingStatus],
+            )}
+          >
+            {item.status}
+          </span>
+          <ArrowUpRight
+            className="h-4 w-4 text-[#0F2A1D]/25 opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
+        </div>
+      </Link>
+    </li>
+  );
+}
+
 function ActivityTimelineRow({ item }: { item: AdminRecentActivity }): JSX.Element {
   return (
     <li>
@@ -144,10 +208,10 @@ function ActivityTimelineRow({ item }: { item: AdminRecentActivity }): JSX.Eleme
         to={`/admin/bookings?booking=${item.bookingId}`}
         className="group flex gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-[#F9F9F6]"
       >
-        <ProfileAvatar
+        <DashboardClientAvatar
+          avatarPath={item.clientAvatarPath}
           firstName={item.clientFirstName}
           lastName={item.clientLastName}
-          className="h-8 w-8 text-[10px]"
         />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-[#0F2A1D] group-hover:text-[#0F2A1D]">
@@ -178,7 +242,7 @@ function ActivityTimelineRow({ item }: { item: AdminRecentActivity }): JSX.Eleme
 export function AdminDashboardOverview(): JSX.Element {
   const { profile } = useAuth();
   const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);
-  const [categoryShares, setCategoryShares] = useState<CategoryBookingShare[]>([]);
+  const [upcomingBookings, setUpcomingBookings] = useState<AdminUpcomingBookingRow[]>([]);
   const [recentActivity, setRecentActivity] = useState<AdminRecentActivity[]>([]);
   const [activityFilter, setActivityFilter] = useState<ActivityActorFilter>("all");
   const [loading, setLoading] = useState(true);
@@ -188,7 +252,7 @@ export function AdminDashboardOverview(): JSX.Element {
     setError(null);
     const data = await fetchAdminDashboardMetrics();
     setMetrics(data.metrics);
-    setCategoryShares(data.categoryShares);
+    setUpcomingBookings(data.upcomingBookings);
     setRecentActivity(data.recentActivity);
   }, []);
 
@@ -299,40 +363,38 @@ export function AdminDashboardOverview(): JSX.Element {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-12">
           <div className="rounded-xl border border-[#EDECE6] bg-white p-6 shadow-sm lg:col-span-5">
-            <h2 className="font-serif text-xl font-semibold">Popular categories</h2>
-            <p className="mt-1 text-sm text-[#0F2A1D]/60">
-              Share of active bookings by service line
-            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="font-serif text-xl font-semibold">Upcoming sessions</h2>
+                <p className="mt-1 text-sm text-[#0F2A1D]/60">
+                  Next client appointments on the schedule
+                </p>
+              </div>
+              <Link
+                to="/admin/sessions"
+                className="shrink-0 text-sm font-medium text-[#0F2A1D] hover:underline"
+              >
+                View all
+              </Link>
+            </div>
             {loading ? (
               <div className="mt-6 space-y-4">
-                {[1, 2, 3].map((key) => (
-                  <div key={key} className="h-8 animate-pulse rounded bg-[#EDECE6]" />
+                {[1, 2, 3, 4].map((key) => (
+                  <div key={key} className="h-12 animate-pulse rounded bg-[#EDECE6]" />
                 ))}
               </div>
-            ) : categoryShares.length === 0 ? (
-              <p className="mt-6 text-sm text-[#0F2A1D]/60">No booking data yet.</p>
+            ) : upcomingBookings.length === 0 ? (
+              <p className="mt-6 text-sm text-[#0F2A1D]/60">
+                {metrics?.upcomingSessions === 0
+                  ? "No upcoming sessions scheduled."
+                  : "No bookings on upcoming sessions yet."}
+              </p>
             ) : (
-              <div className="mt-6 space-y-4">
-                {categoryShares.map((item, index) => (
-                  <div key={item.id}>
-                    <div className="mb-1 flex justify-between text-sm">
-                      <span className="font-medium text-[#0F2A1D]">{item.name}</span>
-                      <span className="text-[#0F2A1D]/60">
-                        {item.count} · {item.pct}%
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-[#EDECE6]">
-                      <div
-                        className={cn(
-                          "h-2 rounded-full transition-all",
-                          index === 0 ? "bg-[#C9A84C]" : "bg-[#0F2A1D]",
-                        )}
-                        style={{ width: `${Math.max(item.pct, 4)}%` }}
-                      />
-                    </div>
-                  </div>
+              <ul className="mt-4 divide-y divide-[#EDECE6]">
+                {upcomingBookings.map((item) => (
+                  <UpcomingBookingRow key={item.id} item={item} />
                 ))}
-              </div>
+              </ul>
             )}
           </div>
 

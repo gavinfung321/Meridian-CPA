@@ -11,7 +11,7 @@ import {
   type ManualBookingSession,
 } from "../../lib/booking-admin";
 import { getDisplayName } from "../../lib/profile";
-import { countActiveBookings, formatPrice, formatSessionSchedule, adminInputClassName } from "../../lib/session-admin";
+import { formatAdminSessionCapacity, formatPrice, formatSessionSchedule, getSessionBookingCounts, adminInputClassName } from "../../lib/session-admin";
 
 interface ManualBookingModalProps {
   open: boolean;
@@ -61,8 +61,11 @@ export function ManualBookingModal({
     [sessions, sessionId],
   );
 
-  const sessionCapacityLabel = selectedSession
-    ? `${countActiveBookings(selectedSession.bookings)} / ${selectedSession.max_slots} booked`
+  const sessionCapacity = selectedSession
+    ? formatAdminSessionCapacity(
+        getSessionBookingCounts(selectedSession.bookings),
+        selectedSession.max_slots,
+      )
     : null;
 
   const handleSubmit = async (event: FormEvent) => {
@@ -154,8 +157,13 @@ export function ManualBookingModal({
                 </option>
               ))}
             </select>
-            {sessionCapacityLabel ? (
-              <span className="mt-1 block text-xs text-[#0F2A1D]/50">{sessionCapacityLabel}</span>
+            {sessionCapacity ? (
+              <span className="mt-1 block text-xs text-[#0F2A1D]/50">
+                {sessionCapacity.primary} booked
+                {sessionCapacity.subline ? (
+                  <span className="mt-0.5 block text-amber-700">{sessionCapacity.subline}</span>
+                ) : null}
+              </span>
             ) : null}
           </label>
 

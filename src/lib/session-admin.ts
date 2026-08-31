@@ -13,6 +13,87 @@ export function formatPrice(amount: number): string {
   }).format(amount);
 }
 
+export function formatSessionTimeShort(startTime: string): string {
+  return new Intl.DateTimeFormat("en-HK", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(startTime));
+}
+
+export function formatSessionTimeRange(startTime: string, endTime: string): string {
+  return `${formatSessionTimeShort(startTime)} – ${formatSessionTimeShort(endTime)}`;
+}
+
+export function formatSessionDateLong(startTime: string): string {
+  return new Intl.DateTimeFormat("en-HK", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(startTime));
+}
+
+export function startOfWeek(date: Date, weekStartsOn = 1): Date {
+  const value = new Date(date);
+  value.setHours(0, 0, 0, 0);
+  const day = value.getDay();
+  const diff = (day - weekStartsOn + 7) % 7;
+  value.setDate(value.getDate() - diff);
+  return value;
+}
+
+export function addCalendarDays(date: Date, days: number): Date {
+  const value = new Date(date);
+  value.setDate(value.getDate() + days);
+  return value;
+}
+
+export function isSameCalendarDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+export function formatWeekRangeLabel(weekStart: Date): string {
+  const weekEnd = addCalendarDays(weekStart, 6);
+  const dayFormatter = new Intl.DateTimeFormat("en-HK", { month: "short", day: "numeric" });
+  const yearFormatter = new Intl.DateTimeFormat("en-HK", { year: "numeric" });
+
+  if (weekStart.getMonth() === weekEnd.getMonth()) {
+    return `${dayFormatter.format(weekStart)} – ${weekEnd.getDate()}, ${yearFormatter.format(weekStart)}`;
+  }
+
+  return `${dayFormatter.format(weekStart)} – ${dayFormatter.format(weekEnd)}, ${yearFormatter.format(weekEnd)}`;
+}
+
+export function filterSessionsBySearch<
+  T extends {
+    title: string;
+    description?: string | null;
+    location: string;
+    type: string;
+    session_type?: { name: string; category?: { name: string } | null } | null;
+  },
+>(sessions: T[], query: string): T[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return sessions;
+
+  return sessions.filter((session) => {
+    const typeLabel =
+      session.session_type?.category?.name && session.session_type?.name
+        ? `${session.session_type.category.name} ${session.session_type.name}`
+        : (session.session_type?.name ?? session.type);
+
+    const haystack = [session.title, session.description, session.location, typeLabel]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(normalized);
+  });
+}
+
 export function formatSessionSchedule(startTime: string): string {
   return new Intl.DateTimeFormat("en-HK", {
     dateStyle: "medium",
@@ -56,10 +137,59 @@ export async function fetchSessionTypesWithCategories(): Promise<SessionTypeWith
   return (data ?? []) as SessionTypeWithCategory[];
 }
 
+export type SessionBookingCounts = {
+  confirmed: number;
+  pending: number;
+  reserved: number;
+};
+
+export function getSessionBookingCounts(
+  bookings: Array<{ status: string }> | null | undefined,
+): SessionBookingCounts {
+  const rows = bookings ?? [];
+  const confirmed = rows.filter((booking) => booking.status === "confirmed").length;
+  const pending = rows.filter((booking) => booking.status === "pending").length;
+  return { confirmed, pending, reserved: confirmed + pending };
+}
+
 export function countActiveBookings(
   bookings: Array<{ status: string }> | null | undefined,
 ): number {
-  return (bookings ?? []).filter(
-    (booking) => booking.status === "pending" || booking.status === "confirmed",
-  ).length;
+  return getSessionBookingCounts(bookings).reserved;
+}
+
+export type AdminSessionCapacityDisplay = {
+  primary: string;
+  subline?: string;
+  title?: string;
+};
+
+export function formatAdminSessionCapacity(
+  counts: SessionBookingCounts,
+  maxSlots: number,
+): AdminSessionCapacityDisplay {
+  const primary = `${counts.reserved} / ${maxSlots}`;
+
+  if (counts.pending > 0) {
+    const subline =
+      counts.pending === 1 ? "1 awaiting approval" : `${counts.pending} awaiting approval`;
+    const detailParts: string[] = [];
+    if (counts.confirmed > 0) {
+      detailParts.push(`${counts.confirmed} confirmed`);
+    }
+    detailParts.push(subline);
+    return {
+      primary,
+      subline,
+      title: `${counts.reserved} of ${maxSlots} slots held (${detailParts.join(" · ")})`,
+    };
+  }
+
+  return {
+    primary,
+    title:
+      counts.confirmed > 0
+        ? `${counts.confirmed} confirmed of ${maxSlots} slots`
+        : undefined,
+  };
 }

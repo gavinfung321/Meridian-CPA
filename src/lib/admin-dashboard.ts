@@ -1,4 +1,4 @@
-import { countActiveBookings, formatPrice } from "./session-admin";
+import { countActiveBookings, formatPrice, getSessionBookingCounts } from "./session-admin";
 import { getDisplayName } from "./profile";
 import { supabase } from "./supabase";
 import type { BookingStatus, UserRole } from "../types/database";
@@ -13,11 +13,19 @@ export type AdminDashboardMetrics = {
   upcomingSessions: number;
 };
 
-export type CategoryBookingShare = {
+export type AdminUpcomingBookingRow = {
   id: string;
-  name: string;
-  count: number;
-  pct: number;
+  bookingId: string;
+  sessionId: string;
+  clientName: string;
+  clientFirstName: string;
+  clientLastName: string;
+  clientAvatarPath: string | null;
+  sessionTitle: string;
+  sessionTypeLabel: string;
+  startTime: string;
+  capacityLabel: string;
+  status: BookingStatus;
 };
 
 export type ActivityActor = "user" | "admin";
@@ -33,6 +41,7 @@ export type AdminRecentActivity = {
   sessionTitle: string;
   clientFirstName: string;
   clientLastName: string;
+  clientAvatarPath: string | null;
   timestamp: string;
   status: BookingStatus;
   actor: ActivityActor;
@@ -47,6 +56,7 @@ type BookingMetricsRow = {
   user: {
     first_name: string;
     last_name: string;
+    avatar_path: string | null;
   } | null;
   session: {
     title: string;
@@ -75,6 +85,7 @@ type BookingHistoryRow = {
     user: {
       first_name: string;
       last_name: string;
+      avatar_path: string | null;
     } | null;
     session: {
       title: string;
@@ -84,10 +95,70 @@ type BookingHistoryRow = {
 
 type SessionOccupancyRow = {
   id: string;
+  title: string;
   max_slots: number;
   start_time: string;
-  bookings: Array<{ status: string }> | null;
+  session_type: {
+    name: string;
+    category: { name: string } | null;
+  } | null;
+  bookings: Array<{
+    id: string;
+    status: string;
+    user: { first_name: string; last_name: string; avatar_path: string | null } | null;
+  }> | null;
 };
+
+function upcomingSessionTypeLabel(session: SessionOccupancyRow): string {
+  const type = session.session_type;
+  if (type?.category?.name && type.name) {
+    return `${type.category.name} · ${type.name}`;
+  }
+  return type?.name ?? session.title;
+}
+
+function buildUpcomingBookingRows(
+  sessions: SessionOccupancyRow[],
+  limit = 5,
+): AdminUpcomingBookingRow[] {
+  const rows: AdminUpcomingBookingRow[] = [];
+
+  for (const session of sessions) {
+    const counts = getSessionBookingCounts(session.bookings);
+    const capacityLabel = `${counts.reserved}/${session.max_slots}`;
+    const activeBookings = (session.bookings ?? []).filter(
+      (booking) => booking.status === "pending" || booking.status === "confirmed",
+    );
+
+    for (const booking of activeBookings) {
+      const user = booking.user;
+      rows.push({
+        id: booking.id,
+        bookingId: booking.id,
+        sessionId: session.id,
+        clientName: bookingClientLabel({ user }),
+        clientFirstName: user?.first_name ?? "",
+        clientLastName: user?.last_name ?? "",
+        clientAvatarPath: user?.avatar_path ?? null,
+        sessionTitle: session.title,
+        sessionTypeLabel: upcomingSessionTypeLabel(session),
+        startTime: session.start_time,
+        capacityLabel,
+        status: booking.status as BookingStatus,
+      });
+    }
+  }
+
+  return rows
+    .sort((a, b) => {
+      const timeDiff = new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+      if (timeDiff !== 0) return timeDiff;
+      if (a.status === "pending" && b.status !== "pending") return -1;
+      if (a.status !== "pending" && b.status === "pending") return 1;
+      return 0;
+    })
+    .slice(0, limit);
+}
 
 function bookingClientLabel(row: {
   user: { first_name: string; last_name: string } | null;
@@ -114,6 +185,7 @@ function createActivityEvent(params: {
   sessionTitle: string;
   clientFirstName?: string;
   clientLastName?: string;
+  clientAvatarPath?: string | null;
   timestamp: string;
   status: BookingStatus;
 }): AdminRecentActivity {
@@ -122,6 +194,7 @@ function createActivityEvent(params: {
     ...params,
     clientFirstName: params.clientFirstName ?? "",
     clientLastName: params.clientLastName ?? "",
+    clientAvatarPath: params.clientAvatarPath ?? null,
     message: `${actionLabel} — ${clientName} · ${sessionTitle}`,
   };
 }
@@ -158,6 +231,7 @@ function historyToActivity(row: BookingHistoryRow): AdminRecentActivity {
     sessionTitle: title,
     clientFirstName: user?.first_name ?? "",
     clientLastName: user?.last_name ?? "",
+    clientAvatarPath: user?.avatar_path ?? null,
     timestamp: row.created_at,
     status,
   });
@@ -168,6 +242,7 @@ function synthesizeBookingEvents(row: BookingMetricsRow): AdminRecentActivity[] 
   const title = row.session?.title ?? "a session";
   const firstName = row.user?.first_name ?? "";
   const lastName = row.user?.last_name ?? "";
+  const avatarPath = row.user?.avatar_path ?? null;
   const createdMs = new Date(row.created_at).getTime();
   const updatedMs = new Date(row.updated_at).getTime();
   const events: AdminRecentActivity[] = [];
@@ -186,6 +261,7 @@ function synthesizeBookingEvents(row: BookingMetricsRow): AdminRecentActivity[] 
         sessionTitle: title,
         clientFirstName: firstName,
         clientLastName: lastName,
+        clientAvatarPath: avatarPath,
         timestamp: row.created_at,
         status: "confirmed",
       }),
@@ -203,6 +279,7 @@ function synthesizeBookingEvents(row: BookingMetricsRow): AdminRecentActivity[] 
       sessionTitle: title,
       clientFirstName: firstName,
       clientLastName: lastName,
+      clientAvatarPath: avatarPath,
       timestamp: row.created_at,
       status: "pending",
     }),
@@ -225,6 +302,7 @@ function synthesizeBookingEvents(row: BookingMetricsRow): AdminRecentActivity[] 
         sessionTitle: title,
         clientFirstName: firstName,
         clientLastName: lastName,
+        clientAvatarPath: avatarPath,
         timestamp: changeTimestamp,
         status: "confirmed",
       }),
@@ -240,6 +318,7 @@ function synthesizeBookingEvents(row: BookingMetricsRow): AdminRecentActivity[] 
         sessionTitle: title,
         clientFirstName: firstName,
         clientLastName: lastName,
+        clientAvatarPath: avatarPath,
         timestamp: changeTimestamp,
         status: "rejected",
       }),
@@ -256,6 +335,7 @@ function synthesizeBookingEvents(row: BookingMetricsRow): AdminRecentActivity[] 
         sessionTitle: title,
         clientFirstName: firstName,
         clientLastName: lastName,
+        clientAvatarPath: avatarPath,
         timestamp: changeTimestamp,
         status: "cancelled",
       }),
@@ -282,7 +362,7 @@ async function fetchBookingHistoryActivity(limit = 24): Promise<AdminRecentActiv
         last_name
       ),
       booking:bookings (
-        user:profiles!bookings_user_id_fkey ( first_name, last_name ),
+        user:profiles!bookings_user_id_fkey ( first_name, last_name, avatar_path ),
         session:sessions!bookings_session_id_fkey ( title )
       )
     `)
@@ -319,7 +399,7 @@ export function filterRecentActivity(
 
 export async function fetchAdminDashboardMetrics(): Promise<{
   metrics: AdminDashboardMetrics;
-  categoryShares: CategoryBookingShare[];
+  upcomingBookings: AdminUpcomingBookingRow[];
   recentActivity: AdminRecentActivity[];
 }> {
   const now = new Date().toISOString();
@@ -333,7 +413,7 @@ export async function fetchAdminDashboardMetrics(): Promise<{
         created_at,
         updated_at,
         cancelled_at,
-        user:profiles!bookings_user_id_fkey ( first_name, last_name ),
+        user:profiles!bookings_user_id_fkey ( first_name, last_name, avatar_path ),
         session:sessions!bookings_session_id_fkey (
           title,
           price,
@@ -348,12 +428,23 @@ export async function fetchAdminDashboardMetrics(): Promise<{
       .from("sessions")
       .select(`
         id,
+        title,
         max_slots,
         start_time,
-        bookings ( status )
+        session_type:session_types (
+          name,
+          category:categories ( name )
+        ),
+        bookings (
+          id,
+          status,
+          user:profiles!bookings_user_id_fkey ( first_name, last_name, avatar_path )
+        )
       `)
       .eq("is_cancelled", false)
-      .gte("start_time", now),
+      .gte("start_time", now)
+      .order("start_time", { ascending: true })
+      .limit(24),
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
@@ -385,31 +476,7 @@ export async function fetchAdminDashboardMetrics(): Promise<{
 
   const pendingBookings = bookings.filter((row) => row.status === "pending").length;
 
-  const categoryCounts = new Map<string, { id: string; name: string; count: number }>();
-  for (const row of bookings) {
-    if (row.status !== "pending" && row.status !== "confirmed") continue;
-    const category = row.session?.session_type?.category;
-    if (!category) continue;
-    const existing = categoryCounts.get(category.id);
-    if (existing) existing.count += 1;
-    else categoryCounts.set(category.id, { id: category.id, name: category.name, count: 1 });
-  }
-
-  const totalCategoryBookings = [...categoryCounts.values()].reduce(
-    (sum, item) => sum + item.count,
-    0,
-  );
-
-  const categoryShares: CategoryBookingShare[] = [...categoryCounts.values()]
-    .map((item) => ({
-      ...item,
-      pct:
-        totalCategoryBookings > 0
-          ? Math.round((item.count / totalCategoryBookings) * 100)
-          : 0,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  const upcomingBookings = buildUpcomingBookingRows(sessions);
 
   const recentActivity = buildRecentActivityFeed(bookings, historyResult);
 
@@ -423,7 +490,7 @@ export async function fetchAdminDashboardMetrics(): Promise<{
       totalBookings: bookings.length,
       upcomingSessions: sessions.length,
     },
-    categoryShares,
+    upcomingBookings,
     recentActivity,
   };
 }

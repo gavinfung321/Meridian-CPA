@@ -7,6 +7,9 @@ export const adminTableRowInteractiveClassName = `${adminTableRowClassName} curs
 export const adminTableIconButtonClassName =
   "rounded-md p-2 text-[#0F2A1D]/70 transition-colors hover:bg-[#EDECE6] hover:text-[#0F2A1D]";
 
+/** View-only action — matches AdminBookings Eye button */
+export const adminTableViewButtonClassName = adminTableIconButtonClassName;
+
 export const adminTableDangerIconButtonClassName =
   "rounded-md p-2 text-red-700/80 transition-colors hover:bg-red-50 hover:text-red-700";
 

@@ -1,9 +1,13 @@
-import { Ban, Pencil } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
 import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { useAuth } from "../../contexts/AuthContext";
-import { adminTableRowInteractiveClassName } from "../../lib/table-styles";
+import {
+  adminTableRowInteractiveClassName,
+  adminTableViewButtonClassName,
+} from "../../lib/table-styles";
 import {
   formatProfileJoinedDate,
   getDisplayName,
@@ -20,14 +24,12 @@ import { TableSkeleton } from "./catalog/TableSkeleton";
 
 export function AdminClients(): JSX.Element {
   const { profile: currentProfile } = useAuth();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<ClientRoleFilter>("all");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [modalMode, setModalMode] = useState<
-    "view" | "edit" | "confirm-ban" | "confirm-reinstate"
-  >("view");
 
   const loadProfiles = useCallback(async () => {
     setError(null);
@@ -59,24 +61,17 @@ export function AdminClients(): JSX.Element {
   }, [profiles, roleFilter]);
 
   const openView = (profile: Profile) => {
+    if (profile.id === currentProfile?.id) {
+      navigate("/admin/profile");
+      return;
+    }
     setSelectedProfile(profile);
-    setModalMode("view");
   };
 
-  const openEdit = (profile: Profile, event: MouseEvent) => {
+  const openViewFromAction = (profile: Profile, event: MouseEvent) => {
     event.stopPropagation();
-    setSelectedProfile(profile);
-    setModalMode("edit");
+    openView(profile);
   };
-
-  const openBan = (profile: Profile, event: MouseEvent) => {
-    event.stopPropagation();
-    setSelectedProfile(profile);
-    setModalMode(profile.status === "banned" ? "confirm-reinstate" : "confirm-ban");
-  };
-
-  const canManageProfile = (profile: Profile) =>
-    profile.role !== "admin" && profile.id !== currentProfile?.id;
 
   return (
     <AdminLayout>
@@ -176,34 +171,19 @@ export function AdminClients(): JSX.Element {
                     </td>
                     <td className="px-4 py-4">{formatProfileJoinedDate(profile.created_at)}</td>
                     <td className="px-4 py-4 text-right" onClick={(event) => event.stopPropagation()}>
-                      {canManageProfile(profile) ? (
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            title="Edit"
-                            aria-label={`Edit ${profile.full_name}`}
-                            onClick={(event) => openEdit(profile, event)}
-                            className="rounded-md p-2 text-[#0F2A1D]/70 transition-colors hover:bg-[#EDECE6] hover:text-[#0F2A1D]"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            title={profile.status === "banned" ? "Reinstate" : "Ban user"}
-                            aria-label={
-                              profile.status === "banned"
-                                ? `Reinstate ${profile.full_name}`
-                                : `Ban ${profile.full_name}`
-                            }
-                            onClick={(event) => openBan(profile, event)}
-                            className="rounded-md p-2 text-red-700/80 transition-colors hover:bg-red-50 hover:text-red-700"
-                          >
-                            <Ban className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-[#0F2A1D]/40">View only</span>
-                      )}
+                      <button
+                        type="button"
+                        title={profile.id === currentProfile?.id ? "Edit your profile" : "View profile"}
+                        aria-label={
+                          profile.id === currentProfile?.id
+                            ? "Edit your profile"
+                            : `View ${profile.full_name ?? profile.email}`
+                        }
+                        onClick={(event) => openViewFromAction(profile, event)}
+                        className={adminTableViewButtonClassName}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -217,9 +197,20 @@ export function AdminClients(): JSX.Element {
         profile={selectedProfile}
         currentUserId={currentProfile?.id}
         open={selectedProfile !== null}
-        initialMode={modalMode}
         onClose={() => setSelectedProfile(null)}
-        onUpdated={() => void loadProfiles()}
+        onUpdated={() => {
+          void loadProfiles().then(() => {
+            if (!selectedProfile) return;
+            void supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", selectedProfile.id)
+              .single()
+              .then(({ data }) => {
+                if (data) setSelectedProfile(data);
+              });
+          });
+        }}
       />
     </AdminLayout>
   );

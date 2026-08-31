@@ -4,7 +4,7 @@
 
 Extend the Catalog Management hub so **session type templates** define default **capacity** and **description**, scheduled sessions inherit those defaults on create, admin tables expose the new columns, and **Sessions** + **Clients** match the **Bookings** interaction model (row click → modal; Actions column = View eye icon only).
 
-> **Status:** 🔄 In progress — branch created, no implementation commits yet.  
+> **Status:** ✅ Implementation complete on branch — pending remote migration verify + manual QA + close #6.  
 > **GitHub:** [#6](https://github.com/gavinfung321/Meridian-CPA/issues/6)  
 > **Branch:** `feat/issue-6-session-type-capacity-descriptions`  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) — Phase 2.5 catalog polish + Phase 3 admin UX  
@@ -85,7 +85,7 @@ Step 6  Update IMPLEMENTATION_PLAN_BOOKING.md + close #6
 *Skip if Step 0 confirms remote column + types already aligned.*
 
 - [ ] Migration applied remotely
-- [ ] `src/types/database.ts` — `SessionType` includes `default_max_slots`
+- [x] `src/types/database.ts` — `SessionType` includes `default_max_slots`
 - [ ] Supabase generated types stay in sync *(manual update if project does not auto-generate)*
 
 ---
@@ -96,18 +96,18 @@ Step 6  Update IMPLEMENTATION_PLAN_BOOKING.md + close #6
 
 ### Modal
 
-- [ ] **Create:** Capacity input visible; initial state **empty** (placeholder e.g. “e.g. 1”)
-- [ ] **Create:** Require capacity on submit (min 1); map empty → validation error, not silent `0`
-- [ ] **Edit:** Capacity input shows saved `default_max_slots`
-- [ ] Save payload includes `default_max_slots`
-- [ ] Description field unchanged (already in modal)
+- [x] **Create:** Capacity input visible; initial state **empty** (placeholder e.g. “e.g. 1”)
+- [x] **Create:** Require capacity on submit (min 1); map empty → validation error, not silent `0`
+- [x] **Edit:** Capacity input shows saved `default_max_slots`
+- [x] Save payload includes `default_max_slots`
+- [x] Description field unchanged (already in modal)
 
 ### Table
 
-- [ ] Column order: **Name → Description → Category → Duration → Capacity → Base price → Status → Actions**
-- [ ] Description column shows full text or em dash — **no** subtitle under Name
-- [ ] Capacity column shows integer
-- [ ] Loading skeleton column count updated
+- [x] Column order: **Name → Description → Category → Duration → Capacity → Base price → Status → Actions**
+- [x] Description column shows full text or em dash — **no** subtitle under Name
+- [x] Capacity column shows integer
+- [x] Loading skeleton column count updated
 
 ---
 
@@ -119,31 +119,31 @@ Step 6  Update IMPLEMENTATION_PLAN_BOOKING.md + close #6
 
 When admin **changes session type** on **create** *(not necessarily on edit — decide: overwrite only if description/capacity still match type default, or always on create only)*:
 
-- [ ] **Capacity:** set `max_slots` from `session_type.default_max_slots`
-- [ ] **Description:** set `description` from `session_type.description` (or empty string if null)
+- [x] **Capacity:** set `max_slots` from `session_type.default_max_slots`
+- [x] **Description:** set `description` from `session_type.description` (or empty string if null)
 
 **Recommended rule:** On **new session**, always apply type defaults on type change. On **edit**, apply only when user changes type *(same as duration/price today)*.
 
 ### SessionFormModal (quick edit)
 
-- [ ] Description textarea visible
-- [ ] Type select triggers capacity + description prefill (per rule above)
-- [ ] Save persists `description` and `max_slots`
+- [x] Description textarea visible
+- [x] Type select triggers capacity + description prefill (per rule above)
+- [x] Save persists `description` and `max_slots`
 
 ### AdminSessionForm (`/admin/sessions/new`, `/admin/sessions/edit/:id`)
 
-- [ ] Description field visible *(may already exist)* — wired to type default on create/type change
-- [ ] Capacity prefills from `default_max_slots` on create/type change
-- [ ] Recurrence + image behaviour unchanged
+- [x] Description field visible *(may already exist)* — wired to type default on create/type change
+- [x] Capacity prefills from `default_max_slots` on create/type change
+- [x] Recurrence + image behaviour unchanged
 
 ### Active Sessions table
 
-- [ ] Column order: **Session → Description → Date & Time → Capacity → Price → Status → Actions**
-- [ ] Description column: truncated with `title` tooltip if long, or single-line ellipsis
-- [ ] Session cell: title + type subtext only *(description moves to its own column)*
-- [ ] **Actions:** replace Pencil/Cancel icons with **Eye only** *(View)*
-- [ ] Row click still opens edit modal
-- [ ] Cancel / Reactivate move to **inside modal** or secondary modal footer — **not** in Actions column *(align with “view only” in Actions)*
+- [x] Column order: **Session → Description → Date & Time → Capacity → Price → Status → Actions**
+- [x] Description column: truncated with `title` tooltip if long, or single-line ellipsis
+- [x] Session cell: title + type subtext only *(description moves to its own column)*
+- [x] **Actions:** replace Pencil/Cancel icons with **Eye only** *(View)*
+- [x] Row click still opens edit modal
+- [x] Cancel / Reactivate move to **inside modal** or secondary modal footer — **not** in Actions column *(align with “view only” in Actions)*
 
 > **Design decision — session destructive actions:** Bookings keep approve/reject inside modal, not in Actions. For sessions, **Cancel session** and **Reactivate** should live in `SessionFormModal` footer (or linked full editor), not the table Actions column.
 
@@ -153,11 +153,11 @@ When admin **changes session type** on **create** *(not necessarily on edit — 
 
 **File:** `AdminClients.tsx`
 
-- [ ] **Actions column:** **Eye icon only** — same classes as `AdminBookings.tsx`
-- [ ] Row click opens `ClientProfileModal` (view mode)
-- [ ] Eye click opens same modal (`stopPropagation`)
-- [ ] **Edit / Ban** available **inside** `ClientProfileModal` only — remove Pencil/Ban from table Actions
-- [ ] Manageable vs admin read-only rows unchanged
+- [x] **Actions column:** **Eye icon only** — same classes as `AdminBookings.tsx`
+- [x] Row click opens `ClientProfileModal` (view mode)
+- [x] Eye click opens same modal (`stopPropagation`)
+- [x] **Edit / Ban** available **inside** `ClientProfileModal` only — remove Pencil/Ban from table Actions
+- [x] Manageable vs admin read-only rows unchanged
 
 ---
 
@@ -165,18 +165,18 @@ When admin **changes session type** on **create** *(not necessarily on edit — 
 
 **File:** `src/lib/table-styles.ts` *(optional extract: `adminTableViewButtonClassName` mirroring bookings)*
 
-- [ ] Catalog tabs + Clients use `adminTableRowInteractiveClassName`
-- [ ] Actions column: single Eye button; `onClick` + `stopPropagation` pattern matches bookings
+- [x] Catalog tabs + Clients use `adminTableRowInteractiveClassName`
+- [x] Actions column: single Eye button; `onClick` + `stopPropagation` pattern matches bookings
 - [ ] Categories tab: if Actions still uses Pencil/Power — **optional** align to Eye-only for parity *(#6 focuses Sessions + Clients; Categories can stay modal-only with row click)*
 
 ---
 
 ## Step 6 — Documentation & issue close
 
-- [ ] Check off items in this file as work completes
+- [x] Check off items in this file as work completes
 - [ ] Sync acceptance criteria on [#6](https://github.com/gavinfung321/Meridian-CPA/issues/6)
 - [ ] Update [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) §7 catalog polish if behaviour changed
-- [ ] `npm run build` passes
+- [x] `npm run build` passes
 - [ ] Manual QA checklist below
 - [ ] Close #6 with summary comment
 
