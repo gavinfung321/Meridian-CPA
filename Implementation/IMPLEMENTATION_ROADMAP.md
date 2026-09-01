@@ -4,10 +4,10 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** ✅ **Wave 3 complete** — merged to `main` ([#14](https://github.com/gavinfung321/Meridian-CPA/issues/14), PR [#15](https://github.com/gavinfung321/Meridian-CPA/pull/15))  
-> **Next:** Wave 4 (Email notifications)  
+> **Status:** ✅ **Prototype scope complete** — Waves 0–3 merged to `main`  
+> **Wave 4:** ⏸️ **Deferred** — email notifications skipped for prototype; revisit pre-launch  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
-> **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
+> **Path chosen:** Conservative *(ops + QA first, then feature phases in order; email deferred post-prototype)*
 
 ### Locked sequence
 
@@ -20,8 +20,10 @@ Wave 2  Phase 5A — People management
    ↓
 Wave 3  Phase 5B — Settings & reporting
    ↓
-Wave 4  Email notifications — pre-launch
+Wave 4  Email notifications — ⏸️ deferred (post-prototype / pre-launch)
 ```
+
+**Prototype complete:** Waves **0–3** deliver a demo-ready booking system. In-app notifications (bell, Realtime, toasts) cover prototype needs; Wave 4 is optional until production launch.
 
 **Out of this path (do not start until Waves 0–3 are done):**
 - Landing P2 cleanup (`data/sessions.ts`, unused keys)
@@ -40,7 +42,7 @@ Create issues **when starting each wave**, not all upfront.
 | 1 | `Phase 4: Audit trails — login, session, admin booking history` | `feat/issue-N-phase-4-audit-trails` |
 | 2 | `Phase 5A: Client search, promote/demote, full detail page` | `feat/issue-N-phase-5a-people-mgmt` |
 | 3 | `Phase 5B: Firm settings + admin reporting` | `feat/issue-N-phase-5b-settings-reporting` |
-| 4 | `Email notifications on booking status change` | `feat/issue-N-booking-emails` |
+| 4 | `Email notifications on booking status change` | `feat/issue-N-booking-emails` *(deferred — do not open for prototype)* |
 
 **Commit format:** `[#<issue>] …`
 
@@ -309,13 +311,15 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-## Wave 4 — Email notifications *(pre-launch)*
+## Wave 4 — Email notifications *(deferred — post-prototype)*
 
 **Goal:** Automated emails on booking lifecycle events.
 
-**Depends on:** Waves 0–3 complete; production Supabase + domain ready.
+**Status:** ⏸️ **Skipped for prototype** (Sep 2026). In-app channels already shipped: Realtime bell, toasts, booking history. Revisit when moving to production launch with a verified sender domain.
 
-### Checklist
+**Depends on:** Production Supabase + domain; Resend or SendGrid account.
+
+### Checklist *(unchanged — for pre-launch backlog)*
 
 - [ ] Choose provider: Resend or SendGrid
 - [ ] Supabase Edge Function: on booking status change
@@ -323,7 +327,7 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 - [ ] Secrets: API key in Supabase project settings
 - [ ] Test with staging inbox
 - [ ] Document env vars in README / deploy notes
-- [ ] Close Wave 4 GitHub issue
+- [ ] Open GitHub issue when starting pre-launch work
 
 **Reference:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) § Notifications
 
@@ -337,9 +341,24 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 | 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) — `1690624`) |
 | 2 | Phase 5A — People management | ✅ Complete ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12) — `802db26`) |
 | 3 | Phase 5B — Settings & reporting | ✅ Complete ([#14](https://github.com/gavinfung321/Meridian-CPA/issues/14) — `97735d4`) |
-| 4 | Email notifications | 🚧 **Next** |
+| 4 | Email notifications | ⏸️ Deferred *(post-prototype)* |
 
 ---
+
+## Prototype sign-off *(Sep 2026)*
+
+The conservative roadmap **Waves 0–3** are complete on `main`. This is sufficient for prototype / demo purposes:
+
+| Area | Covered by |
+|------|------------|
+| Auth + profiles | Phase 1 |
+| Sessions + landing booking | Phases 2–2.5 |
+| Booking flow + in-app alerts | Phase 3 |
+| Audit trails | Wave 1 / Phase 4 |
+| People management | Wave 2 / Phase 5A |
+| Settings + reporting | Wave 3 / Phase 5B |
+
+**Explicitly out of prototype scope:** Wave 4 email, account deletion Edge Function, CSV export, business-hours enforcement, `/about` page, landing P2 cleanup.
 
 ## Related documents
 
@@ -353,4 +372,4 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-*Last updated: Sep 1, 2026 — Wave 3 merged to main; Wave 4 next.*
+*Last updated: Sep 1, 2026 — Prototype complete (Waves 0–3); Wave 4 email deferred.*

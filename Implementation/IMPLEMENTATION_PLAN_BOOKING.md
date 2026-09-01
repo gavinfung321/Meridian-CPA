@@ -18,11 +18,12 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 | 4 | **3** | Booking Logic & Evolution | ✅ Complete | | Bookings, overview UX, bell, toasts, reinstate |
 | 5 | **4.5** | Live People Directory | ✅ Complete | | Live `/admin/clients`, filters, ClientProfileModal |
 | 6 | **4** | History & Logging | ✅ Complete | [#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) | Login / session / booking audit trails |
-| 7 | **5** | Admin Controls & Reporting | **Next** | | Search, promote/demote, charts, `app_settings` |
+| 7 | **5** | Admin Controls & Reporting | ✅ Complete | [#12](https://github.com/gavinfung321/Meridian-CPA/issues/12), [#14](https://github.com/gavinfung321/Meridian-CPA/issues/14) | Search, promote/demote, charts, `app_settings` |
+| — | **Email** | ⏸️ Deferred | — | Edge Function + Resend/SendGrid — post-prototype only |
 
 **Why 4.5 exists:** The people directory was built early *(only needs `profiles`, not bookings)* but keeps the label **4.5** from the original plan — meaning “inserted between audit prep and Phase 5 admin controls,” not “half of Phase 4.”
 
-**What's next:** Phase **4** — wire audit tables (`user_login_history`, `session_history`, `booking_history`) and admin views.
+**Prototype status (Sep 2026):** Phases **1–5B** complete on `main`. Email notifications deferred — in-app bell, Realtime, and toasts are sufficient for demo. Revisit email before production launch.
 
 ### Document map
 
@@ -915,13 +916,13 @@ Bookings are **status-managed**, not fully editable records:
 | **In-app realtime** | New booking submitted; admin approves/rejects/cancels; client booking status changes | Supabase **Realtime** via `useBookingNotifications` *(requires migration applied)* |
 | **Header bell badge** | Admin: pending booking count + dropdown list | ✅ Dropdown with pending items → `/admin/bookings?booking=<id>`; footer **View all** |
 | **Toast messages** | After user actions *(book, cancel, admin approve)* | ✅ `ToastProvider` top-left *(Forest Green / Gold)* |
-| **Email** | Booking confirmation, rejection, cancellation | Edge Function + Resend/SendGrid — deferred |
+| **Email** | Booking confirmation, rejection, cancellation | Edge Function + Resend/SendGrid — **deferred post-prototype** |
 
 **Notification checklist** *(bell + toasts + Realtime hook shipped; email deferred)*:
 - [x] `useBookingNotifications` hook — Realtime subscription on `bookings`
 - [x] Header 🔔: pending booking count badge *(admin)* + dropdown list of pending bookings
 - [x] Toast provider for booking action feedback
-- [ ] Edge Function + email templates for status changes
+- [ ] Edge Function + email templates for status changes *(deferred — post-prototype; in-app notifications sufficient for demo)*
 
 #### Admin overview UX polish *(Phase 3)* — ✅ **COMPLETE**
 
@@ -1207,4 +1208,8 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 - **Enforcement:** Public + portal session lists and checkout respect booking window
 - **`/admin/reporting`:** Live Recharts dashboard — occupancy, revenue, category/type charts, client metrics
 
-### Wave 4 — Email notifications (next)
+### Wave 4 — Email notifications ⏸️ *(deferred — post-prototype)*
+
+Automated booking lifecycle emails via Supabase Edge Function + Resend/SendGrid. **Not required for prototype** — clients and admins already get in-app bell, Realtime, and toast feedback. Revisit before production launch with a verified sender domain.
+
+**Backlog when ready:** submitted, confirmed, rejected, cancelled templates; API secrets; staging inbox QA.
