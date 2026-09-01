@@ -10,6 +10,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { buildFullName, getPasswordResetRedirectUrl } from "../lib/profile";
+import { recordLoginHistory } from "../lib/login-history";
 import type { Profile } from "../types/database";
 
 interface AuthContextValue {
@@ -104,6 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const nextProfile = data.user ? await fetchProfile(data.user.id) : null;
+    if (data.user) {
+      void recordLoginHistory(data.user.id);
+    }
     setProfile(nextProfile);
     return { error: null, profile: nextProfile };
   }, []);

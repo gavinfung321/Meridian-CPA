@@ -17,8 +17,8 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 | 3 | **2.5** | Unified Catalog UX | ✅ Complete | *(UI refactor under #5 scope)* | Tabbed hub, row-click modals, capacity, catalog consistency |
 | 4 | **3** | Booking Logic & Evolution | ✅ Complete | | Bookings, overview UX, bell, toasts, reinstate |
 | 5 | **4.5** | Live People Directory | ✅ Complete | | Live `/admin/clients`, filters, ClientProfileModal |
-| 6 | **4** | History & Logging | **Next** | | Login / session / booking audit trails |
-| 7 | **5** | Admin Controls & Reporting | Not started | | Search, promote/demote, charts, `app_settings` |
+| 6 | **4** | History & Logging | ✅ Complete | [#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) | Login / session / booking audit trails |
+| 7 | **5** | Admin Controls & Reporting | **Next** | | Search, promote/demote, charts, `app_settings` |
 
 **Why 4.5 exists:** The people directory was built early *(only needs `profiles`, not bookings)* but keeps the label **4.5** from the original plan — meaning “inserted between audit prep and Phase 5 admin controls,” not “half of Phase 4.”
 
@@ -1023,16 +1023,19 @@ Shared hover styles in `src/lib/table-styles.ts`:
 
 ---
 
-### Phase 4: History & Logging
+### Phase 4: History & Logging — ✅ **COMPLETE**
 
 Audit trails for compliance and admin visibility.
 
-- [ ] Auth Hook: Save entry in `user_login_history` on successful login *(table exists — wire auth hook)*
-- [ ] Database Triggers (or service logic) for `session_history` on session CREATE / UPDATE / CANCEL
-- [x] **Partial:** `booking_history` inserts on admin/client status changes via `booking-history.ts` *(dashboard activity feed consumes this)*
-- [ ] Master Booking history view for Admin *(timeline in booking modal — Phase 4)*
-- [ ] Admin `/admin/clients`: audit view displaying `user_login_history` for selected users
-- [ ] Admin session change log viewer (from `session_history`)
+- [x] Auth post-login: insert into `user_login_history` via `recordLoginHistory` in `AuthContext.signIn`
+- [x] Session history: `session-history.ts` logs create/update/cancel/reactivate from admin session flows
+- [x] **Partial (prior):** `booking_history` inserts on admin/client status changes via `booking-history.ts`
+- [x] Admin booking detail modal — activity timeline via `fetchAdminBookingHistory`
+- [x] Admin client profile modal — **Login history** section (`LoginHistoryList`)
+- [x] Session catalog edit modal — **Change log** section (`SessionChangeLog`) with **field-level diffs** on UPDATED *(old → new for title, schedule, capacity, price, etc.)*
+- [x] Migration `20250901180000_audit_history_insert_policies.sql` — insert RLS for login + session history
+
+**Tables (Phase 1 schema):** `user_login_history`, `session_history`, `booking_history`
 
 **Tables already migrated in Phase 1:** `user_login_history`, `session_history`, `booking_history` (RLS: admin read only)
 

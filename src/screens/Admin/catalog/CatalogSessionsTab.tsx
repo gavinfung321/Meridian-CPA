@@ -2,6 +2,7 @@ import { CalendarDays, Eye, LayoutList, Search, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
+import { useAuth } from "../../../contexts/AuthContext";
 import { buildAdminSessionBookingsUrl } from "../../../lib/booking-admin";
 import {
   filterSessionsBySearch,
@@ -17,6 +18,12 @@ import {
   adminTableViewButtonClassName,
 } from "../../../lib/table-styles";
 import { cn } from "../../../lib/utils";
+import {
+  logSessionCancelled,
+  logSessionReactivated,
+  logSessionUpdated,
+  sessionToHistorySnapshot,
+} from "../../../lib/session-history";
 import { supabase } from "../../../lib/supabase";
 import type { Session } from "../../../types/database";
 import { SessionCancelModal } from "./SessionCancelModal";
@@ -45,6 +52,7 @@ function truncateDescription(text: string | null, max = 48): string {
 }
 
 export function CatalogSessionsTab(): JSX.Element {
+  const { profile } = useAuth();
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +143,16 @@ export function CatalogSessionsTab(): JSX.Element {
       return;
     }
 
+    if (profile?.id) {
+      const updatedSession: SessionRow = { ...editTarget, ...payload };
+      await logSessionUpdated(
+        editTarget.id,
+        profile.id,
+        sessionToHistorySnapshot(editTarget),
+        sessionToHistorySnapshot(updatedSession),
+      );
+    }
+
     setMessage("Session updated.");
     closeEditModal();
     await loadSessions();
@@ -163,6 +181,15 @@ export function CatalogSessionsTab(): JSX.Element {
       return;
     }
 
+    if (profile?.id) {
+      await logSessionCancelled(
+        cancelTarget.id,
+        profile.id,
+        sessionToHistorySnapshot(cancelTarget),
+        reason.trim(),
+      );
+    }
+
     if (editTarget?.id === cancelTarget.id) {
       closeEditModal();
     }
@@ -189,6 +216,14 @@ export function CatalogSessionsTab(): JSX.Element {
     if (reactivateError) {
       setError(reactivateError.message);
       return;
+    }
+
+    if (profile?.id) {
+      await logSessionReactivated(
+        session.id,
+        profile.id,
+        sessionToHistorySnapshot(session),
+      );
     }
 
     if (editTarget?.id === session.id) {

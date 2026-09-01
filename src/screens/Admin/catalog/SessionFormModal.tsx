@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { RecurrenceRulesEditor } from "../../../components/RecurrenceRulesEditor";
 import { AdminModal } from "../../../components/AdminModal";
+import { SessionChangeLog } from "../../../components/SessionChangeLog";
 import { Button } from "../../../components/ui/button";
 import { buildAdminSessionBookingsUrl } from "../../../lib/booking-admin";
 import {
@@ -627,6 +628,8 @@ export function SessionFormModal({
           <RecurrenceRulesEditor value={recurrence} onChange={setRecurrence} />
         </section>
       </form>
+
+      {session ? <SessionChangeLog sessionId={session.id} /> : null}
     </AdminModal>
   );
 }
