@@ -1,6 +1,6 @@
-import { Eye, Search } from "lucide-react";
+import { CalendarDays, Eye, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
 import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { useAuth } from "../../contexts/AuthContext";
@@ -20,6 +20,7 @@ import {
 } from "../../lib/profile";
 import { adminInputClassName } from "../../lib/session-admin";
 import {
+  adminTableLinkPillClassName,
   adminTableRowInteractiveClassName,
   adminTableViewButtonClassName,
 } from "../../lib/table-styles";
@@ -94,10 +95,8 @@ export function AdminClients(): JSX.Element {
     openProfile(profile);
   };
 
-  const openClientBookings = (profile: Profile, event: MouseEvent) => {
-    event.stopPropagation();
-    navigate(buildAdminClientBookingsUrl(profile.id));
-  };
+  const getBookingCountLabel = (count: number) =>
+    count === 1 ? "1 booking" : `${count} bookings`;
 
   const emptyMessage =
     searchQuery.trim() || statusFilter !== "all" || roleFilter !== "all"
@@ -239,15 +238,15 @@ export function AdminClients(): JSX.Element {
                     <td className="px-4 py-4">
                       <StatusBadge status={profile.status} />
                     </td>
-                    <td className="px-4 py-4">
-                      <button
-                        type="button"
+                    <td className="px-4 py-4" onClick={(event) => event.stopPropagation()}>
+                      <Link
+                        to={buildAdminClientBookingsUrl(profile.id)}
                         title={`View ${getDisplayName(profile.first_name, profile.last_name, profile.full_name)}'s bookings`}
-                        onClick={(event) => openClientBookings(profile, event)}
-                        className="font-medium text-[#0F2A1D] underline-offset-2 hover:text-[#C9A84C] hover:underline"
+                        className={adminTableLinkPillClassName}
                       >
-                        {bookingCounts[profile.id] ?? 0}
-                      </button>
+                        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#C9A84C]" aria-hidden />
+                        {getBookingCountLabel(bookingCounts[profile.id] ?? 0)}
+                      </Link>
                     </td>
                     <td className="px-4 py-4">{formatProfileJoinedDate(profile.created_at)}</td>
                     <td className="px-4 py-4 text-right" onClick={(event) => event.stopPropagation()}>
