@@ -2,6 +2,7 @@ import {
   BarChart3,
   CalendarDays,
   LayoutDashboard,
+  LineChart,
   Settings,
   User,
   Users,
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/admin/bookings", label: "Bookings", icon: BarChart3, end: false },
   { to: "/admin/sessions", label: "Sessions", icon: CalendarDays, end: false },
   { to: "/admin/clients", label: "Clients", icon: Users, end: false },
+  { to: "/admin/reporting", label: "Reporting", icon: LineChart, end: false },
   { to: "/admin/profile", label: "Profile", icon: User, end: false },
   { to: "/admin/settings", label: "Settings", icon: Settings, end: false },
 ];
