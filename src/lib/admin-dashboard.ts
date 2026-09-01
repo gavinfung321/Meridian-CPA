@@ -386,7 +386,7 @@ function buildRecentActivityFeed(
 
   return [...historyEvents, ...synthesized]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, 12);
+    .slice(0, 10);
 }
 
 export function filterRecentActivity(

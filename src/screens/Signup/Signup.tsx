@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { getPostLoginBookDestination } from "../../lib/auth-routes";
 import { getPendingBookSessionId } from "../../lib/pending-book-session";
+import { MIN_PASSWORD_LENGTH } from "../../lib/password-policy";
 
 const inputClassName =
   "w-full rounded-md border border-[#EDECE6] bg-[#F9F9F6] px-3 py-2 text-sm outline-none ring-[#C9A84C] focus:ring-2";
@@ -160,7 +161,7 @@ export function Signup(): JSX.Element {
                     id="password"
                     type="password"
                     required
-                    minLength={8}
+                    minLength={MIN_PASSWORD_LENGTH}
                     autoComplete="new-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}

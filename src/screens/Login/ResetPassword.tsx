@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { useAuth } from "../../contexts/AuthContext";
+import { MIN_PASSWORD_LENGTH, validatePasswordLength } from "../../lib/password-policy";
 import { supabase } from "../../lib/supabase";
 
 const inputClassName =
@@ -48,8 +49,9 @@ export function ResetPassword(): JSX.Element {
     event.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    const passwordError = validatePasswordLength(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -109,7 +111,7 @@ export function ResetPassword(): JSX.Element {
                     id="new-password"
                     type="password"
                     required
-                    minLength={8}
+                    minLength={MIN_PASSWORD_LENGTH}
                     autoComplete="new-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
@@ -125,7 +127,7 @@ export function ResetPassword(): JSX.Element {
                     id="confirm-password"
                     type="password"
                     required
-                    minLength={8}
+                    minLength={MIN_PASSWORD_LENGTH}
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}

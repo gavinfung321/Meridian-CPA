@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { MeridianLogo } from "../../components/MeridianLogo";
 import { Button } from "../../components/ui/button";
@@ -66,10 +67,16 @@ export function Login(): JSX.Element {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F9F9F6] px-6 py-12 font-sans text-[#0F2A1D]">
       <div className="w-full max-w-md">
+        <Link
+          to="/"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#0F2A1D]/70 transition-colors hover:text-[#0F2A1D]"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back to homepage
+        </Link>
+
         <div className="mb-8 flex justify-center">
-          <Link to="/">
-            <MeridianLogo variant="dark" className="h-10 w-auto" />
-          </Link>
+          <MeridianLogo variant="dark" className="h-10 w-auto" aria-hidden="true" />
         </div>
 
         <Card className="border-[#EDECE6] bg-white shadow-sm">

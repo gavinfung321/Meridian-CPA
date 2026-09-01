@@ -36,8 +36,8 @@ export function PortalLayout({
   const sidebarOpenOnDesktop = !desktopCollapsed;
 
   return (
-    <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#0F2A1D]">
-      <div className="flex min-h-screen">
+    <div className="min-h-dvh bg-[#F9F9F6] font-sans text-[#0F2A1D]">
+      <div className="flex h-dvh overflow-hidden">
         <aside
           className={cn(
             "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-[#EDECE6] bg-[#0F2A1D] text-white transition-transform duration-200 lg:static lg:translate-x-0",
@@ -122,8 +122,8 @@ export function PortalLayout({
           />
         ) : null}
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#EDECE6] bg-white px-4 py-3 sm:gap-4 sm:px-6 lg:px-10">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="z-20 flex shrink-0 items-center gap-3 border-b border-[#EDECE6] bg-white px-4 py-3 sm:gap-4 sm:px-6 lg:px-10">
             <button
               type="button"
               className="shrink-0 rounded-md p-2 hover:bg-[#F9F9F6] lg:hidden"
@@ -155,7 +155,9 @@ export function PortalLayout({
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-8 sm:px-6 lg:px-10">
+            {children}
+          </main>
         </div>
       </div>
     </div>

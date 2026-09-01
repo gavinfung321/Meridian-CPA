@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ContactModal } from "../../components/ContactModal";
 import { Language } from "../../lib/translations";
-import { scrollToBookingSection } from "../../lib/scroll-to-booking";
 import { FooterSection } from "./sections/FooterSection/FooterSection";
 import { HeroSection } from "./sections/HeroSection";
 import { MainContentSection } from "./sections/MainContentSection/MainContentSection";
@@ -23,7 +22,7 @@ export const Desktop = ({ lang, setLang }: DesktopProps): JSX.Element => {
       className="flex min-h-screen w-full flex-col overflow-x-hidden bg-displaydisplay-2"
     >
       <TopNavigationSection lang={lang} setLang={setLang} onContactClick={openContact} />
-      <HeroSection lang={lang} onBookNowClick={scrollToBookingSection} />
+      <HeroSection lang={lang} onBookNowClick={openContact} />
       <MainContentSection lang={lang} onContactClick={openContact} />
       <FooterSection lang={lang} />
       <ContactModal lang={lang} open={contactOpen} onClose={closeContact} />

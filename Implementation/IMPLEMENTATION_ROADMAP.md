@@ -129,8 +129,13 @@ Create issues **when starting each wave**, not all upfront.
 ### Step 4 — Triage & doc sync
 
 - [x] GitHub issue filed: [#9](https://github.com/gavinfung321/Meridian-CPA/issues/9)
-- [ ] File GitHub issues for any P0/P1 bugs found in Steps 1–3
-- [ ] Fix P0/P1 before starting Wave 1 *(P2 can defer)*
+- [x] **P1 fixes from manual QA (Sep 1, 2026):**
+  - Hero **Book Now** → `ContactModal` (same as header Contact us)
+  - Admin recent activity capped at **10** items
+  - Password min length **6** on signup + reset (`password-policy.ts`)
+  - Client/admin portal scroll — `PortalLayout` main pane `overflow-y-auto`
+  - Login page **Back to homepage** button
+- [ ] Re-run manual QA on fixed items
 - [ ] Tick completed QA boxes in source docs when manual QA passes
 - [ ] Mark Wave 0 complete in progress tracker below
 

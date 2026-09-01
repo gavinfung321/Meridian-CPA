@@ -19,7 +19,7 @@ Refine the homepage **`#booking`** section (`BookingSection`) so copy, CTAs, and
 | **Book a session** (`#booking`) | Workshops, clinics, info sessions, group events | Secondary — education, lead gen, client engagement |
 | **Client portal** `/dashboard/book` | Same catalog for logged-in clients | Self-service booking |
 
-**Implication:** The **header** button stays **Contact us** (audit/advisory — primary revenue, always available). The **hero** must not duplicate that label — use a distinct secondary action (**Book Now** → `#booking`) so the above-the-fold view offers two clear paths without redundancy.
+**Implication:** The **header** and **hero** both use **Contact us** → `ContactModal` (audit/advisory — primary revenue). Workshop discovery stays via nav **Sessions** → `#booking` and scroll to the booking section.
 
 ---
 
@@ -49,7 +49,7 @@ Same label, same action, different sizes — feels redundant and wastes the hero
 
 | Key | EN | ZH | Action |
 |-----|----|----|--------|
-| `hero.btn` | **Book Now** | **立即預約** | `scrollToBookingSection()` → `#booking` |
+| `hero.btn` | **Book Now** | **立即預約** | `ContactModal` *(same as header Contact us)* |
 
 **Not** “Browse sessions” (too passive) and **not** “Contact us” (duplicates header).
 
@@ -57,7 +57,8 @@ Same label, same action, different sizes — feels redundant and wastes the hero
 
 ```
 Header button     →  Contact us (ContactModal)     — audit / advisory, always available
-Hero primary      →  Book Now (#booking)           — workshops & info sessions
+Hero primary      →  Book Now label → ContactModal  — same enquiry path as header (Sep 2026)
+Nav Sessions      →  #booking                      — workshop catalog
 Nav "Sessions"    →  #booking                      — text-link discoverability (redundant with hero but OK)
 ```
 
@@ -807,7 +808,7 @@ Prioritised by impact vs effort.
 |---|----------|--------|
 | 1 | Business role of `#booking` | **Workshops & info sessions** — not primary audit funnel |
 | 2 | **Header CTA** | **Contact us** → enquiry modal |
-| 2b | **Hero primary CTA** | **Book Now** → `#booking` scroll *(fixes duplicate Contact us)* |
+| 2b | **Hero primary CTA** | **Book Now** label → **Contact us** action (`ContactModal`) — same as header *(Wave 0 QA, Sep 2026)* |
 | 3 | Session discoverability | Nav text link **Sessions** → `#booking` *(no competing header button)* |
 | 4 | Catalog UI | **Shared with `/dashboard/book`** — list \| calendar, filters, search via `PublicSessionCatalog` |
 | 5 | Subtitle framing | Lead with **workshops, clinics, info sessions** |
