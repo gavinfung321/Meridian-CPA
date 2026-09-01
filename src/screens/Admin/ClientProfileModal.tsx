@@ -2,6 +2,7 @@ import { Camera, Trash2 } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { AdminModal } from "../../components/AdminModal";
+import { LoginHistoryList } from "../../components/LoginHistoryList";
 import { ProfileAvatar } from "../../components/ProfileAvatar";
 import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { Button } from "../../components/ui/button";
@@ -603,6 +604,12 @@ export function ClientProfileModal({
           ) : null}
         </>
       )}
+
+      {!isAdmin && mode === "profile" ? (
+        <div className="mt-6">
+          <LoginHistoryList userId={profile.id} />
+        </div>
+      ) : null}
     </AdminModal>
   );
 }

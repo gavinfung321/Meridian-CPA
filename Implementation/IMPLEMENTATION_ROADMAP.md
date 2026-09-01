@@ -4,7 +4,8 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** ✅ **Wave 0 complete** — merged `c138976`; [#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) closed. **Next:** Wave 1 (Phase 4)  
+> **Status:** ✅ **Wave 1 complete** — Phase 4 merged pending; [#10](https://github.com/gavinfung321/Meridian-CPA/issues/10)  
+> **Next:** Wave 2 (Phase 5A — People management)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
 > **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
@@ -335,8 +336,8 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 | Wave | Name | Status |
 |------|------|--------|
 | 0 | Pre-flight — ops + QA | ✅ Complete ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) — `c138976`) |
-| 1 | Phase 4 — History & logging | 🚧 **Next** |
-| 2 | Phase 5A — People management | ⬜ Blocked on Wave 1 |
+| 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10)) |
+| 2 | Phase 5A — People management | 🚧 **Next** |
 | 3 | Phase 5B — Settings & reporting | ⬜ Blocked on Wave 2 |
 | 4 | Email notifications | ⬜ Blocked on Wave 3 |
 

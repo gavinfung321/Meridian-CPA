@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
 import { RecurrenceRulesEditor } from "../../components/RecurrenceRulesEditor";
 import { Button } from "../../components/ui/button";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   buildRecurrenceRules,
   defaultRecurrenceFormState,
@@ -22,6 +23,12 @@ import {
   removeSessionImage,
   uploadSessionImage,
 } from "../../lib/session-image";
+import {
+  logSessionCancelled,
+  logSessionCreated,
+  logSessionUpdated,
+  sessionToHistorySnapshot,
+} from "../../lib/session-history";
 import { supabase } from "../../lib/supabase";
 import type { Session } from "../../types/database";
 
@@ -35,10 +42,12 @@ const defaultStart = (): string => {
 export function AdminSessionForm(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const isEditing = Boolean(id);
   const draftSessionId = useMemo(() => id ?? crypto.randomUUID(), [id]);
 
   const [sessionTypes, setSessionTypes] = useState<SessionTypeWithCategory[]>([]);
+  const [originalSession, setOriginalSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -94,6 +103,7 @@ export function AdminSessionForm(): JSX.Element {
           if (!data) throw new Error("Session not found.");
 
           const session = data as Session;
+          setOriginalSession(session);
           setTitle(session.title);
           setDescription(session.description ?? "");
           setSessionTypeId(session.session_type_id ?? types.find((type) => type.is_active)?.id ?? "");
@@ -248,6 +258,20 @@ export function AdminSessionForm(): JSX.Element {
       if (isEditing && id) {
         const { error: updateError } = await supabase.from("sessions").update(basePayload).eq("id", id);
         if (updateError) throw updateError;
+        if (originalSession && profile?.id) {
+          const updatedSession: Session = {
+            ...originalSession,
+            ...basePayload,
+            price: basePayload.price,
+          };
+          await logSessionUpdated(
+            id,
+            profile.id,
+            sessionToHistorySnapshot(originalSession),
+            sessionToHistorySnapshot(updatedSession),
+          );
+          setOriginalSession(updatedSession);
+        }
         setImagePath(nextImagePath);
         setPendingImageFile(null);
         setMessage("Session updated.");
@@ -256,6 +280,23 @@ export function AdminSessionForm(): JSX.Element {
           .from("sessions")
           .insert({ ...basePayload, id: sessionId });
         if (insertError) throw insertError;
+        if (profile?.id) {
+          await logSessionCreated(
+            sessionId,
+            profile.id,
+            sessionToHistorySnapshot({
+              id: sessionId,
+              created_at: new Date().toISOString(),
+              updated_at: basePayload.updated_at,
+              recurrence_rules: basePayload.recurrence_rules,
+              image_path: nextImagePath,
+              is_cancelled: false,
+              cancel_reason: null,
+              cancelled_at: null,
+              ...basePayload,
+            }),
+          );
+        }
         navigate("/admin/sessions");
         return;
       }
@@ -290,6 +331,21 @@ export function AdminSessionForm(): JSX.Element {
     if (cancelError) {
       setError(cancelError.message);
       return;
+    }
+
+    if (originalSession && profile?.id) {
+      await logSessionCancelled(
+        id,
+        profile.id,
+        sessionToHistorySnapshot(originalSession),
+        cancelReason.trim(),
+      );
+      setOriginalSession({
+        ...originalSession,
+        is_cancelled: true,
+        cancel_reason: cancelReason.trim(),
+        cancelled_at: new Date().toISOString(),
+      });
     }
 
     setIsCancelled(true);

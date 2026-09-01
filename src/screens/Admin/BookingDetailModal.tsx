@@ -12,12 +12,17 @@ import {
   formatBookingId,
   formatBookingLongSessionDate,
   formatBookingPrice,
+  formatBookingRelativeTime,
   getBookingClientName,
   getBookingSessionTypeLabel,
   reinstateAdminBooking,
   updateBookingStatus,
   type AdminBookingRow,
 } from "../../lib/booking-admin";
+import {
+  fetchAdminBookingHistory,
+  type BookingHistoryTimelineEntry,
+} from "../../lib/booking-history-display";
 import type { BookingStatus } from "../../types/database";
 import { BookingReasonModal, type BookingReasonAction } from "./BookingReasonModal";
 
@@ -41,12 +46,27 @@ export function BookingDetailModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reasonAction, setReasonAction] = useState<BookingReasonAction | null>(null);
+  const [history, setHistory] = useState<BookingHistoryTimelineEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     setError(null);
     setReasonAction(null);
     setSaving(false);
   }, [booking?.id, open]);
+
+  useEffect(() => {
+    if (!open || !booking) {
+      setHistory([]);
+      return;
+    }
+
+    setHistoryLoading(true);
+    void fetchAdminBookingHistory(booking.id)
+      .then(setHistory)
+      .catch(() => setHistory([]))
+      .finally(() => setHistoryLoading(false));
+  }, [booking, open]);
 
   if (!open || !booking) return null;
 
@@ -289,6 +309,33 @@ export function BookingDetailModal({
           </div>
         </div>
       ) : null}
+
+      <div className="mt-6 border-t border-[#EDECE6] pt-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-[#C9A84C]" aria-hidden />
+          <h3 className="text-sm font-semibold text-[#0F2A1D]">Activity</h3>
+        </div>
+        {historyLoading ? (
+          <p className="text-sm text-[#0F2A1D]/60">Loading activity…</p>
+        ) : history.length === 0 ? (
+          <p className="text-sm text-[#0F2A1D]/60">No activity recorded yet.</p>
+        ) : (
+          <ul className="space-y-3 border-l-2 border-[#EDECE6] pl-4">
+            {history.map((entry) => (
+              <li key={entry.id} className="relative">
+                <span className="absolute -left-[1.35rem] top-1.5 h-2 w-2 rounded-full bg-[#C9A84C]" />
+                <p className="text-sm font-medium text-[#0F2A1D]">{entry.label}</p>
+                <p className="text-xs text-[#0F2A1D]/50">
+                  {entry.actorLabel} · {formatBookingRelativeTime(entry.createdAt)}
+                </p>
+                {entry.notes ? (
+                  <p className="mt-1 text-sm text-[#0F2A1D]/70">{entry.notes}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </AdminModal>
   );
 }
