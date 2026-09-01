@@ -1,23 +1,30 @@
-import { Eye } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "../../components/AdminLayout";
 import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { useAuth } from "../../contexts/AuthContext";
 import {
-  adminTableRowInteractiveClassName,
-  adminTableViewButtonClassName,
-} from "../../lib/table-styles";
+  filterProfilesBySearch,
+  filterProfilesByStatus,
+  fetchProfileBookingCounts,
+  PROFILE_STATUS_FILTER_OPTIONS,
+  type ProfileStatusFilter,
+} from "../../lib/profile-admin";
 import {
   formatProfileJoinedDate,
   getDisplayName,
 } from "../../lib/profile";
+import { adminInputClassName } from "../../lib/session-admin";
+import {
+  adminTableRowInteractiveClassName,
+  adminTableViewButtonClassName,
+} from "../../lib/table-styles";
 import { supabase } from "../../lib/supabase";
 import type { Profile } from "../../types/database";
 import { AdminClientAvatar } from "./AdminClientAvatar";
 import {
   CLIENT_ROLE_FILTERS,
-  ClientProfileModal,
   type ClientRoleFilter,
 } from "./ClientProfileModal";
 import { TableSkeleton } from "./catalog/TableSkeleton";
@@ -26,21 +33,24 @@ export function AdminClients(): JSX.Element {
   const { profile: currentProfile } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [bookingCounts, setBookingCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<ClientRoleFilter>("all");
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ProfileStatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadProfiles = useCallback(async () => {
     setError(null);
 
-    const { data, error: fetchError } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [profilesResult, countsResult] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      fetchProfileBookingCounts(),
+    ]);
 
-    if (fetchError) throw fetchError;
-    setProfiles(data ?? []);
+    if (profilesResult.error) throw profilesResult.error;
+    setProfiles(profilesResult.data ?? []);
+    setBookingCounts(countsResult);
   }, []);
 
   useEffect(() => {
@@ -56,22 +66,35 @@ export function AdminClients(): JSX.Element {
   }, [loadProfiles]);
 
   const filteredProfiles = useMemo(() => {
-    if (roleFilter === "all") return profiles;
-    return profiles.filter((profile) => profile.role === roleFilter);
-  }, [profiles, roleFilter]);
+    let result = profiles;
 
-  const openView = (profile: Profile) => {
+    if (roleFilter !== "all") {
+      result = result.filter((profile) => profile.role === roleFilter);
+    }
+
+    result = filterProfilesByStatus(result, statusFilter);
+    result = filterProfilesBySearch(result, searchQuery);
+
+    return result;
+  }, [profiles, roleFilter, statusFilter, searchQuery]);
+
+  const openProfile = (profile: Profile) => {
     if (profile.id === currentProfile?.id) {
       navigate("/admin/profile");
       return;
     }
-    setSelectedProfile(profile);
+    navigate(`/admin/clients/${profile.id}`);
   };
 
-  const openViewFromAction = (profile: Profile, event: MouseEvent) => {
+  const openProfileFromAction = (profile: Profile, event: MouseEvent) => {
     event.stopPropagation();
-    openView(profile);
+    openProfile(profile);
   };
+
+  const emptyMessage =
+    searchQuery.trim() || statusFilter !== "all" || roleFilter !== "all"
+      ? "No people match your filters."
+      : "No registered users yet.";
 
   return (
     <AdminLayout>
@@ -83,21 +106,62 @@ export function AdminClients(): JSX.Element {
           </p>
         </div>
 
-        <div className="mb-4 inline-flex rounded-lg border border-[#EDECE6] bg-[#F9F9F6] p-1">
-          {CLIENT_ROLE_FILTERS.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setRoleFilter(filter.id)}
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                roleFilter === filter.id
-                  ? "bg-[#0F2A1D] text-white shadow-sm"
-                  : "text-[#0F2A1D]/70 hover:text-[#0F2A1D]"
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
+        <div className="mb-4 space-y-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="inline-flex rounded-lg border border-[#EDECE6] bg-[#F9F9F6] p-1">
+              {CLIENT_ROLE_FILTERS.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setRoleFilter(filter.id)}
+                  className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                    roleFilter === filter.id
+                      ? "bg-[#0F2A1D] text-white shadow-sm"
+                      : "text-[#0F2A1D]/70 hover:text-[#0F2A1D]"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-sm text-[#0F2A1D]/60">
+              {filteredProfiles.length} {filteredProfiles.length === 1 ? "person" : "people"}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="relative flex-1">
+              <span className="sr-only">Search clients</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0F2A1D]/40" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search by name or email…"
+                className={`${adminInputClassName} pl-9`}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm sm:min-w-[10rem]">
+              <span className="text-xs font-medium uppercase tracking-wide text-[#0F2A1D]/50">
+                Status
+              </span>
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as ProfileStatusFilter)
+                }
+                className={adminInputClassName}
+              >
+                {PROFILE_STATUS_FILTER_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         {error ? (
@@ -115,21 +179,18 @@ export function AdminClients(): JSX.Element {
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Bookings</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <TableSkeleton columns={6} />
+                <TableSkeleton columns={7} />
               </tbody>
             </table>
           ) : filteredProfiles.length === 0 ? (
             <div className="px-4 py-12 text-center">
-              <p className="text-[#0F2A1D]/70">
-                {roleFilter === "all"
-                  ? "No registered users yet."
-                  : `No ${roleFilter === "user" ? "users" : `${roleFilter}s`} found.`}
-              </p>
+              <p className="text-[#0F2A1D]/70">{emptyMessage}</p>
             </div>
           ) : (
             <table className="min-w-full text-left text-sm">
@@ -139,6 +200,7 @@ export function AdminClients(): JSX.Element {
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Bookings</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
@@ -148,7 +210,7 @@ export function AdminClients(): JSX.Element {
                   <tr
                     key={profile.id}
                     className={adminTableRowInteractiveClassName}
-                    onClick={() => openView(profile)}
+                    onClick={() => openProfile(profile)}
                   >
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -169,6 +231,7 @@ export function AdminClients(): JSX.Element {
                     <td className="px-4 py-4">
                       <StatusBadge status={profile.status} />
                     </td>
+                    <td className="px-4 py-4">{bookingCounts[profile.id] ?? 0}</td>
                     <td className="px-4 py-4">{formatProfileJoinedDate(profile.created_at)}</td>
                     <td className="px-4 py-4 text-right" onClick={(event) => event.stopPropagation()}>
                       <button
@@ -179,7 +242,7 @@ export function AdminClients(): JSX.Element {
                             ? "Edit your profile"
                             : `View ${profile.full_name ?? profile.email}`
                         }
-                        onClick={(event) => openViewFromAction(profile, event)}
+                        onClick={(event) => openProfileFromAction(profile, event)}
                         className={adminTableViewButtonClassName}
                       >
                         <Eye className="h-4 w-4" />
@@ -192,26 +255,6 @@ export function AdminClients(): JSX.Element {
           )}
         </div>
       </div>
-
-      <ClientProfileModal
-        profile={selectedProfile}
-        currentUserId={currentProfile?.id}
-        open={selectedProfile !== null}
-        onClose={() => setSelectedProfile(null)}
-        onUpdated={() => {
-          void loadProfiles().then(() => {
-            if (!selectedProfile) return;
-            void supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", selectedProfile.id)
-              .single()
-              .then(({ data }) => {
-                if (data) setSelectedProfile(data);
-              });
-          });
-        }}
-      />
     </AdminLayout>
   );
 }

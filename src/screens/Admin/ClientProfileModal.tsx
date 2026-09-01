@@ -19,10 +19,16 @@ import {
   uploadProfilePicture,
 } from "../../lib/profile-avatar";
 import { adminInputClassName } from "../../lib/session-admin";
+import { updateProfileRole } from "../../lib/profile-admin";
 import { supabase } from "../../lib/supabase";
 import type { Profile, UserRole } from "../../types/database";
 
-export type ClientModalMode = "profile" | "confirm-ban" | "confirm-reinstate";
+export type ClientModalMode =
+  | "profile"
+  | "confirm-ban"
+  | "confirm-reinstate"
+  | "confirm-promote"
+  | "confirm-demote";
 
 interface ClientProfileModalProps {
   profile: Profile | null;
@@ -119,7 +125,10 @@ export function ClientProfileModal({
   const isSelf = profile.id === currentUserId;
   const canManage = !isAdmin && !isSelf;
   const openedToConfirm =
-    initialMode === "confirm-ban" || initialMode === "confirm-reinstate";
+    initialMode === "confirm-ban" ||
+    initialMode === "confirm-reinstate" ||
+    initialMode === "confirm-promote" ||
+    initialMode === "confirm-demote";
 
   const dismissConfirm = () => {
     if (openedToConfirm) onClose();
@@ -203,6 +212,22 @@ export function ClientProfileModal({
     setMessage("Profile picture removed.");
   };
 
+  const handleRoleChange = async (nextRole: "user" | "client") => {
+    setSaving(true);
+    setError(null);
+
+    const result = await updateProfileRole(profile.id, nextRole);
+    setSaving(false);
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    onUpdated();
+    onClose();
+  };
+
   const handleStatusChange = async (status: "active" | "banned") => {
     setSaving(true);
     setError(null);
@@ -270,6 +295,62 @@ export function ClientProfileModal({
               onClick={() => void handleStatusChange("active")}
             >
               {saving ? "Reinstating…" : "Reinstate"}
+            </Button>
+          </>
+        }
+      >
+        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      </AdminModal>
+    );
+  }
+
+  if (mode === "confirm-promote") {
+    return (
+      <AdminModal
+        open
+        onClose={dismissConfirm}
+        title="Promote to client"
+        description={`Grant ${displayName} the client role? They will appear in client-facing workflows.`}
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={dismissConfirm}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={saving}
+              className="bg-[#0F2A1D] text-white hover:bg-[#0F2A1D]/90"
+              onClick={() => void handleRoleChange("client")}
+            >
+              {saving ? "Promoting…" : "Promote"}
+            </Button>
+          </>
+        }
+      >
+        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      </AdminModal>
+    );
+  }
+
+  if (mode === "confirm-demote") {
+    return (
+      <AdminModal
+        open
+        onClose={dismissConfirm}
+        title="Demote to user"
+        description={`Change ${displayName} from client back to registered user?`}
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={dismissConfirm}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={saving}
+              onClick={() => void handleRoleChange("user")}
+            >
+              {saving ? "Demoting…" : "Demote"}
             </Button>
           </>
         }
@@ -362,6 +443,11 @@ export function ClientProfileModal({
           ) : null}
           {canManage ? (
             <>
+              <Button type="button" variant="outline" asChild>
+                <Link to={`/admin/clients/${profile.id}`} onClick={onClose}>
+                  Full page
+                </Link>
+              </Button>
               <Button
                 type="submit"
                 form="client-profile-form"
@@ -370,6 +456,24 @@ export function ClientProfileModal({
               >
                 {saving ? "Saving…" : "Save changes"}
               </Button>
+              {profile.role === "user" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMode("confirm-promote")}
+                >
+                  Promote
+                </Button>
+              ) : null}
+              {profile.role === "client" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMode("confirm-demote")}
+                >
+                  Demote
+                </Button>
+              ) : null}
               {profile.status === "banned" ? (
                 <Button
                   type="button"
