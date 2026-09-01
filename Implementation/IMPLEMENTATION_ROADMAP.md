@@ -4,8 +4,8 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** 🚧 **Wave 2 in progress** on branch `feat/issue-12-phase-5a-people-mgmt` ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12))  
-> **Next:** QA + merge Wave 2, then Wave 3 (Phase 5B)  
+> **Status:** ✅ **Wave 2 complete** — merged to `main` ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12), PR [#13](https://github.com/gavinfung321/Meridian-CPA/pull/13))  
+> **Next:** Wave 3 (Phase 5B — Settings & reporting)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
 > **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
@@ -262,11 +262,11 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 #### QA
 
-- [ ] Search finds partial name/email match
-- [ ] Promote/demote updates role badge in list + profile
-- [ ] Detail page edits persist; client can still edit own profile at `/dashboard/profile`
+- [x] Search finds partial name/email match
+- [x] Promote/demote updates role badge in list + profile
+- [x] Detail page edits persist; client can still edit own profile at `/dashboard/profile`
 - [x] `npm run build` passes
-- [ ] Close Wave 2 GitHub issue
+- [x] [#12](https://github.com/gavinfung321/Meridian-CPA/issues/12) closed; merged to `main` via [#13](https://github.com/gavinfung321/Meridian-CPA/pull/13)
 
 **Reference:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) § Phase 5
 
@@ -335,8 +335,8 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 |------|------|--------|
 | 0 | Pre-flight — ops + QA | ✅ Complete ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) — `c138976`) |
 | 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) — `1690624`) |
-| 2 | Phase 5A — People management | 🚧 In progress ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12)) |
-| 3 | Phase 5B — Settings & reporting | ⬜ Blocked on Wave 2 |
+| 2 | Phase 5A — People management | ✅ Complete ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12) — `802db26`) |
+| 3 | Phase 5B — Settings & reporting | 🚧 **Next** |
 | 4 | Email notifications | ⬜ Blocked on Wave 3 |
 
 ---
@@ -353,4 +353,4 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-*Last updated: Sep 1, 2026 — Wave 2 Phase 5A in progress on #12.*
+*Last updated: Sep 1, 2026 — Wave 2 merged to main; Wave 3 next.*

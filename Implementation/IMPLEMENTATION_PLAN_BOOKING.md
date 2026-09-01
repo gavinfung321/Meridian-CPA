@@ -1090,15 +1090,15 @@ Admins get **full profile edit access** on `/admin/clients/:id` plus **role/stat
 - [x] Role + status badges — **Phase 4.5**
 - [x] Role filter tabs: All \| Users \| Clients \| Admins — **Phase 4.5 polish**
 - [x] Avatar column (signed URL) — **Phase 4.5**
-- [ ] Search by name/email; status filter (Banned)
-- [ ] Optional column: booking count *(join or subquery — after Phase 3)*
+- [x] Search by name/email; status filter (Banned) — **Phase 5A**
+- [x] Optional column: booking count pill → `/admin/bookings?client=<id>` — **Phase 5A**
 - [x] Row actions: **Edit** (pencil) + **Ban/Reinstate** (ban icon) for `user`/`client` — **Phase 4.5 polish**
-- [ ] Promote/Demote between `user` and `client`
+- [x] Promote/Demote between `user` and `client` — **Phase 5A**
 - [x] Confirmation modals for ban/reinstate — **Phase 4.5 polish** (`ClientProfileModal`)
-- [x] **ClientProfileModal** — view/edit/ban for non-admin profiles — **Phase 4.5 polish**
-- [ ] `/admin/clients/:id` — **full editable profile form** *(Option B)* + audit tabs — modal covers basic edit today
-- [ ] Detail tabs: Profile \| Bookings \| Login history *(login tab needs Phase 4 data)*
-- [ ] Admin avatar upload on non-admin detail *(storage policy if needed)*
+- [x] **ClientProfileModal** — view/edit/ban/promote/demote for non-admin profiles — **Phase 5A**
+- [x] `/admin/clients/:id` — full editable profile form *(Option B)* + audit tabs — **Phase 5A**
+- [x] Detail tabs: Profile \| Bookings \| Login history — **Phase 5A**
+- [x] Admin avatar upload on non-admin detail — **Phase 5A** *(storage policy migration)*
 - [ ] Account deletion *(edge function)* — optional late Phase 5
 
 #### Other Phase 5 items
@@ -1197,8 +1197,12 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 - **Booking audit:** Status changes write to `booking_history`; admin booking detail modal shows full timeline
 - **Migration:** `20250901180000_audit_history_insert_policies.sql` — insert RLS for login + session history
 
-### Phase 5 — Admin Controls & Reporting (next)
-- **People management:** Search, promote/demote, full Option B detail page + avatar upload *(basic edit/ban shipped in Phase 4.5 modal)*
-- **User management:** Account deletion via edge function
+### Phase 5A — People management ✅
+- **Directory:** Search, banned filter, booking count pill → filtered admin bookings
+- **Lifecycle:** Promote/demote user ↔ client; ban/reinstate; admin rows view-only
+- **Detail page:** `/admin/clients/:id` — Profile \| Bookings \| Login history tabs, Option B edit, avatar upload
+
+### Phase 5B — Settings & reporting (next)
 - **Reporting:** Charts reflect live booking/session data
 - **Settings:** Changes to `app_settings` take effect on new bookings
+- **User management:** Account deletion via edge function *(optional)*
