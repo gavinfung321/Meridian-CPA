@@ -4,10 +4,9 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** 🚧 **Active** — Wave 0 in progress ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9))  
+> **Status:** ✅ **Wave 0 complete** — merged `c138976`; [#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) closed. **Next:** Wave 1 (Phase 4)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
-> **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*  
-> **Branch:** `chore/issue-9-ops-preflight`
+> **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
 ### Locked sequence
 
@@ -135,9 +134,9 @@ Create issues **when starting each wave**, not all upfront.
   - Password min length **6** on signup + reset (`password-policy.ts`)
   - Client/admin portal scroll — `PortalLayout` main pane `overflow-y-auto`
   - Login page **Back to homepage** button
-- [ ] Re-run manual QA on fixed items
-- [ ] Tick completed QA boxes in source docs when manual QA passes
-- [ ] Mark Wave 0 complete in progress tracker below
+- [x] Re-run manual QA on fixed items *(user sign-off Sep 1, 2026)*
+- [x] Mark Wave 0 complete in progress tracker below
+- [x] [#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) closed; merged to `main`
 
 ---
 
@@ -335,8 +334,8 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 | Wave | Name | Status |
 |------|------|--------|
-| 0 | Pre-flight — ops + QA | 🚧 In progress ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9)) |
-| 1 | Phase 4 — History & logging | ⬜ Blocked on Wave 0 |
+| 0 | Pre-flight — ops + QA | ✅ Complete ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) — `c138976`) |
+| 1 | Phase 4 — History & logging | 🚧 **Next** |
 | 2 | Phase 5A — People management | ⬜ Blocked on Wave 1 |
 | 3 | Phase 5B — Settings & reporting | ⬜ Blocked on Wave 2 |
 | 4 | Email notifications | ⬜ Blocked on Wave 3 |
@@ -355,4 +354,4 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-*Last updated: Sep 1, 2026 — conservative path locked.*
+*Last updated: Sep 1, 2026 — Wave 0 closed; Wave 1 ready.*
