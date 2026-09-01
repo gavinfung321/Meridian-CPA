@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { fetchBookingAppSettings, getMaxBookableCutoff } from "./app-settings";
 import { getPublicSessionImageUrl } from "./session-image";
 import { countActiveBookings } from "./session-admin";
 import type {
@@ -102,6 +103,8 @@ function mapSessionRow(row: SessionQueryRow, locale: string): PublicSessionCard 
 
 export async function fetchPublicSessions(locale = "en-HK"): Promise<PublicSessionCard[]> {
   const now = new Date().toISOString();
+  const bookingSettings = await fetchBookingAppSettings();
+  const maxStart = getMaxBookableCutoff(bookingSettings.max_booking_days_advance).toISOString();
 
   const { data, error } = await supabase
     .from("sessions")
@@ -123,6 +126,7 @@ export async function fetchPublicSessions(locale = "en-HK"): Promise<PublicSessi
     `)
     .eq("is_cancelled", false)
     .gte("start_time", now)
+    .lte("start_time", maxStart)
     .order("start_time", { ascending: true });
 
   if (error) throw error;

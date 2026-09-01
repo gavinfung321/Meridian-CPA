@@ -4,8 +4,8 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** ✅ **Wave 2 complete** — merged to `main` ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12), PR [#13](https://github.com/gavinfung321/Meridian-CPA/pull/13))  
-> **Next:** Wave 3 (Phase 5B — Settings & reporting)  
+> **Status:** 🚧 **Wave 3 in progress** on branch `feat/issue-14-phase-5b-settings-reporting` ([#14](https://github.com/gavinfung321/Meridian-CPA/issues/14))  
+> **Next:** QA + merge Wave 3, then Wave 4 (Email notifications)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
 > **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
@@ -282,18 +282,18 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 #### Settings — `/admin/settings`
 
-- [ ] Remove `MockupBanner` from `AdminSettings.tsx`
-- [ ] Wire `app_settings` table *(create migration if not on remote)*
-- [ ] Editable: `max_booking_days_advance` booking window
-- [ ] Placeholders: business hours, notification preferences *(UI only OK for v1)*
-- [ ] Enforce `max_booking_days_advance` in client + public book flows
+- [x] Remove `MockupBanner` from `AdminSettings.tsx`
+- [x] Wire `app_settings` table *(migration `20250901193000_app_settings.sql`)*
+- [x] Editable: `max_booking_days_advance` booking window
+- [x] Placeholders: business hours, notification preferences *(UI only OK for v1)*
+- [x] Enforce `max_booking_days_advance` in client + public book flows
 
 #### Reporting — `/admin/reporting`
 
-- [ ] Replace mock with live Recharts dashboard
-- [ ] Charts: session occupancy, projected revenue, category/type distribution
-- [ ] Metrics: active vs banned clients, pending bookings snapshot
-- [ ] Match admin design system (forest green / gold / cream)
+- [x] Replace mock with live Recharts dashboard
+- [x] Charts: session occupancy, projected revenue, category/type distribution
+- [x] Metrics: active vs banned clients, pending bookings snapshot
+- [x] Match admin design system (forest green / gold / cream)
 
 #### Optional (late Phase 5)
 
@@ -336,7 +336,7 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 | 0 | Pre-flight — ops + QA | ✅ Complete ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) — `c138976`) |
 | 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) — `1690624`) |
 | 2 | Phase 5A — People management | ✅ Complete ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12) — `802db26`) |
-| 3 | Phase 5B — Settings & reporting | 🚧 **Next** |
+| 3 | Phase 5B — Settings & reporting | 🚧 In progress ([#14](https://github.com/gavinfung321/Meridian-CPA/issues/14)) |
 | 4 | Email notifications | ⬜ Blocked on Wave 3 |
 
 ---
@@ -353,4 +353,4 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-*Last updated: Sep 1, 2026 — Wave 2 merged to main; Wave 3 next.*
+*Last updated: Sep 1, 2026 — Wave 3 Phase 5B in progress on #14.*

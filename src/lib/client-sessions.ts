@@ -1,3 +1,4 @@
+import { fetchBookingAppSettings, getMaxBookableCutoff } from "./app-settings";
 import { supabase } from "./supabase";
 import type { Session } from "../types/database";
 
@@ -8,6 +9,8 @@ export type ClientCalendarSession = Session & {
 
 export async function fetchClientCalendarSessions(): Promise<ClientCalendarSession[]> {
   const now = new Date().toISOString();
+  const bookingSettings = await fetchBookingAppSettings();
+  const maxStart = getMaxBookableCutoff(bookingSettings.max_booking_days_advance).toISOString();
 
   const { data, error } = await supabase
     .from("sessions")
@@ -21,6 +24,7 @@ export async function fetchClientCalendarSessions(): Promise<ClientCalendarSessi
     `)
     .eq("is_cancelled", false)
     .gte("start_time", now)
+    .lte("start_time", maxStart)
     .order("start_time", { ascending: true });
 
   if (error) throw error;

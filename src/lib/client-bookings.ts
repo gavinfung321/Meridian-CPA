@@ -1,4 +1,5 @@
 import { countActiveBookings } from "./session-admin";
+import { fetchBookingAppSettings, isSessionWithinBookingWindow } from "./app-settings";
 import { supabase } from "./supabase";
 import type { BookingStatus } from "../types/database";
 import { logBookingCreated, logBookingStatusChange } from "./booking-history";
@@ -249,6 +250,13 @@ export async function assertSessionBookable(sessionId: string, userId: string): 
 
   if (new Date(session.start_time).getTime() <= Date.now()) {
     throw new Error("This session has already started.");
+  }
+
+  const bookingSettings = await fetchBookingAppSettings();
+  if (!isSessionWithinBookingWindow(session.start_time, bookingSettings.max_booking_days_advance)) {
+    throw new Error(
+      `Bookings can only be made up to ${bookingSettings.max_booking_days_advance} days in advance.`,
+    );
   }
 
   const bookings = session.bookings ?? [];

@@ -14,6 +14,7 @@ import { AdminDashboardOverview } from "./screens/Admin/AdminDashboardOverview";
 import { AdminCatalogPage } from "./screens/Admin/AdminCatalogPage";
 import { AdminSessionForm } from "./screens/Admin/AdminSessionForm";
 import { AdminProfile } from "./screens/Admin/AdminProfile";
+import { AdminReporting } from "./screens/Admin/AdminReporting";
 import { AdminSettings } from "./screens/Admin/AdminSettings";
 import { DashboardBookSession } from "./screens/Dashboard/DashboardBookSession";
 import { DashboardBookings } from "./screens/Dashboard/DashboardBookings";
@@ -78,6 +79,7 @@ export const App = (): JSX.Element => {
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/clients" element={<AdminClients />} />
             <Route path="/admin/clients/:id" element={<AdminClientDetail />} />
+            <Route path="/admin/reporting" element={<AdminReporting />} />
             <Route path="/admin/profile" element={<AdminProfile />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
