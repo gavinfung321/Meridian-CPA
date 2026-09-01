@@ -4,9 +4,9 @@
 
 Refine the homepage **`#booking`** section (`BookingSection`) so copy, CTAs, and card UX accurately reflect Meridian’s **workshop and info-session** catalog — while keeping **audit / advisory enquiry** as the primary commercial path sitewide. Align the landing booking UI with the client portal **`/dashboard/book`** experience already built in [#7](./IMPLEMENTATION_USER.md).
 
-> **Status:** ✅ **Complete** — P0 + P1 shipped; P2 cleanup deferred; merge to `main` pending close of [#8](https://github.com/gavinfung321/Meridian-CPA/issues/8)  
-> **GitHub:** [#8](https://github.com/gavinfung321/Meridian-CPA/issues/8)  
-> **Branch:** `feat/issue-8-landing-booking-polish`  
+> **Status:** ✅ **Complete** — merged to `main` in `9852223`; [#8](https://github.com/gavinfung321/Meridian-CPA/issues/8) closed  
+> **GitHub:** [#8](https://github.com/gavinfung321/Meridian-CPA/issues/8) — closed  
+> **Branch:** `feat/issue-8-landing-booking-polish` *(merged)*  
 > **Commit format:** `[#8] …`
 
 ---
