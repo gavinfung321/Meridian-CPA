@@ -626,8 +626,8 @@ Phases below are in **execution order** (same as the roadmap table at the top). 
 | 3 | [Phase 2.5 — Unified Catalog UX](#phase-25-unified-catalog-ux-best-path---complete) | ✅ |
 | 4 | [Phase 3 — Booking Logic & Evolution](#phase-3-booking-logic--evolution--complete) | ✅ |
 | 5 | [Phase 4.5 — Live People Directory](#phase-45-live-people-directory--complete) | ✅ |
-| 6 | [Phase 4 — History & Logging](#phase-4-history--logging) | **Next** |
-| 7 | [Phase 5 — Admin Controls & Reporting](#phase-5-admin-controls--reporting-after-phase-4) | Pending |
+| 6 | [Phase 4 — History & Logging](#phase-4-history--logging) | ✅ |
+| 7 | [Phase 5 — Admin Controls & Reporting](#phase-5-admin-controls--reporting-after-phase-4) | **Next** |
 
 ---
 
@@ -1190,13 +1190,13 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 - **Detail page:** `/admin/clients/:id` read-only fallback for deep links
 - **Deferred to Phase 5:** Search, promote/demote, full Option B detail page + avatar upload
 
-### Phase 4 — History & Logging (next)
-- **Login audit:** Successful sign-in writes to `user_login_history`
-- **Session audit:** Session create/update/cancel writes to `session_history`
-- **Booking audit:** Status changes write to `booking_history` *(partial — app-layer logging ✅; full admin views pending)*
-- **Admin views:** Master booking history timeline in modal; per-user login log visible to admins
+### Phase 4 — History & Logging ✅
+- **Login audit:** Successful sign-in writes to `user_login_history`; visible in admin client profile modal
+- **Session audit:** Session create/update/cancel/reactivate writes to `session_history`; field-level change log in catalog session modal
+- **Booking audit:** Status changes write to `booking_history`; admin booking detail modal shows full timeline
+- **Migration:** `20250901180000_audit_history_insert_policies.sql` — insert RLS for login + session history
 
-### Phase 5 — Admin Controls & Reporting (pending)
+### Phase 5 — Admin Controls & Reporting (next)
 - **People management:** Search, promote/demote, full Option B detail page + avatar upload *(basic edit/ban shipped in Phase 4.5 modal)*
 - **User management:** Account deletion via edge function
 - **Reporting:** Charts reflect live booking/session data

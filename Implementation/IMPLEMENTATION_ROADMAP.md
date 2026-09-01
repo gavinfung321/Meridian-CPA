@@ -4,8 +4,8 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** ✅ **Wave 1 complete** on branch `feat/issue-10-phase-4-audit-trails` ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10))  
-> **Next:** Merge to `main`, then Wave 2 (Phase 5A)  
+> **Status:** ✅ **Wave 1 complete** — merged to `main` ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10), PR [#11](https://github.com/gavinfung321/Meridian-CPA/pull/11))  
+> **Next:** Wave 2 (Phase 5A — People management)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
 > **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
@@ -147,15 +147,11 @@ Create issues **when starting each wave**, not all upfront.
 
 **Depends on:** Wave 0 green.
 
-**Partial credit on `main` today:**
-- `booking_history` inserts on status changes via `booking-history.ts` ✅
-- Client `ClientBookingDetailModal` shows history timeline ✅
-- Admin + client activity feeds consume `booking_history` ✅
-
-**Gaps:**
-- No writes to `user_login_history`
-- No writes to `session_history`
-- Admin `BookingDetailModal` has **no** history timeline
+**Shipped on `main` *(PR #11)*:**
+- Login history writes + admin UI in `ClientProfileModal` ✅
+- Session history writes + field-level change log in catalog `SessionFormModal` ✅
+- Admin `BookingDetailModal` booking activity timeline ✅
+- `booking_history` inserts + client modal timeline *(prior)* ✅
 
 ### Execution order
 
@@ -177,16 +173,16 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ### Step 0 — Verification
 
-- [ ] Confirm tables exist: `user_login_history`, `session_history`, `booking_history`
-- [ ] Confirm RLS: admin read on all three; client read own booking history only
-- [ ] Document insert policy gaps *(login + session history may need new policies or service role)*
+- [x] Confirm tables exist: `user_login_history`, `session_history`, `booking_history`
+- [x] Confirm RLS: admin read on all three; client read own booking history only
+- [x] Insert policies added — migration `20250901180000_audit_history_insert_policies.sql`
 
 ### Step 1 — Login history
 
-- [ ] On successful login, insert row into `user_login_history`
-- [ ] Capture at minimum: `user_id`, `login_time`, `user_agent`
+- [x] On successful login, insert row into `user_login_history`
+- [x] Capture at minimum: `user_id`, `login_time`, `user_agent`
 - [ ] IP optional *(Edge Function or auth hook if client IP required)*
-- [ ] Do not log failed attempts in v1 *(optional follow-up)*
+- [x] Do not log failed attempts in v1 *(optional follow-up)*
 
 **Implementation options *(pick one in issue)*:**
 | Option | Pros | Cons |
@@ -196,24 +192,24 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ### Step 2 — Session history
 
-- [ ] On session CREATE: insert `session_history` with `action = 'created'`, `new_data`
-- [ ] On session UPDATE: insert with `old_data` + `new_data` *(title, schedule, capacity, cancel, etc.)*
-- [ ] On session CANCEL: insert with cancel metadata
-- [ ] Set `changed_by` to authenticated admin `profiles.id`
-- [ ] Prefer DB triggers **or** centralized helpers in session admin libs — not scattered one-offs
+- [x] On session CREATE: insert `session_history` with `action = 'created'`, `new_data`
+- [x] On session UPDATE: insert with `old_data` + `new_data` *(title, schedule, capacity, cancel, etc.)*
+- [x] On session CANCEL: insert with cancel metadata
+- [x] Set `changed_by` to authenticated admin `profiles.id`
+- [x] Centralized helpers in `session-history.ts` — wired from catalog + full-page admin forms
 
 ### Step 3 — Admin booking timeline
 
-- [ ] Fetch `booking_history` for selected booking in `BookingDetailModal`
-- [ ] Reuse client modal timeline UI pattern *(actor, relative time, status labels)*
-- [ ] Show `cancel_reason` when present on terminal events
-- [ ] Loading + empty states
+- [x] Fetch `booking_history` for selected booking in `BookingDetailModal`
+- [x] Reuse client modal timeline UI pattern *(actor, relative time, status labels)*
+- [x] Show `cancel_reason` when present on terminal events
+- [x] Loading + empty states
 
 ### Step 4 — Client login history (admin)
 
-- [ ] In `ClientProfileModal` or `/admin/clients/:id`: **Login history** section/tab
-- [ ] List recent logins: date, user agent *(IP if captured)*
-- [ ] Paginate or cap at last N entries
+- [x] In `ClientProfileModal`: **Login history** section *(detail page tab deferred to Wave 2)*
+- [x] List recent logins: date, user agent *(IP if captured)*
+- [x] Paginate or cap at last N entries
 
 ### Step 5 — Session change log viewer
 
@@ -225,13 +221,13 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ### Step 6 — QA & docs
 
-- [ ] Login → row appears in `user_login_history`
-- [ ] Edit session title → row in `session_history`
-- [ ] Admin booking modal shows full status timeline
-- [ ] Client login tab shows login entries
-- [ ] `npm run build` passes
-- [ ] Mark Phase 4 complete in [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)
-- [ ] Close Wave 1 GitHub issue
+- [x] Login → row appears in `user_login_history`
+- [x] Edit session title → row in `session_history`
+- [x] Admin booking modal shows full status timeline
+- [x] Client login tab shows login entries
+- [x] `npm run build` passes
+- [x] Mark Phase 4 complete in [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)
+- [x] [#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) closed; merged to `main` via [#11](https://github.com/gavinfung321/Meridian-CPA/pull/11)
 
 ---
 
@@ -338,7 +334,7 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 | Wave | Name | Status |
 |------|------|--------|
 | 0 | Pre-flight — ops + QA | ✅ Complete ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) — `c138976`) |
-| 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10)) |
+| 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) — `1690624`) |
 | 2 | Phase 5A — People management | 🚧 **Next** |
 | 3 | Phase 5B — Settings & reporting | ⬜ Blocked on Wave 2 |
 | 4 | Email notifications | ⬜ Blocked on Wave 3 |
@@ -357,4 +353,4 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-*Last updated: Sep 1, 2026 — Wave 0 closed; Wave 1 ready.*
+*Last updated: Sep 1, 2026 — Wave 1 merged to main; Wave 2 next.*
