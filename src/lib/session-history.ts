@@ -1,3 +1,4 @@
+import { formatPrice, formatSessionSchedule } from "./session-admin";
 import { supabase } from "./supabase";
 import type { Session } from "../types/database";
 
@@ -187,4 +188,131 @@ export function sessionHistoryActorName(
   if (!changer) return "System";
   const name = `${changer.first_name} ${changer.last_name}`.trim();
   return name || (changer.role === "admin" ? "Admin" : "Staff");
+}
+
+export type SessionHistoryDetail = {
+  label: string;
+  text: string;
+};
+
+const MAX_VISIBLE_CHANGES = 5;
+
+function normalizeText(value: string | null | undefined): string {
+  return value?.trim() ?? "";
+}
+
+function formatSnapshotField(
+  field: keyof SessionHistorySnapshot,
+  snapshot: SessionHistorySnapshot,
+): string {
+  switch (field) {
+    case "title":
+      return snapshot.title;
+    case "description":
+      return normalizeText(snapshot.description) || "—";
+    case "location":
+      return snapshot.location;
+    case "start_time":
+      return formatSessionSchedule(snapshot.start_time);
+    case "end_time":
+      return formatSessionSchedule(snapshot.end_time);
+    case "duration_minutes":
+      return `${snapshot.duration_minutes} min`;
+    case "max_slots":
+      return String(snapshot.max_slots);
+    case "price":
+      return formatPrice(snapshot.price);
+    case "cancel_reason":
+      return normalizeText(snapshot.cancel_reason) || "—";
+    default:
+      return "—";
+  }
+}
+
+const DIFF_FIELD_LABELS: Partial<Record<keyof SessionHistorySnapshot, string>> = {
+  title: "Title",
+  description: "Description",
+  location: "Location",
+  start_time: "Start",
+  end_time: "End",
+  duration_minutes: "Duration",
+  max_slots: "Capacity",
+  price: "Price",
+};
+
+const DIFF_FIELDS: Array<keyof SessionHistorySnapshot> = [
+  "title",
+  "description",
+  "location",
+  "start_time",
+  "duration_minutes",
+  "max_slots",
+  "price",
+];
+
+function diffSessionSnapshots(
+  oldData: SessionHistorySnapshot,
+  newData: SessionHistorySnapshot,
+): SessionHistoryDetail[] {
+  const changes: SessionHistoryDetail[] = [];
+
+  for (const field of DIFF_FIELDS) {
+    const oldValue = formatSnapshotField(field, oldData);
+    const newValue = formatSnapshotField(field, newData);
+    if (oldValue === newValue) continue;
+
+    const label = DIFF_FIELD_LABELS[field] ?? field;
+    changes.push({
+      label,
+      text: `${oldValue} → ${newValue}`,
+    });
+  }
+
+  return changes;
+}
+
+function describeCreatedSession(snapshot: SessionHistorySnapshot): SessionHistoryDetail[] {
+  return [
+    { label: "Title", text: snapshot.title },
+    { label: "Start", text: formatSessionSchedule(snapshot.start_time) },
+    { label: "Capacity", text: String(snapshot.max_slots) },
+    { label: "Price", text: formatPrice(snapshot.price) },
+  ];
+}
+
+export function describeSessionHistoryDetails(row: SessionHistoryRow): {
+  details: SessionHistoryDetail[];
+  overflowCount: number;
+} {
+  let details: SessionHistoryDetail[] = [];
+
+  switch (row.action) {
+    case "CREATED":
+      if (row.new_data) details = describeCreatedSession(row.new_data);
+      break;
+    case "UPDATED":
+      if (row.old_data && row.new_data) {
+        details = diffSessionSnapshots(row.old_data, row.new_data);
+      }
+      break;
+    case "CANCELLED":
+      if (row.new_data?.cancel_reason) {
+        details = [{ label: "Reason", text: row.new_data.cancel_reason }];
+      }
+      break;
+    case "REACTIVATED":
+      details = [{ label: "Status", text: "Session is open for booking again" }];
+      break;
+    default:
+      break;
+  }
+
+  if (details.length <= MAX_VISIBLE_CHANGES) {
+    return { details, overflowCount: 0 };
+  }
+
+  return {
+    details: details.slice(0, MAX_VISIBLE_CHANGES),
+    overflowCount: details.length - MAX_VISIBLE_CHANGES,
+  };
 }

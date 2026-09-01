@@ -2,6 +2,7 @@ import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatBookingRelativeTime } from "../lib/booking-admin";
 import {
+  describeSessionHistoryDetails,
   fetchSessionHistory,
   sessionHistoryActionLabel,
   sessionHistoryActorName,
@@ -40,18 +41,36 @@ export function SessionChangeLog({
         <p className="text-sm text-[#0F2A1D]/60">No changes recorded yet.</p>
       ) : (
         <ul className="max-h-48 space-y-3 overflow-y-auto border-l-2 border-[#EDECE6] pl-4">
-          {rows.map((row) => (
-            <li key={row.id} className="relative">
-              <span className="absolute -left-[1.35rem] top-1.5 h-2 w-2 rounded-full bg-[#C9A84C]" />
-              <p className="text-sm font-medium text-[#0F2A1D]">
-                {sessionHistoryActionLabel(row.action)}
-              </p>
-              <p className="text-xs text-[#0F2A1D]/50">
-                {sessionHistoryActorName(row.changer)} ·{" "}
-                {formatBookingRelativeTime(row.created_at)}
-              </p>
-            </li>
-          ))}
+          {rows.map((row) => {
+            const { details, overflowCount } = describeSessionHistoryDetails(row);
+            return (
+              <li key={row.id} className="relative">
+                <span className="absolute -left-[1.35rem] top-1.5 h-2 w-2 rounded-full bg-[#C9A84C]" />
+                <p className="text-sm font-medium text-[#0F2A1D]">
+                  {sessionHistoryActionLabel(row.action)}
+                </p>
+                <p className="text-xs text-[#0F2A1D]/50">
+                  {sessionHistoryActorName(row.changer)} ·{" "}
+                  {formatBookingRelativeTime(row.created_at)}
+                </p>
+                {details.length > 0 ? (
+                  <ul className="mt-2 space-y-1">
+                    {details.map((detail) => (
+                      <li key={`${row.id}-${detail.label}`} className="text-xs text-[#0F2A1D]/70">
+                        <span className="font-medium text-[#0F2A1D]/80">{detail.label}:</span>{" "}
+                        {detail.text}
+                      </li>
+                    ))}
+                    {overflowCount > 0 ? (
+                      <li className="text-xs text-[#0F2A1D]/50">
+                        +{overflowCount} more change{overflowCount === 1 ? "" : "s"}
+                      </li>
+                    ) : null}
+                  </ul>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

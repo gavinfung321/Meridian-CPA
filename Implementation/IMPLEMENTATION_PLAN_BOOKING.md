@@ -1032,7 +1032,7 @@ Audit trails for compliance and admin visibility.
 - [x] **Partial (prior):** `booking_history` inserts on admin/client status changes via `booking-history.ts`
 - [x] Admin booking detail modal — activity timeline via `fetchAdminBookingHistory`
 - [x] Admin client profile modal — **Login history** section (`LoginHistoryList`)
-- [x] Session catalog edit modal — **Change log** section (`SessionChangeLog`)
+- [x] Session catalog edit modal — **Change log** section (`SessionChangeLog`) with **field-level diffs** on UPDATED *(old → new for title, schedule, capacity, price, etc.)*
 - [x] Migration `20250901180000_audit_history_insert_policies.sql` — insert RLS for login + session history
 
 **Tables (Phase 1 schema):** `user_login_history`, `session_history`, `booking_history`

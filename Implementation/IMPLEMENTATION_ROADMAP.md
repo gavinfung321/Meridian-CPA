@@ -217,9 +217,11 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ### Step 5 — Session change log viewer
 
-- [ ] From catalog session row/modal: link or tab **Change log**
-- [ ] Read `session_history` filtered by `session_id`
-- [ ] Human-readable action labels *(Created, Updated, Cancelled)*
+- [x] From catalog session row/modal: **Change log** at bottom of `SessionFormModal`
+- [x] Read `session_history` filtered by `session_id`
+- [x] Human-readable action labels *(Created, Updated, Cancelled, Reactivated)*
+- [x] **Field-level detail lines** — `describeSessionHistoryDetails()` diffs `old_data` / `new_data` *(e.g. Price: HK$750 → HK$800; max 5 lines + overflow)*
+- [x] CREATED shows title + schedule + capacity + price; CANCELLED shows reason
 
 ### Step 6 — QA & docs
 
