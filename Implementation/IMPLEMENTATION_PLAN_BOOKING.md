@@ -340,6 +340,7 @@ Use **dedicated pages** for deep flows *(session create, recurrence + image edit
 | **Row click** | Opens **ClientProfileModal** in view mode — edit and ban/reinstate available in modal footer |
 | **Detail page** | `/admin/clients/:id` — read-only fallback; **Phase 5:** full editable form + audit tabs |
 | **Phase 3 hook** | Live `/admin/bookings` rows link client name → `/admin/clients/:id` *(detail can ship read-only in Phase 3, full edit in Phase 5)* |
+| **Phase 5 hook** | Clients directory **Bookings** count → `/admin/bookings?client=<id>` *(mirrors catalog session → `?session=` filter)* |
 | **Quick action** | “Add client” stays **disabled** — no admin-created accounts |
 
 ---
@@ -904,7 +905,7 @@ Bookings are **status-managed**, not fully editable records:
 - [x] Remove `MockupBanner` from `/admin/bookings`
 - [x] Manual booking quick action *(admin header → `ManualBookingModal`)*
 - [x] **Reinstate** cancelled/rejected bookings as confirmed *(with capacity check)*
-- [x] URL deep links: `?booking=<id>` opens modal; `?status=pending` applies filter
+- [x] URL deep links: `?booking=<id>` opens modal; `?status=pending` applies filter; `?session=<id>` filters by session; `?client=<id>` filters by client *(Phase 5)*
 - [ ] Optional: `/admin/bookings/:id` detail view
 
 #### Notifications *(Phase 3 — partial)*

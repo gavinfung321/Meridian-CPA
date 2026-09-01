@@ -243,7 +243,7 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 - [x] Search input: filter `profiles` by name or email *(client-side)*
 - [x] Status filter: include **Banned** toggle or tab
-- [x] Optional: booking count column *(join/subquery on `bookings`)*
+- [x] Optional: booking count column *(click → `/admin/bookings?client=<id>`)*
 
 #### Role lifecycle
 

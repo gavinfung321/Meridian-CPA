@@ -5,6 +5,9 @@ import { AdminLayout } from "../../components/AdminLayout";
 import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { useAuth } from "../../contexts/AuthContext";
 import {
+  buildAdminClientBookingsUrl,
+} from "../../lib/booking-admin";
+import {
   filterProfilesBySearch,
   filterProfilesByStatus,
   fetchProfileBookingCounts,
@@ -89,6 +92,11 @@ export function AdminClients(): JSX.Element {
   const openProfileFromAction = (profile: Profile, event: MouseEvent) => {
     event.stopPropagation();
     openProfile(profile);
+  };
+
+  const openClientBookings = (profile: Profile, event: MouseEvent) => {
+    event.stopPropagation();
+    navigate(buildAdminClientBookingsUrl(profile.id));
   };
 
   const emptyMessage =
@@ -231,7 +239,16 @@ export function AdminClients(): JSX.Element {
                     <td className="px-4 py-4">
                       <StatusBadge status={profile.status} />
                     </td>
-                    <td className="px-4 py-4">{bookingCounts[profile.id] ?? 0}</td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        title={`View ${getDisplayName(profile.first_name, profile.last_name, profile.full_name)}'s bookings`}
+                        onClick={(event) => openClientBookings(profile, event)}
+                        className="font-medium text-[#0F2A1D] underline-offset-2 hover:text-[#C9A84C] hover:underline"
+                      >
+                        {bookingCounts[profile.id] ?? 0}
+                      </button>
+                    </td>
                     <td className="px-4 py-4">{formatProfileJoinedDate(profile.created_at)}</td>
                     <td className="px-4 py-4 text-right" onClick={(event) => event.stopPropagation()}>
                       <button
