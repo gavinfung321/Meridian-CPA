@@ -3,10 +3,10 @@ import { Language, translations } from "../../../../lib/translations";
 
 interface HeroSectionProps {
   lang: Language;
-  onBookClick: () => void;
+  onBrowseSessionsClick: () => void;
 }
 
-export const HeroSection = ({ lang, onBookClick }: HeroSectionProps): JSX.Element => {
+export const HeroSection = ({ lang, onBrowseSessionsClick }: HeroSectionProps): JSX.Element => {
   const t = translations[lang].hero;
 
   return (
@@ -39,7 +39,7 @@ export const HeroSection = ({ lang, onBookClick }: HeroSectionProps): JSX.Elemen
         </p>
         <Button
           type="button"
-          onClick={onBookClick}
+          onClick={onBrowseSessionsClick}
           className="h-auto rounded-full bg-white hover:bg-[#0F2A1D] hover:text-white hover:scale-[1.03] text-[#0F2A1D] px-8 py-4 text-[15px] font-semibold transition-all duration-200"
         >
           {t.btn}

@@ -8,7 +8,9 @@ export const translations = {
       auditCycle: "Audit Cycle",
       ourTeam: "Our Team",
       faq: "FAQ",
-      bookConsult: "Book",
+      sessions: "Sessions",
+      browseSessions: "Browse sessions",
+      bookConsult: "Browse sessions",
       login: "Login",
       dashboard: "Dashboard",
       admin: "Admin",
@@ -21,7 +23,7 @@ export const translations = {
     hero: {
       title: "Hong Kong Compliance & Advisory, Simplified.",
       subtitle: "Expert audit, tax, and corporate services designed to keep your business secure and agile.",
-      btn: "Book a Consultation",
+      btn: "Browse sessions",
     },
     welcome: {
       title: "Welcome to Meridian CPA & Advisory",
@@ -58,7 +60,7 @@ export const translations = {
           outcome: "Live ledgers and cleaner month-end closes on Xero.",
         },
       ],
-      btn: "Book a Consultation",
+      btn: "Browse sessions",
     },
     clients: {
       title: "Hear From Our Clients",
@@ -221,7 +223,7 @@ export const translations = {
         },
         {
           question: "How do we get started / book a consultation?",
-          answer: "Use Book a Consultation on this page to open our short form, or message us on WhatsApp / email / phone with a brief on your company and year-end. We will schedule a short consultation to scope next steps.",
+          answer: "Browse open sessions in the Book a Session section on this page, or send a general enquiry via Contact us. For bespoke advisory, message us on WhatsApp / email / phone with a brief on your company and year-end.",
         },
       ],
     },
@@ -233,7 +235,7 @@ export const translations = {
       addressLabel: "Office",
       emailLabel: "Email",
       phoneLabel: "Phone",
-      btn: "Book a Consultation",
+      btn: "Contact us",
       whatsapp: "WhatsApp us",
       email: "info@meridiancpa.com.hk",
       phone: "+852 2815 1234",
@@ -243,7 +245,7 @@ export const translations = {
         "Central, Hong Kong",
       ],
       form: {
-        title: "Book a Consultation",
+        title: "Send an enquiry",
         name: "Name",
         email: "Email",
         phone: "Phone (optional)",
@@ -257,7 +259,7 @@ export const translations = {
     booking: {
       label: "UPCOMING SESSIONS",
       title: "Book a Session",
-      subtitle: "Join our specialized 1-on-1 consultations or group workshops to stay ahead on compliance and planning.",
+      subtitle: "Browse upcoming consultations, clinics, and workshops — from private advisory sessions to group compliance events.",
       filters: {
         allTypes: "All Types",
         taxPlanning: "Tax Planning",
@@ -322,7 +324,9 @@ export const translations = {
       auditCycle: "審計週期",
       ourTeam: "我們的團隊",
       faq: "常見問題",
-      bookConsult: "預約",
+      sessions: "活動",
+      browseSessions: "瀏覽活動",
+      bookConsult: "瀏覽活動",
       login: "登入",
       dashboard: "控制台",
       admin: "管理後台",
@@ -335,7 +339,7 @@ export const translations = {
     hero: {
       title: "香港合規與諮詢，化繁為簡。",
       subtitle: "專業審計、稅務及企業服務，助您穩健經營、靈活應對。",
-      btn: "預約諮詢",
+      btn: "瀏覽活動",
     },
     welcome: {
       title: "歡迎來到 Meridian CPA & Advisory",
@@ -372,7 +376,7 @@ export const translations = {
           outcome: "以 Xero 維持實時賬目，簡化月結。",
         },
       ],
-      btn: "預約諮詢",
+      btn: "瀏覽活動",
     },
     clients: {
       title: "客戶見證",
@@ -535,7 +539,7 @@ export const translations = {
         },
         {
           question: "如何開始／預約諮詢？",
-          answer: "請在本頁使用「預約諮詢」開啟表格，或透過 WhatsApp／電郵／電話簡述公司及年結情況。我們會安排簡短諮詢，釐清範圍及下一步。",
+          answer: "在本頁「預約活動」區域瀏覽開放時段並提交預約，或透過「聯絡我們」發送一般查詢。如需度身訂造的顧問服務，亦可經 WhatsApp、電郵或電話提供公司簡介及年結日資料。",
         },
       ],
     },
@@ -547,7 +551,7 @@ export const translations = {
       addressLabel: "辦事處",
       emailLabel: "電郵",
       phoneLabel: "電話",
-      btn: "預約諮詢",
+      btn: "聯絡我們",
       whatsapp: "WhatsApp 聯絡",
       email: "info@meridiancpa.com.hk",
       phone: "+852 2815 1234",
@@ -556,7 +560,7 @@ export const translations = {
         "華懋大廈18樓1801室",
       ],
       form: {
-        title: "預約諮詢",
+        title: "發送查詢",
         name: "姓名",
         email: "電郵",
         phone: "電話（選填）",
@@ -568,9 +572,9 @@ export const translations = {
       },
     },
     booking: {
-      label: "即將舉行的諮詢與活動",
-      title: "預約諮詢",
-      subtitle: "參加我們專屬的一對一諮詢或小組工作坊，掌握最新的合規及規劃資訊。",
+      label: "即將舉行的活動",
+      title: "預約活動",
+      subtitle: "瀏覽即將舉行的諮詢、答疑診所及工作坊 — 涵蓋私人顧問到合規小組活動。",
       filters: {
         allTypes: "所有類型",
         taxPlanning: "稅務規劃",

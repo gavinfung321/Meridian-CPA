@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookSessionModal } from "../../../../components/BookSessionModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useToast } from "../../../../contexts/ToastContext";
-import { createClientBooking } from "../../../../lib/client-bookings";
+import {
+  buildUserSessionBookingMap,
+  createClientBooking,
+  fetchClientBookings,
+  type UserSessionBooking,
+} from "../../../../lib/client-bookings";
 import { translations, Language } from "../../../../lib/translations";
 import { fetchPublicSessions, type PublicSessionCard } from "../../../../lib/public-sessions";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
@@ -21,6 +26,9 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
   const [typeFilter, setTypeFilter] = useState<SessionTypeFilter>("all");
   const [locationFilter, setLocationFilter] = useState<SessionLocationFilter>("all");
   const [sessions, setSessions] = useState<PublicSessionCard[]>([]);
+  const [userSessionBookings, setUserSessionBookings] = useState<Map<string, UserSessionBooking>>(
+    () => new Map(),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookSession, setBookSession] = useState<PublicSessionCard | null>(null);
@@ -34,13 +42,25 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
   const t = translations[lang];
   const locale = lang === "zh" ? "zh-HK" : "en-HK";
 
+  const loadUserBookings = useCallback(async () => {
+    if (!user) {
+      setUserSessionBookings(new Map());
+      return;
+    }
+    const bookings = await fetchClientBookings(user.id);
+    setUserSessionBookings(buildUserSessionBookingMap(bookings));
+  }, [user]);
+
+  const loadSessions = useCallback(async () => {
+    setError(null);
+    const data = await fetchPublicSessions(locale);
+    setSessions(data);
+  }, [locale]);
+
   useEffect(() => {
     let cancelled = false;
 
-    void fetchPublicSessions(locale)
-      .then((data) => {
-        if (!cancelled) setSessions(data);
-      })
+    void Promise.all([loadSessions(), loadUserBookings()])
       .catch((fetchError) => {
         if (!cancelled) {
           setError(fetchError instanceof Error ? fetchError.message : "Failed to load sessions.");
@@ -53,18 +73,29 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [loadSessions, loadUserBookings]);
 
   const filteredSessions = useMemo(() => {
     return sessions.filter((session) => {
       if (typeFilter !== "all" && session.typeFilter !== typeFilter) return false;
       if (locationFilter !== "all" && session.locationFilter !== locationFilter) return false;
-      return true;
+      const spotsLeft = session.capacity.total - session.capacity.booked;
+      const isRegistered = userSessionBookings.has(session.id);
+      return isRegistered || spotsLeft > 0;
     });
-  }, [sessions, typeFilter, locationFilter]);
+  }, [sessions, typeFilter, locationFilter, userSessionBookings]);
+
+  const viewUserBooking = (bookingId: string) => {
+    navigate(`/dashboard/bookings?booking=${bookingId}`);
+  };
 
   const handleBookSession = (session: PublicSessionCard) => {
     setBookSuccess(null);
+    const existing = userSessionBookings.get(session.id);
+    if (existing) {
+      viewUserBooking(existing.bookingId);
+      return;
+    }
     if (!user) {
       navigate("/login", { state: { from: "/", bookSessionId: session.id } });
       return;
@@ -90,8 +121,7 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
           : "Booking request submitted — pending firm approval.";
       setBookSuccess(message);
       showToast(message);
-      const data = await fetchPublicSessions(locale);
-      setSessions(data);
+      await Promise.all([loadSessions(), loadUserBookings()]);
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Booking failed.";
       setBookError(message);
@@ -170,6 +200,8 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
                   key={session.id}
                   session={session}
                   lang={lang}
+                  userBooking={userSessionBookings.get(session.id) ?? null}
+                  onViewBooking={viewUserBooking}
                   onBook={() => handleBookSession(session)}
                 />
               ))}

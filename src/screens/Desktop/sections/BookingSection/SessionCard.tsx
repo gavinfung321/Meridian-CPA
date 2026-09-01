@@ -13,6 +13,14 @@ type SessionCardProps = {
   onViewBooking?: (bookingId: string) => void;
 };
 
+function getSessionCardCtaKey(
+  total: number,
+): "bookConsultation" | "reserveSpot" | "registerNow" {
+  if (total <= 1) return "bookConsultation";
+  if (total <= 8) return "reserveSpot";
+  return "registerNow";
+}
+
 const resolvePath = (obj: Record<string, unknown>, path: string): unknown => {
   return path.split(".").reduce<unknown>((acc, part) => {
     if (acc && typeof acc === "object" && part in acc) {
@@ -34,7 +42,8 @@ export const SessionCard = ({
   const privateLabel = resolvePath(t as Record<string, unknown>, "booking.card.privateSession") as string;
   const spotsLeftLabel = resolvePath(t as Record<string, unknown>, "booking.card.spotsLeft") as string;
   const bookedLabel = resolvePath(t as Record<string, unknown>, "booking.card.booked") as string;
-  const defaultCta = resolvePath(t as Record<string, unknown>, "booking.card.bookConsultation") as string;
+  const ctaKey = getSessionCardCtaKey(session.capacity.total);
+  const ctaLabel = resolvePath(t as Record<string, unknown>, `booking.card.${ctaKey}`) as string;
 
   const { booked, total } = session.capacity;
   const spotsLeft = total - booked;
@@ -153,7 +162,7 @@ export const SessionCard = ({
             disabled={isFull}
             className="w-full rounded-lg bg-[#0F2A1D] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0F2A1D]/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isFull ? (lang === "zh" ? "已滿" : "Full") : defaultCta}
+            {isFull ? (lang === "zh" ? "已滿" : "Full") : ctaLabel}
           </button>
         )}
       </div>

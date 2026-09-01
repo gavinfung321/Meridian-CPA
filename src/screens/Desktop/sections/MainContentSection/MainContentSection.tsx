@@ -12,7 +12,8 @@ import { BookingSection } from "../BookingSection/BookingSection";
 
 interface MainContentSectionProps {
   lang: Language;
-  onBookClick: () => void;
+  onBrowseSessionsClick: () => void;
+  onContactClick: () => void;
 }
 
 interface ServiceListItemProps {
@@ -70,7 +71,11 @@ const TestimonialAvatar = ({ photo, author }: TestimonialAvatarProps) => {
   );
 };
 
-export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProps): JSX.Element => {
+export const MainContentSection = ({
+  lang,
+  onBrowseSessionsClick,
+  onContactClick,
+}: MainContentSectionProps): JSX.Element => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [quoteVisible, setQuoteVisible] = useState(true);
   const t = translations[lang];
@@ -209,7 +214,7 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
             >
               <Button
                 type="button"
-                onClick={onBookClick}
+                onClick={onBrowseSessionsClick}
                 className="h-auto rounded-full bg-white text-[#0F2A1D] px-8 py-4 text-[15px] font-semibold transition-all duration-200 hover:bg-[#C9A84C] hover:text-[#0F2A1D] hover:scale-[1.03] hover:shadow-lg"
               >
                 {offer.btn}
@@ -319,7 +324,7 @@ export const MainContentSection = ({ lang, onBookClick }: MainContentSectionProp
       </section>
 
       <FaqSection lang={lang} />
-      <ContactSection lang={lang} onBookClick={onBookClick} />
+      <ContactSection lang={lang} onBookClick={onContactClick} />
 
       <div
         role="img"
