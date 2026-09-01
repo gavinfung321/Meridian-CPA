@@ -35,6 +35,7 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 | **§7** | **Implementation phases** — full checklists *(execution order)* |
 | **§8** | QA summary — one paragraph per phase |
 | **Client portal UX:** [IMPLEMENTATION_USER.md](./IMPLEMENTATION_USER.md) |
+| **Execution roadmap:** [IMPLEMENTATION_ROADMAP.md](./IMPLEMENTATION_ROADMAP.md) *(conservative path — active)* |
 
 > **Phase 1 detail:** [PHASE_1_AUTH_PROFILES.md](./PHASE_1_AUTH_PROFILES.md)
 

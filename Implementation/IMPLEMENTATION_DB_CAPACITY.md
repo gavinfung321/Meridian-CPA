@@ -66,10 +66,10 @@ Step 6  Update IMPLEMENTATION_PLAN_BOOKING.md + close #6
 
 ## Step 0 — Supabase verification
 
-- [ ] Confirm local migration file: `supabase/migrations/20250830160000_session_type_default_max_slots.sql`
-- [ ] Inspect remote `session_types` columns (Supabase MCP or Dashboard): `default_max_slots` exists
-- [ ] If missing remotely: `npx supabase db push`
-- [ ] Smoke test: insert/update session type with `default_max_slots` via Table Editor
+- [x] Confirm local migration file: `supabase/migrations/20250830160000_session_type_default_max_slots.sql`
+- [x] Inspect remote `session_types` columns (Supabase CLI): `default_max_slots` exists *(Sep 1, 2026)*
+- [x] All migrations in sync — `npx supabase migration list` shows 16/16 local = remote
+- [ ] Smoke test: insert/update session type with `default_max_slots` via Table Editor or admin UI
 
 **Column spec:**
 
@@ -245,7 +245,7 @@ When admin **changes session type** on **create** *(not necessarily on edit — 
 
 | Step | Status |
 |------|--------|
-| 0 — Supabase verification | ⏳ Ops — confirm remote column via Dashboard / `supabase db push` |
+| 0 — Supabase verification | ✅ Remote verified — admin UI smoke test pending |
 | 1 — Database & types | ✅ Complete |
 | 2 — Session Types tab | ✅ Complete |
 | 3 — Active Sessions + full editor | ✅ Complete |
