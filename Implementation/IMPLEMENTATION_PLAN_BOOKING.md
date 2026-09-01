@@ -628,7 +628,7 @@ Phases below are in **execution order** (same as the roadmap table at the top). 
 | 4 | [Phase 3 — Booking Logic & Evolution](#phase-3-booking-logic--evolution--complete) | ✅ |
 | 5 | [Phase 4.5 — Live People Directory](#phase-45-live-people-directory--complete) | ✅ |
 | 6 | [Phase 4 — History & Logging](#phase-4-history--logging) | ✅ |
-| 7 | [Phase 5 — Admin Controls & Reporting](#phase-5-admin-controls--reporting-after-phase-4) | **Next** |
+| 7 | [Phase 5 — Admin Controls & Reporting](#phase-5-admin-controls--reporting-after-phase-4) | ✅ |
 
 ---
 
@@ -1103,9 +1103,9 @@ Admins get **full profile edit access** on `/admin/clients/:id` plus **role/stat
 
 #### Other Phase 5 items
 
-- [ ] Reporting: Charts for session popularity using **Recharts** (`/admin/reporting`)
-- [ ] Metrics: occupancy rate, projected revenue, category/type distribution, active vs banned clients
-- [ ] Settings Page: Manage `app_settings` (including `max_booking_days_advance` booking window)
+- [x] Reporting: Charts for session popularity using **Recharts** (`/admin/reporting`) — **Phase 5B**
+- [x] Metrics: occupancy rate, projected revenue, category/type distribution, active vs banned clients — **Phase 5B**
+- [x] Settings Page: Manage `app_settings` (including `max_booking_days_advance` booking window) — **Phase 5B**
 - [ ] Admin `/admin/settings`: wire notification preferences, business hours placeholders
 
 **Existing mock UI to replace:** `/admin/clients`, `/admin/settings` ✅ *Phase 1*
@@ -1202,7 +1202,9 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 - **Lifecycle:** Promote/demote user ↔ client; ban/reinstate; admin rows view-only
 - **Detail page:** `/admin/clients/:id` — Profile \| Bookings \| Login history tabs, Option B edit, avatar upload
 
-### Phase 5B — Settings & reporting (next)
-- **Reporting:** Charts reflect live booking/session data
-- **Settings:** Changes to `app_settings` take effect on new bookings
-- **User management:** Account deletion via edge function *(optional)*
+### Phase 5B — Settings & reporting ✅
+- **`/admin/settings`:** Live `app_settings` — editable `max_booking_days_advance` booking window
+- **Enforcement:** Public + portal session lists and checkout respect booking window
+- **`/admin/reporting`:** Live Recharts dashboard — occupancy, revenue, category/type charts, client metrics
+
+### Wave 4 — Email notifications (next)
