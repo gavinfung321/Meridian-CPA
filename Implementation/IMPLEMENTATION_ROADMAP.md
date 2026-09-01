@@ -4,8 +4,8 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** ✅ **Wave 1 complete** — merged to `main` ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10), PR [#11](https://github.com/gavinfung321/Meridian-CPA/pull/11))  
-> **Next:** Wave 2 (Phase 5A — People management)  
+> **Status:** 🚧 **Wave 2 in progress** on branch `feat/issue-12-phase-5a-people-mgmt` ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12))  
+> **Next:** QA + merge Wave 2, then Wave 3 (Phase 5B)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
 > **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
@@ -241,31 +241,31 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 #### Directory enhancements
 
-- [ ] Search input: filter `profiles` by name or email *(client-side or Supabase ilike)*
-- [ ] Status filter: include **Banned** toggle or tab
-- [ ] Optional: booking count column *(join/subquery on `bookings`)*
+- [x] Search input: filter `profiles` by name or email *(client-side)*
+- [x] Status filter: include **Banned** toggle or tab
+- [x] Optional: booking count column *(click → `/admin/bookings?client=<id>`)*
 
 #### Role lifecycle
 
-- [ ] Promote `user` → `client` with confirmation modal
-- [ ] Demote `client` → `user` with confirmation modal
-- [ ] `admin` rows remain view-only — no promote/demote/ban in UI
-- [ ] Promote to `admin` stays manual/Supabase only
+- [x] Promote `user` → `client` with confirmation modal
+- [x] Demote `client` → `user` with confirmation modal
+- [x] `admin` rows remain view-only — no promote/demote/ban in UI
+- [x] Promote to `admin` stays manual/Supabase only
 
 #### Detail page — `/admin/clients/:id`
 
-- [ ] Full Option B editable form: name, phone, address fields
-- [ ] Tabs: **Profile** \| **Bookings** \| **Login history**
-- [ ] Bookings tab: list user’s bookings with link to admin booking modal
-- [ ] Login history tab: reuse Wave 1 component
-- [ ] Admin avatar upload for non-admin clients *(extend storage RLS on `profile-pictures`)*
+- [x] Full Option B editable form: name, phone, address fields
+- [x] Tabs: **Profile** \| **Bookings** \| **Login history**
+- [x] Bookings tab: list user’s bookings with link to admin booking modal
+- [x] Login history tab: reuse Wave 1 component
+- [x] Admin avatar upload for non-admin clients *(storage RLS migration)*
 
 #### QA
 
 - [ ] Search finds partial name/email match
 - [ ] Promote/demote updates role badge in list + profile
 - [ ] Detail page edits persist; client can still edit own profile at `/dashboard/profile`
-- [ ] `npm run build` passes
+- [x] `npm run build` passes
 - [ ] Close Wave 2 GitHub issue
 
 **Reference:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) § Phase 5
@@ -335,7 +335,7 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 |------|------|--------|
 | 0 | Pre-flight — ops + QA | ✅ Complete ([#9](https://github.com/gavinfung321/Meridian-CPA/issues/9) — `c138976`) |
 | 1 | Phase 4 — History & logging | ✅ Complete ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10) — `1690624`) |
-| 2 | Phase 5A — People management | 🚧 **Next** |
+| 2 | Phase 5A — People management | 🚧 In progress ([#12](https://github.com/gavinfung321/Meridian-CPA/issues/12)) |
 | 3 | Phase 5B — Settings & reporting | ⬜ Blocked on Wave 2 |
 | 4 | Email notifications | ⬜ Blocked on Wave 3 |
 
@@ -353,4 +353,4 @@ Step 6  QA + update IMPLEMENTATION_PLAN_BOOKING.md § Phase 4
 
 ---
 
-*Last updated: Sep 1, 2026 — Wave 1 merged to main; Wave 2 next.*
+*Last updated: Sep 1, 2026 — Wave 2 Phase 5A in progress on #12.*

@@ -221,9 +221,14 @@ export function filterAdminBookings(
   customTo: string,
   searchQuery = "",
   sessionFilter = "all",
+  clientFilter = "all",
 ): AdminBookingRow[] {
   return bookings.filter((booking) => {
     if (statusFilter !== "all" && booking.status !== statusFilter) return false;
+
+    if (clientFilter !== "all") {
+      if (booking.user?.id !== clientFilter) return false;
+    }
 
     if (sessionFilter !== "all") {
       if (booking.session?.id !== sessionFilter) return false;
@@ -396,11 +401,13 @@ export function hasActiveBookingFilters(
   customTo: string,
   searchQuery = "",
   sessionFilter = "all",
+  clientFilter = "all",
 ): boolean {
   return (
     statusFilter !== "all" ||
     sessionTypeFilter !== "all" ||
     sessionFilter !== "all" ||
+    clientFilter !== "all" ||
     dateRange !== "all" ||
     Boolean(customFrom) ||
     Boolean(customTo) ||
@@ -417,6 +424,12 @@ export function buildAdminSessionBookingsUrl(
   if (options?.status && options.status !== "all") {
     params.set("status", options.status);
   }
+  return `/admin/bookings?${params.toString()}`;
+}
+
+export function buildAdminClientBookingsUrl(clientId: string): string {
+  const params = new URLSearchParams();
+  params.set("client", clientId);
   return `/admin/bookings?${params.toString()}`;
 }
 

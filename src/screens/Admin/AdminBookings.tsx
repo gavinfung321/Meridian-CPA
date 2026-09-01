@@ -25,6 +25,7 @@ import {
   type BookingSortColumn,
   type BookingStatusFilter,
 } from "../../lib/booking-admin";
+import { getDisplayName } from "../../lib/profile";
 import { fetchSessionTypesWithCategories } from "../../lib/session-admin";
 import { adminTableRowInteractiveClassName } from "../../lib/table-styles";
 import { supabase } from "../../lib/supabase";
@@ -49,6 +50,8 @@ export function AdminBookings(): JSX.Element {
   const [customTo, setCustomTo] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sessionFilter, setSessionFilter] = useState("all");
+  const [clientFilter, setClientFilter] = useState("all");
+  const [clientFilterLabel, setClientFilterLabel] = useState<string | null>(null);
 
   const [selectedBooking, setSelectedBooking] = useState<AdminBookingRow | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
@@ -92,6 +95,7 @@ export function AdminBookings(): JSX.Element {
   const bookingIdFromUrl = searchParams.get("booking");
   const statusFromUrl = searchParams.get("status");
   const sessionFromUrl = searchParams.get("session");
+  const clientFromUrl = searchParams.get("client");
 
   useEffect(() => {
     if (!statusFromUrl) return;
@@ -108,6 +112,39 @@ export function AdminBookings(): JSX.Element {
   useEffect(() => {
     setSessionFilter(sessionFromUrl ?? "all");
   }, [sessionFromUrl]);
+
+  useEffect(() => {
+    setClientFilter(clientFromUrl ?? "all");
+  }, [clientFromUrl]);
+
+  useEffect(() => {
+    if (!clientFromUrl) {
+      setClientFilterLabel(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void supabase
+      .from("profiles")
+      .select("first_name, last_name, full_name, email")
+      .eq("id", clientFromUrl)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (!data) {
+          setClientFilterLabel("Selected client");
+          return;
+        }
+        setClientFilterLabel(
+          getDisplayName(data.first_name, data.last_name, data.full_name),
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clientFromUrl]);
 
   useEffect(() => {
     if (!bookingIdFromUrl || loading) return;
@@ -140,8 +177,9 @@ export function AdminBookings(): JSX.Element {
         customTo,
         searchQuery,
         sessionFilter,
+        clientFilter,
       ),
-    [bookings, statusFilter, sessionTypeFilter, dateRange, customFrom, customTo, searchQuery, sessionFilter],
+    [bookings, statusFilter, sessionTypeFilter, dateRange, customFrom, customTo, searchQuery, sessionFilter, clientFilter],
   );
 
   const sessionFilterTitle = useMemo(() => {
@@ -172,6 +210,7 @@ export function AdminBookings(): JSX.Element {
     customTo,
     searchQuery,
     sessionFilter,
+    clientFilter,
     sort.column,
     sort.direction,
   ]);
@@ -243,6 +282,7 @@ export function AdminBookings(): JSX.Element {
     customTo,
     searchQuery,
     sessionFilter,
+    clientFilter,
   );
 
   const clearSessionFilter = () => {
@@ -250,6 +290,17 @@ export function AdminBookings(): JSX.Element {
     setSearchParams(
       (params) => {
         params.delete("session");
+        return params;
+      },
+      { replace: true },
+    );
+  };
+
+  const clearClientFilter = () => {
+    setClientFilter("all");
+    setSearchParams(
+      (params) => {
+        params.delete("client");
         return params;
       },
       { replace: true },
@@ -327,6 +378,20 @@ export function AdminBookings(): JSX.Element {
           </div>
         ) : null}
 
+        {clientFilter !== "all" && clientFilterLabel ? (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-[#EDECE6] bg-[#F9F9F6] px-3 py-2.5 text-sm">
+            <span className="text-[#0F2A1D]/60">Showing bookings for</span>
+            <span className="font-medium text-[#0F2A1D]">{clientFilterLabel}</span>
+            <button
+              type="button"
+              onClick={clearClientFilter}
+              className="ml-auto text-xs font-medium text-[#0F2A1D]/70 underline-offset-2 hover:text-[#0F2A1D] hover:underline"
+            >
+              Clear client filter
+            </button>
+          </div>
+        ) : null}
+
         <BookingFilters
           statusFilter={statusFilter}
           sessionTypeFilter={sessionTypeFilter}
@@ -362,7 +427,9 @@ export function AdminBookings(): JSX.Element {
             <div className="px-4 py-12 text-center">
               <p className="text-[#0F2A1D]/70">
                 {filtersActive
-                  ? sessionFilter !== "all"
+                  ? clientFilter !== "all"
+                    ? "No bookings for this client match your filters."
+                    : sessionFilter !== "all"
                     ? "No bookings for this session match your filters."
                     : "No bookings match your filters."
                   : "No bookings yet."}
