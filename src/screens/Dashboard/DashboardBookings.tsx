@@ -1,4 +1,4 @@
-import { Eye } from "lucide-react";
+import { CalendarDays, Eye, LayoutList } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CancelBookingModal } from "../../components/BookSessionModal";
@@ -20,10 +20,13 @@ import {
   type ClientBookingStatusFilter,
 } from "../../lib/client-bookings";
 import { adminTableRowInteractiveClassName } from "../../lib/table-styles";
-import { formatSessionSchedule } from "../../lib/session-admin";
+import { formatSessionSchedule, startOfWeek } from "../../lib/session-admin";
 import { cn } from "../../lib/utils";
 import type { BookingStatus } from "../../types/database";
 import { ClientBookingDetailModal } from "./ClientBookingDetailModal";
+import { ClientBookingsCalendarView } from "./ClientBookingsCalendarView";
+
+type BookingsViewMode = "list" | "calendar";
 
 export function DashboardBookings(): JSX.Element {
   const { user } = useAuth();
@@ -40,6 +43,8 @@ export function DashboardBookings(): JSX.Element {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
+  const [viewMode, setViewMode] = useState<BookingsViewMode>("list");
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
 
   const loadBookings = useCallback(async (): Promise<ClientBookingRow[]> => {
     if (!user) return [];
@@ -193,7 +198,9 @@ export function DashboardBookings(): JSX.Element {
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="font-serif text-3xl font-semibold text-[#0F2A1D]">My bookings</h1>
-            <p className="mt-2 text-[#0F2A1D]/70">Track your session requests and confirmations.</p>
+            <p className="mt-2 text-[#0F2A1D]/70">
+              Track your session requests and confirmations — list or calendar view.
+            </p>
           </div>
           <Link
             to="/dashboard/book"
@@ -230,15 +237,79 @@ export function DashboardBookings(): JSX.Element {
               );
             })}
           </div>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search by session name…"
-            className="w-full rounded-lg border border-[#EDECE6] bg-white px-3 py-2 text-sm outline-none ring-[#C9A84C] focus:ring-2 lg:max-w-xs"
-          />
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:shrink-0">
+            <div className="inline-flex shrink-0 rounded-lg border border-[#EDECE6] bg-[#F9F9F6] p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  viewMode === "list"
+                    ? "bg-[#0F2A1D] text-white shadow-sm"
+                    : "text-[#0F2A1D]/70 hover:text-[#0F2A1D]",
+                )}
+              >
+                <LayoutList className="h-4 w-4 shrink-0" aria-hidden />
+                List view
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("calendar")}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  viewMode === "calendar"
+                    ? "bg-[#0F2A1D] text-white shadow-sm"
+                    : "text-[#0F2A1D]/70 hover:text-[#0F2A1D]",
+                )}
+              >
+                <CalendarDays className="h-4 w-4 shrink-0" aria-hidden />
+                Calendar view
+              </button>
+            </div>
+
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search by session name…"
+              className="w-full rounded-lg border border-[#EDECE6] bg-white px-3 py-2 text-sm outline-none ring-[#C9A84C] focus:ring-2 lg:min-w-[220px]"
+            />
+          </div>
         </div>
 
+        {viewMode === "calendar" ? (
+          <div className="rounded-xl border border-[#EDECE6] bg-white p-4 shadow-sm sm:p-6">
+            {loading ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <div key={index} className="h-52 animate-pulse rounded-xl bg-[#EDECE6]" />
+                ))}
+              </div>
+            ) : filteredBookings.length === 0 ? (
+              <div className="px-4 py-12 text-center">
+                <p className="text-[#0F2A1D]/70">
+                  {bookings.length === 0
+                    ? "You have no bookings yet."
+                    : "No bookings match your filters."}
+                </p>
+                <Link
+                  to="/dashboard/book"
+                  className="mt-4 inline-block text-sm font-medium text-[#0F2A1D] hover:underline"
+                >
+                  Browse available sessions
+                </Link>
+              </div>
+            ) : (
+              <ClientBookingsCalendarView
+                bookings={filteredBookings}
+                weekStart={weekStart}
+                onWeekStartChange={setWeekStart}
+                onBookingClick={openBooking}
+              />
+            )}
+          </div>
+        ) : (
         <div className="overflow-hidden rounded-xl border border-[#EDECE6] bg-white shadow-sm">
           {loading ? (
             <div className="px-4 py-12 text-center text-[#0F2A1D]/60">Loading bookings…</div>
@@ -336,6 +407,7 @@ export function DashboardBookings(): JSX.Element {
             </>
           )}
         </div>
+        )}
       </div>
 
       <ClientBookingDetailModal

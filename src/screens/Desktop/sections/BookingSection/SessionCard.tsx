@@ -1,9 +1,12 @@
 import { Clock, MapPin } from "lucide-react";
 import { bookingStatusStyles } from "../../../../lib/booking-admin";
 import type { UserSessionBooking } from "../../../../lib/client-bookings";
+import { formatPrice } from "../../../../lib/session-admin";
+import { getSessionFormatKey } from "../../../../lib/session-format";
 import { translations, Language } from "../../../../lib/translations";
 import type { PublicSessionCard } from "../../../../lib/public-sessions";
 import { cn } from "../../../../lib/utils";
+import { SessionCardCover } from "./SessionCardCover";
 
 type SessionCardProps = {
   session: PublicSessionCard;
@@ -44,6 +47,9 @@ export const SessionCard = ({
   const bookedLabel = resolvePath(t as Record<string, unknown>, "booking.card.booked") as string;
   const ctaKey = getSessionCardCtaKey(session.capacity.total);
   const ctaLabel = resolvePath(t as Record<string, unknown>, `booking.card.${ctaKey}`) as string;
+  const formatKey = getSessionFormatKey(session.capacity.total);
+  const formatLabel = t.booking.format[formatKey];
+  const priceLabel = session.price > 0 ? formatPrice(session.price) : t.booking.card.free;
 
   const { booked, total } = session.capacity;
   const spotsLeft = total - booked;
@@ -66,7 +72,7 @@ export const SessionCard = ({
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl border bg-white transition-shadow duration-300 hover:shadow-lg",
+        "flex h-full flex-col overflow-hidden rounded-xl border bg-white transition-shadow duration-300 hover:shadow-lg",
         isRegistered
           ? userBooking?.status === "pending"
             ? "border-l-4 border-[#EDECE6] border-l-[#C9A84C] ring-1 ring-[#C9A84C]/20"
@@ -74,17 +80,18 @@ export const SessionCard = ({
           : "border-[#EDECE6]",
       )}
     >
-      {session.imageUrl ? (
-        <div className="aspect-[16/9] w-full overflow-hidden bg-[#EDECE6]">
-          <img src={session.imageUrl} alt="" className="h-full w-full object-cover" />
-        </div>
-      ) : null}
+      <SessionCardCover session={session} lang={lang} />
 
       <div className="flex flex-1 flex-col p-6">
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h3 className="font-serif text-xl font-medium leading-tight text-[#0F2A1D]">
-            {session.title}
-          </h3>
+          <div className="min-w-0 flex-1">
+            <span className="mb-2 inline-flex rounded-full border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#0F2A1D]">
+              {formatLabel}
+            </span>
+            <h3 className="line-clamp-2 min-h-[3.25rem] font-serif text-xl font-medium leading-tight text-[#0F2A1D]">
+              {session.title}
+            </h3>
+          </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5">
             {isRegistered && userBooking ? (
               <span
@@ -125,6 +132,10 @@ export const SessionCard = ({
               <Clock className="mr-1.5 h-4 w-4" />
               {session.duration} {minLabel}
             </span>
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold text-[#0F2A1D]">{priceLabel}</span>
           </div>
 
           <div className="space-y-1.5">

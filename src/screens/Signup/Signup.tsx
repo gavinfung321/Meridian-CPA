@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { MeridianLogo } from "../../components/MeridianLogo";
 import { Button } from "../../components/ui/button";
 import {
@@ -10,12 +10,27 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { useAuth } from "../../contexts/AuthContext";
+import { getPostLoginBookDestination } from "../../lib/auth-routes";
+import { getPendingBookSessionId } from "../../lib/pending-book-session";
 
 const inputClassName =
   "w-full rounded-md border border-[#EDECE6] bg-[#F9F9F6] px-3 py-2 text-sm outline-none ring-[#C9A84C] focus:ring-2";
 
+type SignupLocationState = {
+  from?: string;
+  bookSessionId?: string;
+};
+
 export function Signup(): JSX.Element {
-  const { signUp, user, loading } = useAuth();
+  const { signUp, user, profile, loading } = useAuth();
+  const location = useLocation();
+  const authState = (location.state as SignupLocationState | null) ?? {};
+  const from = authState.from ?? "/dashboard";
+  const bookSessionId = authState.bookSessionId ?? getPendingBookSessionId() ?? undefined;
+  const postLoginState = bookSessionId ? { bookSessionId } : undefined;
+
+  const loginState = { from, bookSessionId };
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,8 +48,14 @@ export function Signup(): JSX.Element {
     );
   }, []);
 
-  if (!loading && user) {
-    return <Navigate to="/dashboard" replace />;
+  if (!loading && user && profile) {
+    return (
+      <Navigate
+        to={getPostLoginBookDestination(from, profile.role, bookSessionId)}
+        replace
+        state={postLoginState}
+      />
+    );
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -78,7 +99,9 @@ export function Signup(): JSX.Element {
                   Account created. Check your email to confirm your address, then sign in.
                 </p>
                 <Button asChild className="w-full bg-[#0F2A1D] text-white hover:bg-[#0F2A1D]/90">
-                  <Link to="/login">Go to sign in</Link>
+                  <Link to="/login" state={loginState}>
+                    Go to sign in
+                  </Link>
                 </Button>
               </div>
             ) : (
@@ -163,7 +186,11 @@ export function Signup(): JSX.Element {
 
             <p className="mt-6 text-center text-sm text-[#0F2A1D]/70">
               Already have an account?{" "}
-              <Link to="/login" className="font-medium text-[#C9A84C] hover:underline">
+              <Link
+                to="/login"
+                state={loginState}
+                className="font-medium text-[#C9A84C] hover:underline"
+              >
                 Sign in
               </Link>
             </p>

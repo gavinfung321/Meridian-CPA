@@ -1,39 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookSessionModal } from "../../../../components/BookSessionModal";
-import { useAuth } from "../../../../contexts/AuthContext";
-import { useToast } from "../../../../contexts/ToastContext";
-import {
-  buildUserSessionBookingMap,
-  createClientBooking,
-  fetchClientBookings,
-  type UserSessionBooking,
-} from "../../../../lib/client-bookings";
-import { translations, Language } from "../../../../lib/translations";
-import { fetchPublicSessions, type PublicSessionCard } from "../../../../lib/public-sessions";
+import { PublicSessionCatalog } from "../../../../components/PublicSessionCatalog";
+import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
-import { BookingFilters, SessionLocationFilter, SessionTypeFilter } from "./BookingFilters";
-import { SessionCard } from "./SessionCard";
 
 interface BookingSectionProps {
   lang: Language;
+  onContactClick: () => void;
 }
 
-export const BookingSection = ({ lang }: BookingSectionProps) => {
-  const { user, profile } = useAuth();
-  const { showToast } = useToast();
+export const BookingSection = ({ lang, onContactClick }: BookingSectionProps) => {
   const navigate = useNavigate();
-  const [typeFilter, setTypeFilter] = useState<SessionTypeFilter>("all");
-  const [locationFilter, setLocationFilter] = useState<SessionLocationFilter>("all");
-  const [sessions, setSessions] = useState<PublicSessionCard[]>([]);
-  const [userSessionBookings, setUserSessionBookings] = useState<Map<string, UserSessionBooking>>(
-    () => new Map(),
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [bookSession, setBookSession] = useState<PublicSessionCard | null>(null);
-  const [bookSubmitting, setBookSubmitting] = useState(false);
-  const [bookError, setBookError] = useState<string | null>(null);
   const [bookSuccess, setBookSuccess] = useState<string | null>(null);
 
   const [headerRef, headerVisible] = useScrollAnimation<HTMLDivElement>(0.1);
@@ -41,95 +18,6 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
 
   const t = translations[lang];
   const locale = lang === "zh" ? "zh-HK" : "en-HK";
-
-  const loadUserBookings = useCallback(async () => {
-    if (!user) {
-      setUserSessionBookings(new Map());
-      return;
-    }
-    const bookings = await fetchClientBookings(user.id);
-    setUserSessionBookings(buildUserSessionBookingMap(bookings));
-  }, [user]);
-
-  const loadSessions = useCallback(async () => {
-    setError(null);
-    const data = await fetchPublicSessions(locale);
-    setSessions(data);
-  }, [locale]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Promise.all([loadSessions(), loadUserBookings()])
-      .catch((fetchError) => {
-        if (!cancelled) {
-          setError(fetchError instanceof Error ? fetchError.message : "Failed to load sessions.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loadSessions, loadUserBookings]);
-
-  const filteredSessions = useMemo(() => {
-    return sessions.filter((session) => {
-      if (typeFilter !== "all" && session.typeFilter !== typeFilter) return false;
-      if (locationFilter !== "all" && session.locationFilter !== locationFilter) return false;
-      const spotsLeft = session.capacity.total - session.capacity.booked;
-      const isRegistered = userSessionBookings.has(session.id);
-      return isRegistered || spotsLeft > 0;
-    });
-  }, [sessions, typeFilter, locationFilter, userSessionBookings]);
-
-  const viewUserBooking = (bookingId: string) => {
-    navigate(`/dashboard/bookings?booking=${bookingId}`);
-  };
-
-  const handleBookSession = (session: PublicSessionCard) => {
-    setBookSuccess(null);
-    const existing = userSessionBookings.get(session.id);
-    if (existing) {
-      viewUserBooking(existing.bookingId);
-      return;
-    }
-    if (!user) {
-      navigate("/login", { state: { from: "/", bookSessionId: session.id } });
-      return;
-    }
-    if (profile?.role === "admin") {
-      navigate("/admin/bookings");
-      return;
-    }
-    setBookError(null);
-    setBookSession(session);
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!user || !bookSession) return;
-    setBookSubmitting(true);
-    setBookError(null);
-    try {
-      await createClientBooking(bookSession.id, user.id);
-      setBookSession(null);
-      const message =
-        lang === "zh"
-          ? "預約請求已提交，等待審批。"
-          : "Booking request submitted — pending firm approval.";
-      setBookSuccess(message);
-      showToast(message);
-      await Promise.all([loadSessions(), loadUserBookings()]);
-    } catch (submitError) {
-      const message = submitError instanceof Error ? submitError.message : "Booking failed.";
-      setBookError(message);
-      showToast(message, "error");
-    } finally {
-      setBookSubmitting(false);
-    }
-  };
 
   return (
     <section
@@ -156,15 +44,13 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
         {bookSuccess ? (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {bookSuccess}{" "}
-            {user ? (
-              <button
-                type="button"
-                onClick={() => navigate("/dashboard/bookings")}
-                className="font-medium underline"
-              >
-                {lang === "zh" ? "查看我的預約" : "View my bookings"}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/bookings")}
+              className="font-medium underline"
+            >
+              {lang === "zh" ? "查看我的預約" : "View my bookings"}
+            </button>
           </div>
         ) : null}
 
@@ -172,65 +58,15 @@ export const BookingSection = ({ lang }: BookingSectionProps) => {
           ref={gridRef}
           className={`scroll-hidden scroll-fade-up stagger-2 ${gridVisible ? "scroll-visible" : ""}`}
         >
-          <BookingFilters
+          <PublicSessionCatalog
             lang={lang}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            locationFilter={locationFilter}
-            setLocationFilter={setLocationFilter}
+            locale={locale}
+            variant="landing"
+            onContactClick={onContactClick}
+            onBookingSuccess={(message) => setBookSuccess(message)}
           />
-
-          {loading ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((key) => (
-                <div
-                  key={key}
-                  className="h-72 animate-pulse rounded-xl border border-[#EDECE6] bg-white"
-                />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-8 text-center text-sm text-red-700">
-              {error}
-            </div>
-          ) : filteredSessions.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredSessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  lang={lang}
-                  userBooking={userSessionBookings.get(session.id) ?? null}
-                  onViewBooking={viewUserBooking}
-                  onBook={() => handleBookSession(session)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-[#EDECE6] bg-white py-20 text-center text-gray-500">
-              {sessions.length === 0
-                ? lang === "zh"
-                  ? "暫無可預約時段。"
-                  : "No upcoming sessions available."
-                : lang === "zh"
-                  ? "沒有符合篩選條件的時段。"
-                  : "No sessions found matching your filters."}
-            </div>
-          )}
         </div>
       </div>
-
-      <BookSessionModal
-        session={bookSession}
-        open={bookSession !== null}
-        submitting={bookSubmitting}
-        error={bookError}
-        onClose={() => {
-          setBookSession(null);
-          setBookError(null);
-        }}
-        onConfirm={() => void handleConfirmBooking()}
-      />
     </section>
   );
 };

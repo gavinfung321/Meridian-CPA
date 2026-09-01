@@ -129,18 +129,74 @@ export function matchesClientBookingStatusFilter(
   return true;
 }
 
+function getSessionStartMs(booking: ClientBookingRow): number {
+  const startTime = booking.session?.start_time;
+  return startTime ? new Date(startTime).getTime() : 0;
+}
+
+/** Pending or confirmed booking for a session that has not started yet. */
+function isFutureActiveBooking(booking: ClientBookingRow, nowMs: number = Date.now()): boolean {
+  if (booking.status !== "pending" && booking.status !== "confirmed") return false;
+  const startTime = booking.session?.start_time;
+  return startTime ? new Date(startTime).getTime() >= nowMs : false;
+}
+
+function compareSessionStart(
+  left: ClientBookingRow,
+  right: ClientBookingRow,
+  direction: "asc" | "desc",
+): number {
+  const leftTime = getSessionStartMs(left);
+  const rightTime = getSessionStartMs(right);
+  const result = leftTime - rightTime;
+  if (result !== 0) return direction === "asc" ? result : -result;
+
+  return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+}
+
+/** Sort client bookings by session date — tab-aware defaults for list + calendar. */
+export function sortClientBookingsList(
+  bookings: ClientBookingRow[],
+  statusFilter: ClientBookingStatusFilter,
+  nowMs: number = Date.now(),
+): ClientBookingRow[] {
+  const sorted = [...bookings];
+
+  sorted.sort((left, right) => {
+    switch (statusFilter) {
+      case "upcoming":
+      case "pending":
+        return compareSessionStart(left, right, "asc");
+      case "past":
+      case "cancelled":
+        return compareSessionStart(left, right, "desc");
+      case "all":
+      default: {
+        const leftFuture = isFutureActiveBooking(left, nowMs);
+        const rightFuture = isFutureActiveBooking(right, nowMs);
+        if (leftFuture !== rightFuture) return leftFuture ? -1 : 1;
+        return compareSessionStart(left, right, leftFuture ? "asc" : "desc");
+      }
+    }
+  });
+
+  return sorted;
+}
+
 export function filterClientBookingsList(
   bookings: ClientBookingRow[],
   statusFilter: ClientBookingStatusFilter,
   searchQuery: string,
 ): ClientBookingRow[] {
   const normalizedQuery = searchQuery.trim().toLowerCase();
-  return bookings.filter((booking) => {
+  const filtered = bookings.filter((booking) => {
     if (!matchesClientBookingStatusFilter(booking, statusFilter)) return false;
     if (!normalizedQuery) return true;
     const title = booking.session?.title?.toLowerCase() ?? "";
     return title.includes(normalizedQuery);
   });
+
+  return sortClientBookingsList(filtered, statusFilter);
 }
 
 export function computeClientDashboardStats(

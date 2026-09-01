@@ -4,9 +4,9 @@
 
 Elevate the **client portal** (`/dashboard/*`) to match the polish and utility of the admin overview while staying focused on **self-service booking** for registered users and clients. This phase improves **both** `/dashboard` (overview) and `/dashboard/bookings` (management desk), adds a **notification bell + activity feed**, and introduces a **hybrid in-portal booking** experience without duplicating the full homepage catalog.
 
-> **Status:** 🚧 In progress — Option C Book page shipped on `feat/issue-7-client-dashboard-portal`  
-> **GitHub:** [#7](https://github.com/gavinfung321/Meridian-CPA/issues/7) *(create if not yet filed — see body in issue comment)*  
-> **Branch:** `feat/issue-7-client-dashboard-portal`  
+> **Status:** ✅ **Complete** — merged to `main` in `9e2c850`; bookings calendar + session-date sort shipped on `feat/issue-8-landing-booking-polish`  
+> **GitHub:** [#7](https://github.com/gavinfung321/Meridian-CPA/issues/7) — closed  
+> **Branch:** `feat/issue-7-client-dashboard-portal` *(merged)*  
 > **Commit format:** `[#7] …`
 
 ---
@@ -81,15 +81,14 @@ Overview  |  Book a session  |  Bookings  |  Profile
 
 | Area | Today | Gap |
 |------|-------|-----|
-| `/dashboard/book` | List + calendar; registered-session highlighting | ✅ Phase 7 |
-| `/dashboard` overview | Next session, upcoming, activity; browse strip (default / compact) | ✅ Phase 7 |
-| `/dashboard/bookings` | Live table + cancel with reason | No status tabs/filters, no search, no pagination, no detail modal |
-| `DashboardLayout` | Sidebar + header **Book a session** → `/dashboard/book`; notification bell | ✅ Phase 7 |
-| Admin bell | `AdminNotificationBell` + `useBookingNotifications` | Client equivalent not built |
-| Activity data | `booking_history` consumed by admin dashboard | No client-scoped fetch/helpers |
-| Profile nudge | None on dashboard | Missing phone not surfaced |
-| Pagination | `AdminTablePagination` on admin bookings | Not reused on client bookings |
-| Homepage booking | Full `BookingSection` with filters | Reuse `SessionCard` / `BookSessionModal` only — not full section |
+| `/dashboard/book` | List + calendar; registered-session highlighting; `?session=` resume after login | ✅ Shipped |
+| `/dashboard` overview | Greeting, metrics, banners, next session, upcoming, activity feed, browse strip | ✅ Shipped |
+| `/dashboard/bookings` | Status tabs, search, pagination, list + calendar, detail modal, cancel, tab-aware sort | ✅ Shipped |
+| `DashboardLayout` | Sidebar + header **Book a session** → `/dashboard/book`; `ClientNotificationBell` | ✅ Shipped |
+| Activity data | `client-dashboard.ts` + client-scoped `booking_history` | ✅ Shipped |
+| Profile nudge | Phone banner on overview when `phone_number` empty | ✅ Shipped |
+| Pagination | `AdminTablePagination` on client bookings | ✅ Shipped |
+| Homepage booking | `PublicSessionCatalog` shared with portal; post-login book flow | ✅ Shipped — see [IMPLEMENTATION_LANDING_PAGE_BOOK.md](./IMPLEMENTATION_LANDING_PAGE_BOOK.md) |
 
 ### Files in scope *(expected touch list)*
 
@@ -389,21 +388,21 @@ Step 7  QA + update IMPLEMENTATION_PLAN_BOOKING.md
 
 ## Step 0 — Verification checklist
 
-- [ ] Signed-in `user` can read own `bookings` and `booking_history` via Supabase client
-- [ ] `fetchClientBookings` returns expected shape for dashboard widgets
-- [ ] `booking_history` rows exist for new bookings *(created via `booking-history.ts`)*
-- [ ] `fetchPublicSessions` returns bookable sessions for widget
-- [ ] `useBookingNotifications` Realtime channel works for client session *(same as admin)*
-- [ ] Confirm `profile.phone_number` nullable — nudge logic valid
+- [x] Signed-in `user` can read own `bookings` and `booking_history` via Supabase client
+- [x] `fetchClientBookings` returns expected shape for dashboard widgets
+- [x] `booking_history` rows exist for new bookings *(created via `booking-history.ts`)*
+- [x] `fetchPublicSessions` returns bookable sessions for widget
+- [x] `useBookingNotifications` Realtime channel works for client session *(same as admin)*
+- [x] Confirm `profile.phone_number` nullable — nudge logic valid
 
 ---
 
 ## Step 1 — Data layer
 
-- [ ] Create `src/lib/client-dashboard.ts`
-- [ ] Implement `fetchClientDashboardData` (parallel queries like admin)
-- [ ] Implement client activity mapping + filters
-- [ ] Implement `fetchClientNotificationItems`
+- [x] Create `src/lib/client-dashboard.ts`
+- [x] Implement `fetchClientDashboardData` (parallel queries like admin)
+- [x] Implement client activity mapping + filters
+- [x] Implement `fetchClientNotificationItems`
 - [ ] *(Optional)* Extract `src/lib/booking-activity.ts` from admin-dashboard
 - [ ] Unit-test pure helpers if extracted *(optional — only if helpers are non-trivial)*
 
@@ -411,64 +410,65 @@ Step 7  QA + update IMPLEMENTATION_PLAN_BOOKING.md
 
 ## Step 2 — Notification bell
 
-- [ ] Create `ClientNotificationBell.tsx`
-- [ ] Badge + dropdown UI — match admin styling
-- [ ] Realtime refresh via `useBookingNotifications`
-- [ ] Pass to `DashboardLayout` → `PortalLayout notifications=`
-- [ ] Update `IMPLEMENTATION_PLAN_BOOKING.md` carried-forward: client bell ✅ when done
+- [x] Create `ClientNotificationBell.tsx`
+- [x] Badge + dropdown UI — match admin styling
+- [x] Realtime refresh via `useBookingNotifications`
+- [x] Pass to `DashboardLayout` → `PortalLayout notifications=`
+- [x] Update `IMPLEMENTATION_PLAN_BOOKING.md` carried-forward: client bell ✅ when done
 
 ---
 
 ## Step 3 — Overview UI
 
-- [ ] Greeting + summary line
-- [ ] Attention banners *(banned, pending, soon, phone, welcome)*
-- [ ] Metric cards with icons + links
-- [ ] Next session card + upcoming list
-- [ ] Activity feed with All | You | Firm tabs
-- [ ] Loading skeletons + error banner
-- [ ] `max-w-6xl` content width
+- [x] Greeting + summary line
+- [x] Attention banners *(banned, pending, soon, phone, welcome)*
+- [x] Metric cards with icons + links
+- [x] Next session card + upcoming list
+- [x] Activity feed with All | You | Firm tabs
+- [x] Loading skeletons + error banner
+- [x] `max-w-6xl` content width
 
 ---
 
 ## Step 4 — Available sessions widget
 
-- [ ] `AvailableSessionsSection.tsx` with `#available-sessions`
-- [ ] Integrate into `DashboardOverview`
-- [ ] Change `DashboardLayout` quick action: Link to `/dashboard#available-sessions` instead of `/#booking`
-- [ ] Keep secondary “View all sessions” → `/#booking`
-- [ ] Book flow: modal → toast → refresh → optional navigate to bookings
+- [x] Browse strip on overview *(Open sessions / Browse more sessions)*
+- [x] Integrate into `DashboardOverview`
+- [x] Header CTA → `/dashboard/book` *(Option C — not `#available-sessions` anchor)*
+- [x] Secondary “View all sessions” → `/dashboard/book` or `/#booking`
+- [x] Book flow: modal → toast → refresh → optional navigate to bookings
 
 ---
 
 ## Step 5 — Bookings page
 
-- [ ] URL params: `status`, `booking`
-- [ ] Status filter tabs
-- [ ] Search by session title
-- [ ] `AdminTablePagination`
-- [ ] `ClientBookingDetailModal` *(or shared `BookingDetailModal` with client mode)*
-- [ ] Row click + `?booking=` deep link
-- [ ] Cancel from modal preserves existing `CancelBookingModal`
+- [x] URL params: `status`, `booking`
+- [x] Status filter tabs
+- [x] Search by session title
+- [x] `AdminTablePagination`
+- [x] `ClientBookingDetailModal`
+- [x] Row click + `?booking=` deep link
+- [x] Cancel from modal preserves existing cancel flow
+- [x] List | Calendar toggle + `ClientBookingsCalendarView`
+- [x] Tab-aware sort by session date (`sortClientBookingsList`)
 
 ---
 
 ## Step 6 — Polish
 
-- [ ] Realtime refresh on both pages
-- [ ] New-user welcome empty state
-- [ ] Phone nudge banner component *(reusable)*
-- [ ] Document title + meta description updates if copy changes
-- [ ] `npm run build` passes
-- [ ] Manual QA pass *(see below)*
+- [x] Realtime refresh on both pages
+- [x] New-user welcome empty state
+- [x] Phone nudge banner component *(reusable)*
+- [x] `npm run build` passes
+- [ ] Manual QA pass *(see below — spot-check in browser)*
 
 ---
 
 ## Step 7 — Documentation
 
-- [ ] Mark client dashboard polish complete in `IMPLEMENTATION_PLAN_BOOKING.md` §7 Phase 3 / carried-forward
-- [ ] Add link to this doc from parent plan **Document map**
-- [ ] Note any deferred items (email, `.ics`, session reminders v2)
+- [x] Mark client dashboard polish complete in `IMPLEMENTATION_PLAN_BOOKING.md` §7 Phase 3 / carried-forward
+- [x] Add link to this doc from parent plan **Document map**
+- [x] Note any deferred items (email, `.ics`, session reminders v2)
 
 ---
 
@@ -579,5 +579,25 @@ Step 7  QA + update IMPLEMENTATION_PLAN_BOOKING.md
 | Document | Relationship |
 |----------|--------------|
 | [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) | Parent roadmap — Phase 3 client items, brand guide, notification architecture |
+| [IMPLEMENTATION_LANDING_PAGE_BOOK.md](./IMPLEMENTATION_LANDING_PAGE_BOOK.md) | Homepage `#booking` polish — shared catalog with portal |
 | [PHASE_1_AUTH_PROFILES.md](./PHASE_1_AUTH_PROFILES.md) | Auth, profile fields, portal shell |
 | [IMPLEMENTATION_DB_CAPACITY.md](./IMPLEMENTATION_DB_CAPACITY.md) | Example of focused phase doc + execution order |
+
+---
+
+## Progress tracker
+
+| Step | Status |
+|------|--------|
+| 0 — Verification | ✅ Complete |
+| 1 — Data layer | ✅ Complete |
+| 2 — Notification bell | ✅ Complete |
+| 3 — Overview UI | ✅ Complete |
+| 4 — Browse strip / book CTA | ✅ Complete |
+| 5 — Bookings page | ✅ Complete *(incl. calendar + sort)* |
+| 6 — Polish | ✅ Complete *(manual QA optional)* |
+| 7 — Documentation | ✅ Complete |
+
+---
+
+*Last updated: Sep 1, 2026 — synced with `main` + issue-8 follow-ups.*

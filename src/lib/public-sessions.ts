@@ -19,6 +19,8 @@ export interface PublicSessionCard {
   typeFilter: SessionTypeFilter;
   locationFilter: SessionLocationFilter;
   imageUrl: string | null;
+  price: number;
+  sessionTypeName: string;
 }
 
 type SessionQueryRow = {
@@ -29,6 +31,7 @@ type SessionQueryRow = {
   duration_minutes: number;
   max_slots: number;
   type: string;
+  price: number;
   image_path: string | null;
   session_type: {
     name: string;
@@ -92,6 +95,8 @@ function mapSessionRow(row: SessionQueryRow, locale: string): PublicSessionCard 
     typeFilter: categorySlugToTypeFilter(row.session_type?.category?.slug),
     locationFilter: locationToFilter(row.location),
     imageUrl: getPublicSessionImageUrl(row.image_path),
+    price: Number(row.price) || 0,
+    sessionTypeName: typeName,
   };
 }
 
@@ -108,6 +113,7 @@ export async function fetchPublicSessions(locale = "en-HK"): Promise<PublicSessi
       duration_minutes,
       max_slots,
       type,
+      price,
       image_path,
       session_type:session_types (
         name,

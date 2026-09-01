@@ -43,7 +43,8 @@ Phases use **stable labels** from the original roadmap (1, 2, 2.5, 3, 4.5…). T
 - Supabase Edge Functions + email (Resend/SendGrid) — deferred post-Phase 3
 - Production `/reset-password` redirect URL — add on deploy
 - Client notification bell — optional polish *(admin bell ✅ Phase 3)* → **client bell ✅ [#7](https://github.com/gavinfung321/Meridian-CPA/issues/7)**
-- Client **Book a session** page (`/dashboard/book`) — list + calendar *(Option C)*
+- Client **Book a session** page (`/dashboard/book`) — list + calendar *(Option C)* — see [IMPLEMENTATION_LANDING_PAGE_BOOK.md](./IMPLEMENTATION_LANDING_PAGE_BOOK.md)
+- Client **My bookings** page (`/dashboard/bookings`) — list + calendar, status tabs, tab-aware session-date sort *(mirrors book page)*
 
 **Completed since roadmap draft:** top-left toast system ✅, admin booking search ✅, dashboard metric helpers ✅, catalog row-click edit modals ✅, session type default capacity ✅, admin sidebar reorder (Bookings below Overview) ✅
 
@@ -305,7 +306,7 @@ Use **dedicated pages** for deep flows *(session create, recurrence + image edit
 
 ### Client Pages (`/dashboard/*` - Protected Client Route)
 - `/dashboard` - Overview showing next upcoming booking, summary stats. ✅ *Mock UI — Phase 1* → **Phase 3:** live booking summary + quick action “Book a session”
-- `/dashboard/bookings` - History of past bookings, active booking list, request cancellation. ✅ *Mock UI — Phase 1* → **Phase 3:** live list, search, client-side cancel
+- `/dashboard/bookings` - History of past bookings, active booking list, request cancellation. ✅ *Mock UI — Phase 1* → **Phase 3:** live list + calendar, status tabs + search, tab-aware session-date sort, client-side cancel
 - `/dashboard/profile` - Edit profile info (name, phone prefix/number, address, email), view account status. ✅ *Phase 1*
 
 ### Admin Pages (`/admin/*` - Protected Admin Route)
@@ -940,7 +941,19 @@ Bookings are **status-managed**, not fully editable records:
 - [x] Admin Dashboard: Popular categories + recent activity from live bookings *(+ synthesized history for legacy rows)*
 - [x] Admin sidebar: **Bookings** nav item moved below **Overview** *(ops-first order)*
 - [x] Client `/dashboard` landing: upcoming/pending counts + next session card
-- [x] Client `/dashboard/bookings`: live table + cancel with reason
+- [x] Client `/dashboard/bookings`: live table + calendar view + cancel with reason
+- [x] Client `/dashboard/bookings`: tab-aware sort by session date *(Upcoming/Pending/All → soonest first; Past/Cancelled → most recent first)*
+
+**Client bookings sort** *(list + calendar — `sortClientBookingsList` in `client-bookings.ts`)*:
+
+| Tab | Order | Rationale |
+|-----|-------|-----------|
+| **Upcoming** / **Pending** | Session date ↑ *(soonest first)* | “What’s next?” |
+| **All** | Future pending/confirmed ↑, then past/closed ↓ | Next sessions on top, then history |
+| **Past** / **Cancelled** | Session date ↓ *(most recent first)* | Recent history first |
+
+> Previously sorted by `created_at` *(newest booking request first)* — wrong for a schedule view.
+
 - [ ] Constraint: Check `app_settings.max_booking_days_advance` *(needs Phase 5 `app_settings`)*
 - [ ] Configure production **Authentication → Redirect URLs** for `/reset-password`
 
@@ -1156,7 +1169,7 @@ Short pass/fail summary per phase. Full checklists live in **§7** above.
 - **Admin bookings:** Live list, filters, sort, search, view modal, approve/reject/cancel/reinstate with reason
 - **Admin overview:** Live metrics, attention banner, metric helpers, category chart, activity timeline with filters
 - **Client booking:** Homepage session cards → login → book → pending status
-- **Client dashboard:** Live stats, next session, bookings list with cancel
+- **Client dashboard:** Live stats, next session, bookings list + calendar with tab-aware session-date sort and cancel
 - **Bell badge:** Pending count + dropdown list → booking modal deep links
 - **Toasts:** Top-left feedback on book, cancel, and admin status actions
 - **Manual booking:** Admin quick action → create booking for client

@@ -12,7 +12,6 @@ import { BookingSection } from "../BookingSection/BookingSection";
 
 interface MainContentSectionProps {
   lang: Language;
-  onBrowseSessionsClick: () => void;
   onContactClick: () => void;
 }
 
@@ -73,7 +72,6 @@ const TestimonialAvatar = ({ photo, author }: TestimonialAvatarProps) => {
 
 export const MainContentSection = ({
   lang,
-  onBrowseSessionsClick,
   onContactClick,
 }: MainContentSectionProps): JSX.Element => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -214,7 +212,7 @@ export const MainContentSection = ({
             >
               <Button
                 type="button"
-                onClick={onBrowseSessionsClick}
+                onClick={onContactClick}
                 className="h-auto rounded-full bg-white text-[#0F2A1D] px-8 py-4 text-[15px] font-semibold transition-all duration-200 hover:bg-[#C9A84C] hover:text-[#0F2A1D] hover:scale-[1.03] hover:shadow-lg"
               >
                 {offer.btn}
@@ -224,7 +222,7 @@ export const MainContentSection = ({
         </div>
       </section>
 
-      <BookingSection lang={lang} />
+      <BookingSection lang={lang} onContactClick={onContactClick} />
 
       <WhyUsSection lang={lang} />
       <AuditTimelineSection lang={lang} />

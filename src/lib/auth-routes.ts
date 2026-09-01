@@ -19,3 +19,18 @@ export function getPostLoginRoute(from: string, role: UserRole | undefined): str
   if (isDashboardUserRole(role) && from.startsWith("/dashboard")) return from;
   return home;
 }
+
+/** After login/signup — honour pending session booking from landing. */
+export function getPostLoginBookDestination(
+  from: string,
+  role: UserRole | undefined,
+  bookSessionId?: string | null,
+): string {
+  if (bookSessionId && isAdminRole(role)) {
+    return "/admin/bookings";
+  }
+  if (bookSessionId && (isDashboardUserRole(role) || role == null)) {
+    return `/dashboard/book?session=${encodeURIComponent(bookSessionId)}`;
+  }
+  return getPostLoginRoute(from, role);
+}

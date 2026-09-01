@@ -4,9 +4,9 @@
 
 Extend the Catalog Management hub so **session type templates** define default **capacity** and **description**, scheduled sessions inherit those defaults on create, admin tables expose the new columns, and **Sessions** + **Clients** match the **Bookings** interaction model (row click → modal; Actions column = View eye icon only).
 
-> **Status:** ✅ Implementation complete on branch — pending remote migration verify + manual QA + close #6.  
-> **GitHub:** [#6](https://github.com/gavinfung321/Meridian-CPA/issues/6)  
-> **Branch:** `feat/issue-6-session-type-capacity-descriptions`  
+> **Status:** ✅ **Complete** — merged; [#6](https://github.com/gavinfung321/Meridian-CPA/issues/6) closed on GitHub. Remote migration verify remains an ops checklist item.  
+> **GitHub:** [#6](https://github.com/gavinfung321/Meridian-CPA/issues/6) — closed  
+> **Branch:** `feat/issue-6-session-type-capacity-descriptions` *(merged)*  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md) — Phase 2.5 catalog polish + Phase 3 admin UX  
 > **Commit format:** `[#6] …`
 
@@ -245,14 +245,14 @@ When admin **changes session type** on **create** *(not necessarily on edit — 
 
 | Step | Status |
 |------|--------|
-| 0 — Supabase verification | ⬜ Not started |
-| 1 — Database & types | ⬜ Not started |
-| 2 — Session Types tab | ⬜ Not started |
-| 3 — Active Sessions + full editor | ⬜ Not started |
-| 4 — Clients table | ⬜ Not started |
-| 5 — Consistency pass | ⬜ Not started |
-| 6 — Docs & close #6 | ⬜ Not started |
+| 0 — Supabase verification | ⏳ Ops — confirm remote column via Dashboard / `supabase db push` |
+| 1 — Database & types | ✅ Complete |
+| 2 — Session Types tab | ✅ Complete |
+| 3 — Active Sessions + full editor | ✅ Complete |
+| 4 — Clients table | ✅ Complete |
+| 5 — Consistency pass | ✅ Complete |
+| 6 — Docs & close #6 | ✅ Complete — issue closed |
 
 ---
 
-*Last updated: Aug 30, 2026 — plan created; implementation not started.*
+*Last updated: Sep 1, 2026 — implementation shipped; progress tracker synced.*

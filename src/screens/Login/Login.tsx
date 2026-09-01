@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { useAuth } from "../../contexts/AuthContext";
-import { getPostLoginRoute } from "../../lib/auth-routes";
+import { getPostLoginBookDestination } from "../../lib/auth-routes";
+import { getPendingBookSessionId } from "../../lib/pending-book-session";
 
 export function Login(): JSX.Element {
   const { signIn, user, profile, loading } = useAuth();
@@ -24,9 +25,11 @@ export function Login(): JSX.Element {
   );
   const [submitting, setSubmitting] = useState(false);
 
-  const from =
-    (location.state as { from?: string; bookSessionId?: string } | null)?.from ?? "/dashboard";
-  const bookSessionId = (location.state as { bookSessionId?: string } | null)?.bookSessionId;
+  const authState = (location.state as { from?: string; bookSessionId?: string } | null) ?? {};
+  const from = authState.from ?? "/dashboard";
+  const bookSessionId = authState.bookSessionId ?? getPendingBookSessionId() ?? undefined;
+  const postLoginDestination = getPostLoginBookDestination(from, profile?.role, bookSessionId);
+  const postLoginState = bookSessionId ? { bookSessionId } : undefined;
 
   useEffect(() => {
     document.title = "Sign in | Meridian CPA";
@@ -38,12 +41,7 @@ export function Login(): JSX.Element {
   }, []);
 
   if (!loading && user && profile) {
-    const destination = getPostLoginRoute(from, profile.role);
-    const bookDestination =
-      bookSessionId && profile.role !== "admin"
-        ? `/dashboard/book?session=${bookSessionId}`
-        : destination;
-    return <Navigate to={bookDestination} replace />;
+    return <Navigate to={postLoginDestination} replace state={postLoginState} />;
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -59,12 +57,10 @@ export function Login(): JSX.Element {
       return;
     }
 
-    const destination = getPostLoginRoute(from, result.profile?.role);
-    const bookDestination =
-      bookSessionId && result.profile?.role !== "admin"
-        ? `/dashboard/book?session=${bookSessionId}`
-        : destination;
-    navigate(bookDestination, { replace: true });
+    navigate(
+      getPostLoginBookDestination(from, result.profile?.role, bookSessionId),
+      { replace: true, state: postLoginState },
+    );
   };
 
   return (
@@ -148,7 +144,11 @@ export function Login(): JSX.Element {
 
             <p className="mt-6 text-center text-sm text-[#0F2A1D]/70">
               Don&apos;t have an account?{" "}
-              <Link to="/signup" className="font-medium text-[#C9A84C] hover:underline">
+              <Link
+                to="/signup"
+                state={{ from, bookSessionId }}
+                className="font-medium text-[#C9A84C] hover:underline"
+              >
                 Create one
               </Link>
             </p>

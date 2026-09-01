@@ -9,13 +9,13 @@ import { Language, translations } from "../../../../lib/translations";
 interface TopNavigationProps {
   lang: Language;
   setLang: (lang: Language) => void;
-  onBrowseSessionsClick: () => void;
+  onContactClick: () => void;
 }
 
 export const TopNavigationSection = ({
   lang,
   setLang,
-  onBrowseSessionsClick,
+  onContactClick,
 }: TopNavigationProps): JSX.Element => {
   const t = translations[lang].nav;
   const { user, loading } = useAuth();
@@ -59,9 +59,9 @@ export const TopNavigationSection = ({
 
   const closeMenu = () => setMenuOpen(false);
 
-  const handleBrowseSessions = () => {
+  const handleContactClick = () => {
     closeMenu();
-    onBrowseSessionsClick();
+    onContactClick();
   };
 
   const authLinkClass =
@@ -95,14 +95,14 @@ export const TopNavigationSection = ({
           {authLink}
           <Button
             type="button"
-            onClick={onBrowseSessionsClick}
+            onClick={onContactClick}
             className={`h-auto rounded-full px-4 py-2 text-[12px] xl:text-[13px] font-semibold shadow-none transition-all duration-200 hover:scale-[1.03] ${
               pastHero
                 ? "bg-white text-[#0F2A1D] hover:bg-[#C9A84C] hover:text-[#0F2A1D]"
                 : "border border-white/45 bg-transparent text-white hover:border-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#0F2A1D]"
             }`}
           >
-            {t.browseSessions}
+            {t.contactUs}
           </Button>
           <div className="flex items-center gap-2 border-l border-white/20 pl-4 xl:pl-6 text-[12px] xl:text-[13px] font-medium text-white/60">
             <button
@@ -174,10 +174,10 @@ export const TopNavigationSection = ({
             ) : null}
             <Button
               type="button"
-              onClick={handleBrowseSessions}
+              onClick={handleContactClick}
               className="mt-4 h-auto w-full rounded-full bg-white text-[#0F2A1D] px-4 py-3 text-[14px] font-semibold shadow-none transition-all duration-200 hover:bg-[#C9A84C] hover:text-[#0F2A1D]"
             >
-              {t.browseSessions}
+              {t.contactUs}
             </Button>
             <div className="mt-4 flex items-center gap-2 text-[14px] font-medium text-white/60">
               <button

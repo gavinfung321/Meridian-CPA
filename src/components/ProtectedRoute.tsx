@@ -21,7 +21,17 @@ export function ProtectedRoute({ access }: ProtectedRouteProps) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    const bookSessionId = new URLSearchParams(location.search).get("session") ?? undefined;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          from: `${location.pathname}${location.search}`,
+          bookSessionId,
+        }}
+      />
+    );
   }
 
   if (profile?.status === "banned") {

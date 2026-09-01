@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ToastViewport } from "./components/ToastViewport";
+import { getStoredLanguage, storeLanguage } from "./lib/language-preference";
 import { Language } from "./lib/translations";
 import { AboutUs } from "./screens/AboutUs/AboutUs";
 import { AdminBookings } from "./screens/Admin/AdminBookings";
@@ -28,7 +29,12 @@ import { Logout } from "./screens/Logout/Logout";
 import { Profile } from "./screens/Profile/Profile";
 
 export const App = (): JSX.Element => {
-  const [lang, setLang] = useState<Language>("en");
+  const [lang, setLangState] = useState<Language>(() => getStoredLanguage());
+
+  const setLang = (next: Language) => {
+    setLangState(next);
+    storeLanguage(next);
+  };
 
   useEffect(() => {
     document.documentElement.lang = lang === "zh" ? "zh-Hant" : "en";

@@ -101,21 +101,22 @@ export function SessionsCalendarView({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+      <div className="grid auto-rows-fr items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         {weekDays.map((day) => {
           const key = dayKey(day);
           const daySessions = sessionsByDay[key] ?? [];
           const isToday = isSameCalendarDay(day, today);
+          const singleSessionDay = daySessions.length === 1;
 
           return (
             <div
               key={key}
               className={cn(
-                "flex min-h-[220px] flex-col rounded-xl border bg-white p-3 shadow-sm",
+                "flex h-full min-h-[220px] flex-col rounded-xl border bg-white p-3 shadow-sm",
                 isToday ? "border-[#C9A84C]/50 ring-1 ring-[#C9A84C]/20" : "border-[#EDECE6]",
               )}
             >
-              <div className="mb-3 border-b border-[#EDECE6] pb-2">
+              <div className="mb-3 shrink-0 border-b border-[#EDECE6] pb-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0F2A1D]/45">
                   {new Intl.DateTimeFormat("en-HK", { weekday: "short" }).format(day)}
                 </p>
@@ -124,9 +125,9 @@ export function SessionsCalendarView({
                 </p>
               </div>
 
-              <div className="flex flex-1 flex-col gap-2">
+              <div className="flex min-h-0 flex-1 flex-col gap-2">
                 {daySessions.length === 0 ? (
-                  <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-[#EDECE6] bg-[#F9F9F6]/60 px-2 py-6 text-center">
+                  <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-[#EDECE6] bg-[#F9F9F6]/60 px-2 py-4 text-center">
                     <p className="text-xs text-[#0F2A1D]/45">No sessions</p>
                     {showAddOnEmptyDay ? (
                       <Button
@@ -159,7 +160,9 @@ export function SessionsCalendarView({
                         type="button"
                         onClick={() => onSessionClick(session)}
                         className={cn(
-                          "rounded-lg border px-2.5 py-2 text-left transition-colors hover:border-[#C9A84C]/40 hover:bg-[#C9A84C]/5",
+                          "flex flex-col text-left transition-colors",
+                          singleSessionDay ? "flex-1" : "min-h-[128px]",
+                          "rounded-lg border px-2.5 py-2 hover:border-[#C9A84C]/40 hover:bg-[#C9A84C]/5",
                           session.is_cancelled
                             ? "border-red-200 bg-red-50/40 opacity-75"
                             : userBooking
@@ -169,38 +172,42 @@ export function SessionsCalendarView({
                               : "border-[#EDECE6] bg-[#F9F9F6]",
                         )}
                       >
-                        {userBooking ? (
-                          <span
-                            className={cn(
-                              "mb-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize",
-                              bookingStatusStyles[userBooking.status],
-                            )}
-                          >
-                            {registeredLabel}
-                          </span>
-                        ) : null}
-                        <p className="line-clamp-2 text-xs font-semibold leading-snug text-[#0F2A1D]">
+                        <div className="mb-1 min-h-[20px] shrink-0">
+                          {userBooking ? (
+                            <span
+                              className={cn(
+                                "inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize",
+                                bookingStatusStyles[userBooking.status],
+                              )}
+                            >
+                              {registeredLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="line-clamp-2 min-h-[2rem] text-xs font-semibold leading-snug text-[#0F2A1D]">
                           {session.title}
                         </p>
-                        <p className="mt-1 flex items-center gap-1 text-[11px] text-[#C9A84C]">
+                        <p className="mt-1 flex shrink-0 items-center gap-1 text-[11px] text-[#C9A84C]">
                           <Clock className="h-3 w-3 shrink-0" aria-hidden />
                           {formatSessionTimeRange(session.start_time, session.end_time)}
                         </p>
-                        <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-[#0F2A1D]/60">
-                          <span className="inline-flex items-center gap-0.5">
-                            <Users className="h-3 w-3" aria-hidden />
-                            {counts.reserved}/{session.max_slots}
-                          </span>
-                          <span>{formatPrice(Number(session.price))}</span>
-                        </div>
-                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#EDECE6]">
-                          <div
-                            className={cn(
-                              "h-full rounded-full",
-                              session.is_cancelled ? "bg-red-300" : "bg-[#C9A84C]",
-                            )}
-                            style={{ width: `${Math.max(fillPct, fillPct > 0 ? 8 : 0)}%` }}
-                          />
+                        <div className="mt-auto shrink-0 pt-2">
+                          <div className="flex items-center justify-between gap-2 text-[11px] text-[#0F2A1D]/60">
+                            <span className="inline-flex items-center gap-0.5">
+                              <Users className="h-3 w-3" aria-hidden />
+                              {counts.reserved}/{session.max_slots}
+                            </span>
+                            <span>{formatPrice(Number(session.price))}</span>
+                          </div>
+                          <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#EDECE6]">
+                            <div
+                              className={cn(
+                                "h-full rounded-full",
+                                session.is_cancelled ? "bg-red-300" : "bg-[#C9A84C]",
+                              )}
+                              style={{ width: `${Math.max(fillPct, fillPct > 0 ? 8 : 0)}%` }}
+                            />
+                          </div>
                         </div>
                       </button>
                     );

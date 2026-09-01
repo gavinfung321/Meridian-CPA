@@ -9,8 +9,7 @@ export const translations = {
       ourTeam: "Our Team",
       faq: "FAQ",
       sessions: "Sessions",
-      browseSessions: "Browse sessions",
-      bookConsult: "Browse sessions",
+      contactUs: "Contact us",
       login: "Login",
       dashboard: "Dashboard",
       admin: "Admin",
@@ -23,7 +22,7 @@ export const translations = {
     hero: {
       title: "Hong Kong Compliance & Advisory, Simplified.",
       subtitle: "Expert audit, tax, and corporate services designed to keep your business secure and agile.",
-      btn: "Browse sessions",
+      btn: "Book Now",
     },
     welcome: {
       title: "Welcome to Meridian CPA & Advisory",
@@ -60,7 +59,7 @@ export const translations = {
           outcome: "Live ledgers and cleaner month-end closes on Xero.",
         },
       ],
-      btn: "Browse sessions",
+      btn: "Contact us",
     },
     clients: {
       title: "Hear From Our Clients",
@@ -257,9 +256,22 @@ export const translations = {
       },
     },
     booking: {
-      label: "UPCOMING SESSIONS",
+      label: "UPCOMING WORKSHOPS & SESSIONS",
       title: "Book a Session",
-      subtitle: "Browse upcoming consultations, clinics, and workshops — from private advisory sessions to group compliance events.",
+      subtitle: "Register for upcoming workshops, clinics, and info sessions on tax, compliance, and payroll.",
+      catalog: {
+        listView: "Grid View",
+        calendarView: "Calendar View",
+        searchPlaceholder: "Search sessions…",
+        noSessions: "No upcoming sessions available.",
+        noMatches: "No sessions found matching your filters.",
+        noMatchesWeek: "No sessions match your filters this week.",
+        clearFilters: "Clear all filters",
+      },
+      banner: {
+        title: "Need statutory audit or bespoke advisory?",
+        body: "Contact us to discuss your engagement.",
+      },
       filters: {
         allTypes: "All Types",
         taxPlanning: "Tax Planning",
@@ -280,6 +292,34 @@ export const translations = {
         reserveSpot: "Reserve Spot",
         registerNow: "Register Now",
         bookAuditReview: "Book Audit Review",
+        free: "Free",
+      },
+      format: {
+        private: "Private",
+        clinic: "Clinic",
+        workshop: "Workshop",
+      },
+      portal: {
+        pageTitle: "Book a session",
+        pageSubtitle:
+          "Browse upcoming workshops, clinics, and info sessions — list or calendar view.",
+        manageBanner: "You're signed in — manage bookings and sessions in your client portal.",
+        manageLink: "Open client portal",
+      },
+      modal: {
+        title: "Confirm your session",
+        subtitle: "Review the details below to secure your spot.",
+        when: "When",
+        location: "Location",
+        sessionFee: "Session fee",
+        feeNote: "Pay in person at arrival.",
+        statusAfter: "After you confirm",
+        statusPending: "Pending firm approval",
+        policy:
+          "You may cancel free of charge up to 24 hours before the session start time.",
+        backToSchedule: "Back to schedule",
+        confirmBooking: "Confirm booking",
+        confirming: "Confirming…",
       },
       sessions: {
         taxPlanning: {
@@ -325,8 +365,7 @@ export const translations = {
       ourTeam: "我們的團隊",
       faq: "常見問題",
       sessions: "活動",
-      browseSessions: "瀏覽活動",
-      bookConsult: "瀏覽活動",
+      contactUs: "聯絡我們",
       login: "登入",
       dashboard: "控制台",
       admin: "管理後台",
@@ -339,7 +378,7 @@ export const translations = {
     hero: {
       title: "香港合規與諮詢，化繁為簡。",
       subtitle: "專業審計、稅務及企業服務，助您穩健經營、靈活應對。",
-      btn: "瀏覽活動",
+      btn: "立即預約",
     },
     welcome: {
       title: "歡迎來到 Meridian CPA & Advisory",
@@ -376,7 +415,7 @@ export const translations = {
           outcome: "以 Xero 維持實時賬目，簡化月結。",
         },
       ],
-      btn: "瀏覽活動",
+      btn: "聯絡我們",
     },
     clients: {
       title: "客戶見證",
@@ -572,9 +611,22 @@ export const translations = {
       },
     },
     booking: {
-      label: "即將舉行的活動",
+      label: "即將舉行的工作坊及活動",
       title: "預約活動",
-      subtitle: "瀏覽即將舉行的諮詢、答疑診所及工作坊 — 涵蓋私人顧問到合規小組活動。",
+      subtitle: "登記參加即將舉行的稅務、合規及薪酬工作坊、答疑診所及講座。",
+      catalog: {
+        listView: "網格檢視",
+        calendarView: "日曆檢視",
+        searchPlaceholder: "搜尋活動…",
+        noSessions: "暫無可預約時段。",
+        noMatches: "沒有符合篩選條件的時段。",
+        noMatchesWeek: "本週沒有符合篩選條件的時段。",
+        clearFilters: "清除所有篩選",
+      },
+      banner: {
+        title: "需要法定審計或度身顧問服務？",
+        body: "歡迎聯絡我們商討。",
+      },
       filters: {
         allTypes: "所有類型",
         taxPlanning: "稅務規劃",
@@ -595,6 +647,32 @@ export const translations = {
         reserveSpot: "預留名額",
         registerNow: "立即登記",
         bookAuditReview: "預約審計評估",
+        free: "免費",
+      },
+      format: {
+        private: "私人",
+        clinic: "診所",
+        workshop: "工作坊",
+      },
+      portal: {
+        pageTitle: "預約活動",
+        pageSubtitle: "瀏覽即將舉行的工作坊、診所及講座 — 網格或日曆檢視。",
+        manageBanner: "您已登入 — 可在客戶入口管理預約及活動。",
+        manageLink: "開啟客戶入口",
+      },
+      modal: {
+        title: "確認您的活動",
+        subtitle: "請查閱以下詳情以完成登記。",
+        when: "時間",
+        location: "地點",
+        sessionFee: "活動費用",
+        feeNote: "請於到場時付款。",
+        statusAfter: "確認後狀態",
+        statusPending: "待事務所審批",
+        policy: "可於活動開始前 24 小時免費取消。",
+        backToSchedule: "返回日程",
+        confirmBooking: "確認預約",
+        confirming: "確認中…",
       },
       sessions: {
         taxPlanning: {
