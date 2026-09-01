@@ -7,7 +7,7 @@ export interface Profile {
   updated_at: string | null;
   first_name: string;
   last_name: string;
-  full_name: string;
+  full_name?: string | null;
   email: string;
   phone_prefix: string | null;
   phone_number: string | null;
@@ -87,7 +87,7 @@ export interface Database {
           updated_at?: string | null;
           first_name: string;
           last_name: string;
-          full_name: string;
+          full_name?: string | null;
           email: string;
           phone_prefix?: string | null;
           phone_number?: string | null;

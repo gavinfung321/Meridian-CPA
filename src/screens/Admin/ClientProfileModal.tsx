@@ -8,7 +8,6 @@ import { RoleBadge, StatusBadge } from "../../components/RoleBadge";
 import { Button } from "../../components/ui/button";
 import { useProfileAvatarUrl } from "../../hooks/useProfileAvatarUrl";
 import {
-  buildFullName,
   formatAddress,
   formatPhone,
   formatProfileJoinedDate,
@@ -146,7 +145,6 @@ export function ClientProfileModal({
       .update({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        full_name: buildFullName(firstName, lastName),
         phone_prefix: phonePrefix.trim() || null,
         phone_number: phoneNumber.trim() || null,
         address_line1: addressLine1.trim() || null,

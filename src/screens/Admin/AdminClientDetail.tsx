@@ -11,7 +11,6 @@ import { useProfileAvatarUrl } from "../../hooks/useProfileAvatarUrl";
 import { type AdminBookingRow } from "../../lib/booking-admin";
 import { fetchUserAdminBookings, updateProfileRole } from "../../lib/profile-admin";
 import {
-  buildFullName,
   formatProfileJoinedDate,
   getDisplayName,
 } from "../../lib/profile";
@@ -196,7 +195,6 @@ export function AdminClientDetail(): JSX.Element {
       .update({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        full_name: buildFullName(firstName, lastName),
         phone_prefix: phonePrefix.trim() || null,
         phone_number: phoneNumber.trim() || null,
         address_line1: addressLine1.trim() || null,

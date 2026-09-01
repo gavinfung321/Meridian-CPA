@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { ProfileIdentityHeader } from "./ProfileIdentityHeader";
 import { Button } from "./ui/button";
 import { useAuth } from "../contexts/AuthContext";
-import { buildFullName } from "../lib/profile";
+import { getDisplayName } from "../lib/profile";
 import { supabase } from "../lib/supabase";
 import type { Profile } from "../types/database";
 
@@ -69,7 +69,6 @@ export function ProfilePageContent({
       .update({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        full_name: buildFullName(firstName, lastName),
         phone_prefix: phonePrefix.trim() || null,
         phone_number: phoneNumber.trim() || null,
         address_line1: addressLine1.trim() || null,
