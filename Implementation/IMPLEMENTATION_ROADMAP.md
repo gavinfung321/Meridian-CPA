@@ -4,8 +4,8 @@
 
 Execution plan for everything after the #6–#8 merge. Work **top-to-bottom** — do not start Phase 4 until Pre-flight is green (or bugs are filed and triaged).
 
-> **Status:** ✅ **Wave 1 complete** — Phase 4 merged pending; [#10](https://github.com/gavinfung321/Meridian-CPA/issues/10)  
-> **Next:** Wave 2 (Phase 5A — People management)  
+> **Status:** ✅ **Wave 1 complete** on branch `feat/issue-10-phase-4-audit-trails` ([#10](https://github.com/gavinfung321/Meridian-CPA/issues/10))  
+> **Next:** Merge to `main`, then Wave 2 (Phase 5A)  
 > **Parent plan:** [IMPLEMENTATION_PLAN_BOOKING.md](./IMPLEMENTATION_PLAN_BOOKING.md)  
 > **Path chosen:** Conservative *(ops + QA first, then feature phases in order, email at launch)*
 
