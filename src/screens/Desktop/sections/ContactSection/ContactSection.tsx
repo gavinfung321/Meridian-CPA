@@ -8,7 +8,8 @@ interface ContactSectionProps {
 }
 
 export const ContactSection = ({ lang, onBookClick }: ContactSectionProps): JSX.Element => {
-  const c = translations[lang].contact;
+  const t = translations[lang];
+  const c = t.contact;
 
   const [headerRef, headerVisible] = useScrollAnimation<HTMLElement>(0.1);
   const [detailsRef, detailsVisible] = useScrollAnimation<HTMLDivElement>(0.1);
@@ -44,7 +45,7 @@ export const ContactSection = ({ lang, onBookClick }: ContactSectionProps): JSX.
               onClick={onBookClick}
               className="h-auto rounded-full bg-white hover:bg-[#C9A84C] hover:text-[#0F2A1D] hover:scale-[1.03] text-[#0F2A1D] px-8 py-4 text-[15px] font-semibold transition-all duration-200"
             >
-              {c.btn}
+              {t.cta.bookACall}
             </Button>
             <a
               href="https://wa.me/85228151234"
@@ -55,6 +56,12 @@ export const ContactSection = ({ lang, onBookClick }: ContactSectionProps): JSX.
               {c.whatsapp}
             </a>
           </div>
+          <p className="text-[13px] text-white/50 leading-relaxed">
+            {c.emailHint}{" "}
+            <a href={`mailto:${c.email}`} className="text-white/70 underline hover:text-white">
+              {c.email}
+            </a>
+          </p>
         </header>
 
         <div

@@ -119,18 +119,24 @@ export function PublicSessionCatalog({
 
   const loadSessions = useCallback(async () => {
     setError(null);
-    const [cards, calendar] = await Promise.all([
-      fetchPublicSessions(locale),
-      fetchClientCalendarSessions(),
-    ]);
+    const cards = await fetchPublicSessions(locale);
     setSessions(cards);
-    setCalendarSessions(calendar as CalendarSessionRow[]);
+
+    try {
+      const calendar = await fetchClientCalendarSessions();
+      setCalendarSessions(calendar as CalendarSessionRow[]);
+    } catch (calendarError) {
+      setCalendarSessions([]);
+      if (import.meta.env.DEV) {
+        console.warn("[PublicSessionCatalog] Calendar sessions unavailable:", calendarError);
+      }
+    }
   }, [locale]);
 
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([loadSessions(), loadUserBookings()])
+    void loadSessions()
       .catch((loadError) => {
         if (!cancelled) {
           setError(loadError instanceof Error ? loadError.message : "Failed to load sessions.");
@@ -139,6 +145,12 @@ export function PublicSessionCatalog({
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
+    void loadUserBookings().catch((loadError) => {
+      if (import.meta.env.DEV) {
+        console.warn("[PublicSessionCatalog] Could not load user bookings:", loadError);
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -468,7 +480,7 @@ export function PublicSessionCatalog({
             onClick={onContactClick}
             className="mt-5 h-auto rounded-full bg-[#C9A84C] px-8 py-3 text-[15px] font-semibold text-[#0F2A1D] shadow-none transition-all duration-200 hover:scale-[1.03] hover:bg-white"
           >
-            {t.contact.btn}
+            {t.cta.bookACall}
           </Button>
         </div>
       ) : null}

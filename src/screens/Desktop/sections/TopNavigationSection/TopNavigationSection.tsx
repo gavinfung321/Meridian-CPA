@@ -102,7 +102,7 @@ export const TopNavigationSection = ({
                 : "border border-white/45 bg-transparent text-white hover:border-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#0F2A1D]"
             }`}
           >
-            {t.contactUs}
+            {t.bookACall}
           </Button>
           <div className="flex items-center gap-2 border-l border-white/20 pl-4 xl:pl-6 text-[12px] xl:text-[13px] font-medium text-white/60">
             <button
@@ -177,7 +177,7 @@ export const TopNavigationSection = ({
               onClick={handleContactClick}
               className="mt-4 h-auto w-full rounded-full bg-white text-[#0F2A1D] px-4 py-3 text-[14px] font-semibold shadow-none transition-all duration-200 hover:bg-[#C9A84C] hover:text-[#0F2A1D]"
             >
-              {t.contactUs}
+              {t.bookACall}
             </Button>
             <div className="mt-4 flex items-center gap-2 text-[14px] font-medium text-white/60">
               <button

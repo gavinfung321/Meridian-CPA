@@ -12,7 +12,9 @@ import { BookingSection } from "../BookingSection/BookingSection";
 
 interface MainContentSectionProps {
   lang: Language;
-  onContactClick: () => void;
+  onServicesClick: () => void;
+  onBookingContactClick: () => void;
+  onContactSectionClick: () => void;
 }
 
 interface ServiceListItemProps {
@@ -72,7 +74,9 @@ const TestimonialAvatar = ({ photo, author }: TestimonialAvatarProps) => {
 
 export const MainContentSection = ({
   lang,
-  onContactClick,
+  onServicesClick,
+  onBookingContactClick,
+  onContactSectionClick,
 }: MainContentSectionProps): JSX.Element => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [quoteVisible, setQuoteVisible] = useState(true);
@@ -212,17 +216,17 @@ export const MainContentSection = ({
             >
               <Button
                 type="button"
-                onClick={onContactClick}
+                onClick={onServicesClick}
                 className="h-auto rounded-full bg-white text-[#0F2A1D] px-8 py-4 text-[15px] font-semibold transition-all duration-200 hover:bg-[#C9A84C] hover:text-[#0F2A1D] hover:scale-[1.03] hover:shadow-lg"
               >
-                {offer.btn}
+                {t.cta.bookACall}
               </Button>
             </div>
           </nav>
         </div>
       </section>
 
-      <BookingSection lang={lang} onContactClick={onContactClick} />
+      <BookingSection lang={lang} onContactClick={onBookingContactClick} />
 
       <WhyUsSection lang={lang} />
       <AuditTimelineSection lang={lang} />
@@ -322,7 +326,7 @@ export const MainContentSection = ({
       </section>
 
       <FaqSection lang={lang} />
-      <ContactSection lang={lang} onBookClick={onContactClick} />
+      <ContactSection lang={lang} onBookClick={onContactSectionClick} />
 
       <div
         role="img"

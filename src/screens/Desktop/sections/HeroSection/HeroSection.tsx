@@ -7,7 +7,7 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ lang, onBookNowClick }: HeroSectionProps): JSX.Element => {
-  const t = translations[lang].hero;
+  const t = translations[lang];
 
   return (
     <section
@@ -32,17 +32,17 @@ export const HeroSection = ({ lang, onBookNowClick }: HeroSectionProps): JSX.Ele
           id="hero-title"
           className="text-[clamp(1.75rem,4vw,3.25rem)] font-bold leading-[1.15] tracking-tight max-w-4xl"
         >
-          {t.title}
+          {t.hero.title}
         </h1>
         <p className="text-[clamp(1rem,1.8vw,1.25rem)] font-medium leading-snug max-w-[560px] text-white/95">
-          {t.subtitle}
+          {t.hero.subtitle}
         </p>
         <Button
           type="button"
           onClick={onBookNowClick}
           className="h-auto rounded-full bg-white hover:bg-[#0F2A1D] hover:text-white hover:scale-[1.03] text-[#0F2A1D] px-8 py-4 text-[15px] font-semibold transition-all duration-200"
         >
-          {t.btn}
+          {t.cta.bookACall}
         </Button>
       </div>
     </section>

@@ -9,7 +9,7 @@ export const translations = {
       ourTeam: "Our Team",
       faq: "FAQ",
       sessions: "Sessions",
-      contactUs: "Contact us",
+      bookACall: "Book a call",
       login: "Login",
       dashboard: "Dashboard",
       admin: "Admin",
@@ -19,10 +19,20 @@ export const translations = {
       menuOpen: "Open menu",
       menuClose: "Close menu",
     },
+    cta: {
+      bookACall: "Book a call",
+    },
     hero: {
       title: "Hong Kong Compliance & Advisory, Simplified.",
       subtitle: "Expert audit, tax, and corporate services designed to keep your business secure and agile.",
-      btn: "Book Now",
+    },
+    bookACall: {
+      label: "CONSULTATION",
+      title: "Book a call",
+      subtitle: "Schedule a discovery call with our team to discuss audit, tax, or advisory needs.",
+      embedLabel: "Calendly scheduling widget",
+      unavailable: "Our scheduler is temporarily unavailable. Send us an enquiry and we will get back to you.",
+      fallbackBtn: "Send an enquiry",
     },
     welcome: {
       title: "Welcome to Meridian CPA & Advisory",
@@ -59,7 +69,6 @@ export const translations = {
           outcome: "Live ledgers and cleaner month-end closes on Xero.",
         },
       ],
-      btn: "Contact us",
     },
     clients: {
       title: "Hear From Our Clients",
@@ -222,7 +231,7 @@ export const translations = {
         },
         {
           question: "How do we get started / book a consultation?",
-          answer: "Browse open sessions in the Book a Session section on this page, or send a general enquiry via Contact us. For bespoke advisory, message us on WhatsApp / email / phone with a brief on your company and year-end.",
+          answer: "Browse open sessions in the Book a Session section, or click Book a call anywhere on this page to schedule a consultation. For general enquiries, use WhatsApp, email, or phone in the Contact section.",
         },
       ],
     },
@@ -234,7 +243,7 @@ export const translations = {
       addressLabel: "Office",
       emailLabel: "Email",
       phoneLabel: "Phone",
-      btn: "Contact us",
+      emailHint: "Prefer email? Write to us anytime.",
       whatsapp: "WhatsApp us",
       email: "info@meridiancpa.com.hk",
       phone: "+852 2815 1234",
@@ -270,7 +279,7 @@ export const translations = {
       },
       banner: {
         title: "Need statutory audit or bespoke advisory?",
-        body: "Contact us to discuss your engagement.",
+        body: "Book a call to discuss your engagement.",
       },
       filters: {
         allTypes: "All Types",
@@ -365,7 +374,7 @@ export const translations = {
       ourTeam: "我們的團隊",
       faq: "常見問題",
       sessions: "活動",
-      contactUs: "聯絡我們",
+      bookACall: "預約諮詢",
       login: "登入",
       dashboard: "控制台",
       admin: "管理後台",
@@ -375,10 +384,20 @@ export const translations = {
       menuOpen: "開啟選單",
       menuClose: "關閉選單",
     },
+    cta: {
+      bookACall: "預約通話",
+    },
     hero: {
       title: "香港合規與諮詢，化繁為簡。",
       subtitle: "專業審計、稅務及企業服務，助您穩健經營、靈活應對。",
-      btn: "立即預約",
+    },
+    bookACall: {
+      label: "諮詢預約",
+      title: "預約通話",
+      subtitle: "與我們的團隊預約諮詢，討論審計、稅務或顧問需要。",
+      embedLabel: "Calendly 預約工具",
+      unavailable: "預約系統暫時無法使用。請發送查詢，我們會盡快回覆。",
+      fallbackBtn: "發送查詢",
     },
     welcome: {
       title: "歡迎來到 Meridian CPA & Advisory",
@@ -415,7 +434,6 @@ export const translations = {
           outcome: "以 Xero 維持實時賬目，簡化月結。",
         },
       ],
-      btn: "聯絡我們",
     },
     clients: {
       title: "客戶見證",
@@ -578,7 +596,7 @@ export const translations = {
         },
         {
           question: "如何開始／預約諮詢？",
-          answer: "在本頁「預約活動」區域瀏覽開放時段並提交預約，或透過「聯絡我們」發送一般查詢。如需度身訂造的顧問服務，亦可經 WhatsApp、電郵或電話提供公司簡介及年結日資料。",
+          answer: "在本頁「預約活動」區域瀏覽開放時段並提交預約，或點擊頁面上任何「預約通話」安排諮詢。一般查詢可透過頁底聯絡區的 WhatsApp、電郵或電話與我們聯絡。",
         },
       ],
     },
@@ -590,7 +608,7 @@ export const translations = {
       addressLabel: "辦事處",
       emailLabel: "電郵",
       phoneLabel: "電話",
-      btn: "聯絡我們",
+      emailHint: "想以電郵聯絡？歡迎隨時寫信給我們。",
       whatsapp: "WhatsApp 聯絡",
       email: "info@meridiancpa.com.hk",
       phone: "+852 2815 1234",
@@ -625,7 +643,7 @@ export const translations = {
       },
       banner: {
         title: "需要法定審計或度身顧問服務？",
-        body: "歡迎聯絡我們商討。",
+        body: "預約通話與我們商討。",
       },
       filters: {
         allTypes: "所有類型",
