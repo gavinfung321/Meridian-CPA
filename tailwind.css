@@ -365,3 +365,42 @@
     transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
+
+.calendly-inline-widget,
+.calendly-inline-widget iframe {
+  width: 100%;
+  min-height: 480px;
+  height: 100%;
+}
+
+.book-call-calendly-embed.calendly-inline-widget {
+  background-color: #f9f9f6;
+  overflow-y: hidden !important;
+}
+
+.book-call-calendly-embed.calendly-inline-widget,
+.book-call-calendly-embed.calendly-inline-widget iframe {
+  min-height: 0;
+  height: 100%;
+}
+
+/*
+ * Fallback when Calendly ignores embed color params (common on free plans).
+ * Shifts default Calendly blue toward Meridian forest green. Disable via
+ * VITE_CALENDLY_BRAND_FILTER=false once Calendly Standard+ branding is active.
+ */
+.book-call-calendly-brand-filter iframe {
+  filter: hue-rotate(-58deg) saturate(1.08) brightness(0.98);
+}
+
+@media (min-width: 640px) {
+  .calendly-inline-widget,
+  .calendly-inline-widget iframe {
+    min-height: 620px;
+  }
+
+  .book-call-calendly-embed.calendly-inline-widget,
+  .book-call-calendly-embed.calendly-inline-widget iframe {
+    min-height: 0;
+  }
+}

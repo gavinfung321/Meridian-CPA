@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { BookCallPreflightModal } from "../../components/BookCallPreflightModal";
 import { ContactModal } from "../../components/ContactModal";
+import { useAuth } from "../../contexts/AuthContext";
 import { useCalendlyBooking } from "../../hooks/useCalendlyBooking";
+import { getDisplayName } from "../../lib/profile";
 import { Language } from "../../lib/translations";
 import { FooterSection } from "./sections/FooterSection/FooterSection";
 import { HeroSection } from "./sections/HeroSection";
@@ -17,9 +20,23 @@ export const Desktop = ({ lang, setLang }: DesktopProps): JSX.Element => {
   const openContactFallback = () => setContactOpen(true);
   const closeContact = () => setContactOpen(false);
 
-  const { openCalendlyPopup } = useCalendlyBooking({
+  const { user, profile } = useAuth();
+  const {
+    requestBookCall,
+    preflightOpen,
+    preflightUtm,
+    cancelPreflight,
+  } = useCalendlyBooking({
     onFallback: openContactFallback,
   });
+
+  const prefillDefaults = useMemo(() => {
+    const name = profile
+      ? getDisplayName(profile.first_name, profile.last_name, profile.full_name)
+      : "";
+    const email = profile?.email ?? user?.email ?? "";
+    return { name, email };
+  }, [profile, user?.email]);
 
   return (
     <main
@@ -29,19 +46,27 @@ export const Desktop = ({ lang, setLang }: DesktopProps): JSX.Element => {
       <TopNavigationSection
         lang={lang}
         setLang={setLang}
-        onContactClick={() => void openCalendlyPopup("header-contact")}
+        onContactClick={() => requestBookCall("header-contact")}
       />
       <HeroSection
         lang={lang}
-        onBookNowClick={() => void openCalendlyPopup("hero-book-now")}
+        onBookNowClick={() => requestBookCall("hero-book-now")}
       />
       <MainContentSection
         lang={lang}
-        onServicesClick={() => void openCalendlyPopup("services-cta")}
-        onBookingContactClick={() => void openCalendlyPopup("booking-banner")}
-        onContactSectionClick={() => void openCalendlyPopup("contact-section")}
+        onServicesClick={() => requestBookCall("services-cta")}
+        onBookingContactClick={() => requestBookCall("booking-banner")}
+        onContactSectionClick={() => requestBookCall("contact-section")}
       />
       <FooterSection lang={lang} />
+      <BookCallPreflightModal
+        lang={lang}
+        open={preflightOpen}
+        utmContent={preflightUtm}
+        onClose={cancelPreflight}
+        initialName={prefillDefaults.name}
+        initialEmail={prefillDefaults.email}
+      />
       <ContactModal lang={lang} open={contactOpen} onClose={closeContact} />
     </main>
   );

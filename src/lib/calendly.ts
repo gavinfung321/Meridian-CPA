@@ -2,6 +2,14 @@ const CALENDLY_SCRIPT_URL = "https://assets.calendly.com/assets/external/widget.
 const CALENDLY_STYLE_URL = "https://assets.calendly.com/assets/external/widget.css";
 const SCRIPT_LOAD_TIMEOUT_MS = 12_000;
 
+/** Meridian brand tokens — keep in sync with site CSS */
+export const MERIDIAN_BRAND = {
+  primary: "0F2A1D",
+  accent: "C9A84C",
+  background: "F9F9F6",
+  text: "2C3E35",
+} as const;
+
 export type CalendlyUtmContent =
   | "hero-book-now"
   | "header-contact"
@@ -16,23 +24,78 @@ export interface CalendlyConfig {
   textColor: string;
   backgroundColor: string;
   hideGdprBanner: boolean;
+  useBrandFilter: boolean;
 }
 
-export interface CalendlyPopupOptions {
+export interface CalendlyPrefill {
+  name?: string;
+  email?: string;
+  customAnswers?: Record<string, string>;
+}
+
+export interface BookCallPreflightData {
+  name: string;
+  email: string;
+  /** Must exactly match a Calendly Objective dropdown option (see serviceLines in translations). */
+  objective: string;
+  briefContext: string;
+}
+
+export type BookCallServiceLine = "audit" | "tax" | "bookkeeping" | "secretarial" | "advisory";
+
+export interface CalendlyPageSettings {
+  backgroundColor?: string;
+  hideEventTypeDetails?: boolean;
+  hideLandingPageDetails?: boolean;
+  hideGdprBanner?: boolean;
+  primaryColor?: string;
+  textColor?: string;
+}
+
+export interface CalendlyEmbedOptions {
   utmContent: CalendlyUtmContent;
-  prefill?: {
-    name?: string;
-    email?: string;
+  prefill?: CalendlyPrefill;
+}
+
+export interface CalendlyInlineOptions extends CalendlyEmbedOptions {
+  parentElement: HTMLElement;
+}
+
+export function toCalendlyPrefill(data: BookCallPreflightData): CalendlyPrefill {
+  const prefill: CalendlyPrefill = {
+    name: data.name.trim(),
+    email: data.email.trim(),
+    customAnswers: {
+      // Maps to Calendly invitee questions in order: 1) Objective, 2) Brief Context
+      a1: data.objective.trim(),
+    },
   };
+
+  const briefContext = data.briefContext.trim();
+  if (briefContext) {
+    prefill.customAnswers!.a2 = briefContext;
+  }
+
+  return prefill;
 }
 
 declare global {
   interface Window {
     Calendly?: {
+      q?: unknown[];
+      initInlineWidget: (options: {
+        url: string;
+        parentElement: HTMLElement;
+        prefill?: CalendlyPrefill;
+        utm?: Record<string, string>;
+        pageSettings?: CalendlyPageSettings;
+        resize?: boolean;
+      }) => void;
       initPopupWidget: (options: {
         url: string;
-        prefill?: CalendlyPopupOptions["prefill"];
+        prefill?: CalendlyPrefill;
         utm?: Record<string, string>;
+        pageSettings?: CalendlyPageSettings;
       }) => void;
     };
   }
@@ -71,19 +134,27 @@ export function getCalendlyConfig(): CalendlyConfig {
     primaryColor: stripHash(
       trimEnv(import.meta.env.VITE_CALENDLY_PRIMARY_COLOR) ??
         trimEnv(import.meta.env.VITE_BRAND_PRIMARY) ??
-        "0F2A1D",
+        MERIDIAN_BRAND.primary,
     ),
-    textColor: stripHash(trimEnv(import.meta.env.VITE_CALENDLY_TEXT_COLOR) ?? "2C3E35"),
+    textColor: stripHash(
+      trimEnv(import.meta.env.VITE_CALENDLY_TEXT_COLOR) ?? MERIDIAN_BRAND.text,
+    ),
     backgroundColor: stripHash(
       trimEnv(import.meta.env.VITE_CALENDLY_BACKGROUND_COLOR) ??
         trimEnv(import.meta.env.VITE_BRAND_BG) ??
-        "F9F9F6",
+        MERIDIAN_BRAND.background,
     ),
     hideGdprBanner: parseBoolean(
       trimEnv(import.meta.env.VITE_CALENDLY_HIDE_GDPR_BANNER),
       false,
     ),
+    useBrandFilter: parseBoolean(trimEnv(import.meta.env.VITE_CALENDLY_BRAND_FILTER), true),
   };
+}
+
+/** Full event URL with brand query params — useful for debugging in the browser. */
+export function getCalendlyBrandedEventUrl(): string {
+  return buildStyledEventUrl(getCalendlyConfig());
 }
 
 export function isCalendlyEnabled(): boolean {
@@ -95,17 +166,32 @@ function buildStyledEventUrl(config: CalendlyConfig): string {
   url.searchParams.set("primary_color", config.primaryColor);
   url.searchParams.set("text_color", config.textColor);
   url.searchParams.set("background_color", config.backgroundColor);
-  url.searchParams.set("hide_landing_page_details", "1");
+  url.searchParams.set("hide_event_type_details", "1");
+  // embed_domain + embed_type are appended by widget.js — do not set manually.
   if (config.hideGdprBanner) {
     url.searchParams.set("hide_gdpr_banner", "1");
   }
   return url.toString();
 }
 
-function buildUtm(utmContent: CalendlyUtmContent): Record<string, string> {
+function buildPageSettings(config: CalendlyConfig): CalendlyPageSettings {
+  return {
+    backgroundColor: config.backgroundColor,
+    textColor: config.textColor,
+    primaryColor: config.primaryColor,
+    hideEventTypeDetails: true,
+    hideLandingPageDetails: true,
+    hideGdprBanner: config.hideGdprBanner,
+  };
+}
+
+function buildUtm(
+  utmContent: CalendlyUtmContent,
+  medium: "popup" | "inline" = "inline",
+): Record<string, string> {
   return {
     utm_source: "meridian-site",
-    utm_medium: "popup",
+    utm_medium: medium,
     utm_content: utmContent,
   };
 }
@@ -119,41 +205,51 @@ function ensureCalendlyStyles(): void {
   document.head.appendChild(link);
 }
 
-function loadCalendlyScript(): Promise<void> {
-  if (window.Calendly) {
+const CALENDLY_INIT_POLL_MS = 50;
+
+function isCalendlyStub(): boolean {
+  return Boolean(window.Calendly?.q && Array.isArray(window.Calendly.q));
+}
+
+/** True once widget.js has replaced the loader stub with the real API. */
+function isCalendlyReady(): boolean {
+  return typeof window.Calendly?.initInlineWidget === "function" && !isCalendlyStub();
+}
+
+function waitForCalendlyApi(): Promise<void> {
+  if (isCalendlyReady()) {
     return Promise.resolve();
   }
 
   return new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${CALENDLY_SCRIPT_URL}"]`,
-    );
+    const started = Date.now();
 
-    if (existing) {
-      if (window.Calendly) {
+    const poll = window.setInterval(() => {
+      if (isCalendlyReady()) {
+        window.clearInterval(poll);
         resolve();
         return;
       }
 
-      const onReady = () => {
-        if (window.Calendly) resolve();
-        else reject(new Error("Calendly script loaded but Calendly is unavailable"));
-      };
+      if (Date.now() - started >= SCRIPT_LOAD_TIMEOUT_MS) {
+        window.clearInterval(poll);
+        reject(new Error("Calendly failed to initialize"));
+      }
+    }, CALENDLY_INIT_POLL_MS);
+  });
+}
 
-      existing.addEventListener("load", onReady, { once: true });
-      existing.addEventListener(
-        "error",
-        () => reject(new Error("Failed to load Calendly script")),
-        { once: true },
-      );
+/** Clears a broken Calendly script so the widget can load again after a failed init. */
+export function resetCalendlyScript(): void {
+  assetsPromise = null;
+  document
+    .querySelectorAll(`script[src="${CALENDLY_SCRIPT_URL}"]`)
+    .forEach((node) => node.remove());
+  delete window.Calendly;
+}
 
-      // Script may have finished loading before listeners were attached.
-      window.setTimeout(() => {
-        if (window.Calendly) resolve();
-      }, 0);
-      return;
-    }
-
+function injectCalendlyScript(): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = CALENDLY_SCRIPT_URL;
     script.async = true;
@@ -164,8 +260,7 @@ function loadCalendlyScript(): Promise<void> {
 
     script.onload = () => {
       window.clearTimeout(timeoutId);
-      if (window.Calendly) resolve();
-      else reject(new Error("Calendly script loaded but Calendly is unavailable"));
+      waitForCalendlyApi().then(resolve).catch(reject);
     };
 
     script.onerror = () => {
@@ -177,12 +272,31 @@ function loadCalendlyScript(): Promise<void> {
   });
 }
 
+function loadCalendlyScript(): Promise<void> {
+  if (isCalendlyReady()) {
+    return Promise.resolve();
+  }
+
+  const existing = document.querySelector<HTMLScriptElement>(
+    `script[src="${CALENDLY_SCRIPT_URL}"]`,
+  );
+
+  if (existing) {
+    return waitForCalendlyApi().catch(() => {
+      resetCalendlyScript();
+      return injectCalendlyScript();
+    });
+  }
+
+  return injectCalendlyScript();
+}
+
 export function loadCalendlyAssets(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Calendly cannot load during SSR"));
   }
 
-  if (window.Calendly) {
+  if (isCalendlyReady()) {
     ensureCalendlyStyles();
     return Promise.resolve();
   }
@@ -200,8 +314,8 @@ export function loadCalendlyAssets(): Promise<void> {
   return assetsPromise;
 }
 
-export async function openCalendlyPopupWidget(
-  options: CalendlyPopupOptions,
+export async function initCalendlyInlineWidget(
+  options: CalendlyInlineOptions,
 ): Promise<void> {
   const config = getCalendlyConfig();
   if (!config.enabled) {
@@ -210,13 +324,41 @@ export async function openCalendlyPopupWidget(
 
   await loadCalendlyAssets();
 
-  if (!window.Calendly?.initPopupWidget) {
-    throw new Error("Calendly popup API is unavailable");
+  if (!window.Calendly?.initInlineWidget) {
+    throw new Error("Calendly inline API is unavailable");
   }
 
-  window.Calendly.initPopupWidget({
-    url: buildStyledEventUrl(config),
+  options.parentElement.innerHTML = "";
+  options.parentElement.style.backgroundColor = `#${config.backgroundColor}`;
+  options.parentElement.style.overflowY = "hidden";
+  options.parentElement.className = "book-call-calendly-embed h-full w-full min-h-0";
+  options.parentElement.classList.toggle("book-call-calendly-brand-filter", config.useBrandFilter);
+
+  const styledUrl = buildStyledEventUrl(config);
+
+  window.Calendly.initInlineWidget({
+    url: styledUrl,
+    parentElement: options.parentElement,
     prefill: options.prefill,
-    utm: buildUtm(options.utmContent),
+    utm: buildUtm(options.utmContent, "inline"),
+    pageSettings: buildPageSettings(config),
   });
+
+  if (import.meta.env.DEV) {
+    console.info("[Calendly] Inline embed initialized with Meridian branding", {
+      primaryColor: `#${config.primaryColor}`,
+      backgroundColor: `#${config.backgroundColor}`,
+      textColor: `#${config.textColor}`,
+      brandFilter: config.useBrandFilter,
+      testUrl: styledUrl,
+      note: "If colors stay blue, enable Calendly Standard+ branding or set brand color in Calendly admin → Account → Branding.",
+    });
+  }
+}
+
+export function destroyCalendlyInlineWidget(parentElement: HTMLElement | null): void {
+  if (parentElement) {
+    parentElement.innerHTML = "";
+    parentElement.classList.remove("book-call-calendly-brand-filter");
+  }
 }

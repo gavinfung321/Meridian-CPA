@@ -1,10 +1,5 @@
-import { useCallback } from "react";
-import {
-  CalendlyUtmContent,
-  getCalendlyConfig,
-  isCalendlyEnabled,
-  openCalendlyPopupWidget,
-} from "../lib/calendly";
+import { useCallback, useState } from "react";
+import { CalendlyUtmContent, getCalendlyConfig, isCalendlyEnabled } from "../lib/calendly";
 
 interface UseCalendlyBookingOptions {
   onFallback?: () => void;
@@ -12,9 +7,11 @@ interface UseCalendlyBookingOptions {
 
 export function useCalendlyBooking(options: UseCalendlyBookingOptions = {}) {
   const { onFallback } = options;
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [preflightUtm, setPreflightUtm] = useState<CalendlyUtmContent | null>(null);
 
-  const openCalendlyPopup = useCallback(
-    async (utmContent: CalendlyUtmContent) => {
+  const requestBookCall = useCallback(
+    (utmContent: CalendlyUtmContent) => {
       if (!isCalendlyEnabled()) {
         if (import.meta.env.DEV) {
           const config = getCalendlyConfig();
@@ -27,20 +24,22 @@ export function useCalendlyBooking(options: UseCalendlyBookingOptions = {}) {
         return;
       }
 
-      try {
-        await openCalendlyPopupWidget({ utmContent });
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error("[Calendly] Popup failed:", error);
-        }
-        onFallback?.();
-      }
+      setPreflightUtm(utmContent);
+      setPreflightOpen(true);
     },
     [onFallback],
   );
 
+  const cancelPreflight = useCallback(() => {
+    setPreflightOpen(false);
+    setPreflightUtm(null);
+  }, []);
+
   return {
-    openCalendlyPopup,
+    requestBookCall,
+    preflightOpen,
+    preflightUtm,
+    cancelPreflight,
     calendlyEnabled: isCalendlyEnabled(),
   };
 }

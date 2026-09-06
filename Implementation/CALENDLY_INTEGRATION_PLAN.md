@@ -1,8 +1,8 @@
 # Calendly Embed Integration Plan — Meridian CPA
 
-**Status:** Implemented — popup-only (Sep 2026)  
+**Status:** Implemented (popup v1) — pre-step form + branding QA planned (Sep 2026)  
 **Date:** Sep 2026  
-**Scope:** Embed-only Calendly (no Scheduling API). Admins manage event types, invitee questions, and locations in Calendly. All consultation CTAs open the **Calendly popup** — no inline `#book-a-call` section.
+**Scope:** Embed-only Calendly (no Scheduling API). Admins manage event types, invitee questions, availability, and locations in Calendly. All consultation CTAs open a **Calendly popup** after optional on-site pre-step (planned §5).
 
 **Rollout order:** Validate on **localhost** first (`.env` + restart `npm run dev`), then Vercel env vars + redeploy.
 
@@ -62,46 +62,63 @@ Calendly should **not replace** the Supabase workshop catalog (`#booking`). It s
 
 ## 3. Branding alignment
 
-### Calendly URL / init params (embed layer)
+### 3.1 Can the widget match our green theme?
 
-Append to event URL or pass via `Calendly.initInlineWidget` / `initPopupWidget` **styles** / query string:
+**Yes — partially.** Meridian forest green (`#0F2A1D`) is already passed via embed params in `src/lib/calendly.ts`:
+
+| Param | Meridian value | What it affects |
+|-------|----------------|-----------------|
+| `primary_color` | `0F2A1D` | Selected date, time-slot buttons, primary actions |
+| `text_color` | `2C3E35` | Body text inside widget |
+| `background_color` | `F9F9F6` | Widget background (cream) |
+
+Set in `.env` as `VITE_BRAND_PRIMARY` / `VITE_BRAND_BG` (or `VITE_CALENDLY_*_COLOR` overrides).
+
+**If the widget still looks default Calendly blue:**
+
+1. **Restart dev server** after `.env` changes — Vite bakes env at startup.
+2. **Hard-refresh** the browser (Ctrl+Shift+R) — old popup script may be cached.
+3. **Verify params on URL** — open DevTools → Network → filter `calendly.com` → confirm booking URL includes `primary_color=0F2A1D`.
+4. **Calendly account branding** — Calendly → **Account** → **Branding**: set logo + brand color to `#0F2A1D` so standalone and embed views align.
+5. **Paid vs free** — some account-level styles may differ; embed params still apply to buttons/accents on most plans.
+
+**Also set in Calendly admin (recommended — doubles up with embed):**
+
+- Branding → logo (Meridian mark)
+- Brand color → `#0F2A1D`
+- Button/text colors aligned with site
+
+### 3.2 Limitations (document for stakeholders)
+
+- **No custom CSS** inside the Calendly iframe — only URL params + Calendly account branding.
+- Font will be Calendly’s, not the site serif/sans pairing.
+- “Powered by Calendly” may still appear.
+- **Our pre-step modal** (planned §5) can be fully on-brand (forest green, cream, gold rule) — only the Calendly step is Calendly-controlled.
+
+### 3.3 Pre-step modal branding (planned)
+
+When we add the multi-page form before Calendly opens, style it like `ContactModal` / site modals:
+
+- Background `#F9F9F6`, headings `#0F2A1D`, accent `#C9A84C`
+- Primary button forest green; secondary ghost
+- This gives users a **fully branded** first impression before the Calendly iframe
+
+---
+
+## 3 (legacy). Embed params reference
+
+Append to event URL via `buildStyledEventUrl()` in `src/lib/calendly.ts`:
 
 | Param | Meridian value | Notes |
 |-------|----------------|-------|
-| `primary_color` | `0F2A1D` | Forest green — buttons, accents |
-| `text_color` | `2C3E35` | Body text tone |
-| `background_color` | `F9F9F6` | Cream section background |
-| `hide_gdpr_banner` | `1` | Optional — see §8 privacy; only if legal approves |
-| `hide_event_type_details` | `0` | Keep duration/location visible (managed in Calendly) |
-| `hide_landing_page_details` | `1` | Reduces Calendly marketing chrome inside embed |
+| `hide_gdpr_banner` | `0` (default) | Only set `1` with legal approval |
+| `hide_landing_page_details` | `1` | Less Calendly marketing chrome |
 
-Example event URL (placeholder):
+Example:
 
 ```text
-https://calendly.com/meridian-cpa/discovery-call?primary_color=0F2A1D&text_color=2C3E35&background_color=F9F9F6
+https://calendly.com/your-org/discovery-call?primary_color=0F2A1D&text_color=2C3E35&background_color=F9F9F6
 ```
-
-### Calendly admin (out of band — no site admin UI)
-
-Configure in **Calendly dashboard**:
-
-- Event type name, duration, location (Zoom / phone / in-person)
-- **Invitee questions** (company name, service interest, etc.) — these appear automatically in embed
-- Branding → logo, colors (should match params above)
-- Availability, buffers, timezone display
-
-### Limitations (document for stakeholders)
-
-- **No custom CSS** inside the iframe — only Calendly params + Calendly account branding.
-- Font will be Calendly’s, not Geist/serif from the site.
-- Widget chrome (step indicator, powered-by) may still appear on free tiers.
-- Mobile layout is Calendly-controlled; we only control outer section padding/max-width.
-
-### Our wrapper styling (full control)
-
-- Section header: serif title, gold rule — match `BookingSection` / `ContactSection`.
-- Outer container: `max-w-[1180px]`, cream background, `scroll-mt-24` for fixed header.
-- Loading skeleton: cream/gold pulse matching site (not white box flash).
 
 ---
 
@@ -191,31 +208,132 @@ FAQ and booking banner copy updated to reference “Book a call” and direct as
 
 ---
 
-## 5. Data capture & prefill
+## 5. Pre-step questionnaire & prefill (planned v2)
 
-### Invitee questions (Calendly-side)
+### 5.1 Goal
 
-- Configure in Calendly → Event type → **Invitee questions**.
-- No code required; answers appear in Calendly notifications and calendar invite.
-- Plan QA step: submit test booking and verify questions + location in Calendly admin.
+Before opening the Calendly popup, show a **multi-page Meridian-branded modal** that collects name, email, and up to **5 qualifying questions**, then passes answers into Calendly via **`prefill`** so the invitee does not re-type everything.
 
-### Optional prefill (future-friendly, not required v1)
+```mermaid
+flowchart LR
+  CTA["Book a call"] --> Step1["Page 1: Name + Email"]
+  Step1 --> Step2["Page 2: Qualifying questions"]
+  Step2 --> Step3["Page 3: Optional detail"]
+  Step3 --> Calendly["Calendly popup with prefill"]
+```
 
-Calendly supports:
+### 5.2 Recommended questions (CPA firm — max 5 before widget)
+
+Ask only what helps triage the call. Suggested set:
+
+| # | Question | Type | Required | Why |
+|---|----------|------|----------|-----|
+| 1 | **Full name** | Text | Yes | Personalise call + Calendly `prefill.name` |
+| 2 | **Work email** | Email | Yes | Confirmation + Calendly `prefill.email` |
+| 3 | **Company / entity name** | Text | Yes | Core context for CPA intake |
+| 4 | **What do you need help with?** | Single select | Yes | Routes conversation: Audit & compliance / Profits tax / Bookkeeping & cloud / Company secretarial / General advisory |
+| 5 | **Brief context** (optional) | Textarea | No | Year-end date, urgency, or scope — “Tell us briefly what you’d like to discuss” |
+
+**Page layout (recommended):**
+
+| Page | Fields | Primary button |
+|------|--------|----------------|
+| **1 of 3** | Name, email | Continue |
+| **2 of 3** | Company, service line (Q4) | Continue |
+| **3 of 3** | Brief context (Q5) | **Continue to schedule** → opens Calendly |
+
+Keep it to **3 short pages** — not 5 separate pages for 5 questions (reduces drop-off).
+
+### 5.3 Mapping into Calendly (embed prefill)
+
+Calendly `initPopupWidget` supports:
 
 ```ts
 prefill: {
   name: string;
   email: string;
-  customAnswers?: { a1: string; ... };
+  customAnswers: {
+    a1: string; // must match 1st custom invitee question in Calendly admin
+    a2: string; // 2nd question, etc.
+  };
 }
 ```
 
-**v1:** No on-site pre-step form.  
-**v2:** If user is logged in (`useAuth`), pass `profile.first_name` + `profile.last_name` + `profile.email` into embed init.  
-**v2:** Small optional form above embed (name/email) → re-init widget with prefill on submit.
+**Critical:** `a1`, `a2`, … map to **Invitee questions on the event type in order** — not by label. When implementing:
 
-Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty object.
+1. In Calendly → Event type → **Invitee questions**, create questions in the **same order** as the pre-step form (company, service line, brief context).
+2. Use Calendly’s test booking to confirm `a1`/`a2`/`a3` mapping.
+3. Pass name/email from page 1 — Calendly may skip re-asking if already prefilled.
+
+**Logged-in users (optional enhancement):** If `useAuth` has profile email/name, pre-populate page 1 fields.
+
+### 5.4 What stays in Calendly vs on-site
+
+| Data | Collect where | Reason |
+|------|---------------|--------|
+| Name, email, intake questions | **On-site pre-step** (planned) | Branded UX; prefill into Calendly |
+| Date & time | **Calendly only** | Availability engine lives in Calendly |
+| Phone, location preference | **Calendly invitee questions** (optional) | Or add as Q6+ on-site if needed |
+| GDPR / scheduling confirmations | **Calendly** | Required by scheduler |
+
+**Do not duplicate** the same questions on-site and in Calendly unless prefill is wired — users hate typing twice.
+
+### 5.5 Implementation outline (when coding)
+
+| File | Purpose |
+|------|---------|
+| `src/components/BookCallPreflightModal.tsx` | Multi-page form; Meridian styling |
+| `src/hooks/useCalendlyBooking.ts` | Open preflight first → on complete call `openCalendlyPopupWidget({ prefill })` |
+| `src/lib/calendly.ts` | Extend `CalendlyPopupOptions.prefill.customAnswers` |
+| `src/lib/translations.ts` | `bookCallPreflight.*` EN/ZH |
+
+Reuse patterns from `ContactModal` (focus trap, Escape, body scroll lock).
+
+### 5.6 Invitee questions (Calendly-side — today)
+
+Today, questions are configured only in **Calendly dashboard** and appear inside the widget after date/time selection. v2 pre-step reduces duplicate entry for name/email/intake fields configured as custom questions.
+
+---
+
+## 17. Availability & timezone (why midnight slots?)
+
+### 17.1 Does the website sync hours with Calendly?
+
+**No.** With embed-only integration, **all availability is managed in Calendly** — not in Supabase, not in `.env`, not in our code. The website only opens the scheduler; it cannot push 9am–5pm rules to Calendly.
+
+### 17.2 Why you might see midnight / early-morning slots (e.g. 00:00, 00:30)
+
+Your screenshot shows **“Hong Kong Time”** with slots starting at **00:00**. That usually means the **host’s Calendly timezone ≠ Hong Kong**, even though the invitee view is in HK.
+
+**Common cause:** Host account timezone is **US Pacific** (or similar) with availability **9:00 AM – 5:00 PM** in *that* timezone. Converted to Hong Kong:
+
+| Host local (example) | Shows in HK as |
+|----------------------|----------------|
+| 9:00 AM Pacific | **12:00 AM (midnight)** HK same calendar date |
+| 5:00 PM Pacific | **8:00 AM** HK next calendar date |
+
+So “9–5” in Calendly is **9–5 in the host timezone**, not automatically 9–5 HK.
+
+### 17.3 Fix checklist (Calendly admin — no code)
+
+1. **Profile timezone** — Calendly → **Account settings** → **Timezone** → set **`Asia/Hong_Kong`** for HK-based firm.
+2. **Event type** — Confirm `VITE_CALENDLY_URL` points to the same event you edited (e.g. `new-meeting` vs “Discovery Call” — different URLs = different availability).
+3. **Availability** — Event type → **Availability** → weekly hours **Mon–Fri 9:00–17:00** (verify **after** timezone is HK).
+4. **Date overrides** — Check for holidays / custom hours adding odd slots.
+5. **Buffers & minimum notice** — Won’t cause midnight slots but affects what appears.
+6. **Re-test** — Open embed in incognito; pick a weekday; expect **09:00–17:00 HK** slots.
+
+### 17.4 Invitee timezone display
+
+Calendly shows times in the **invitee’s local timezone** (browser), with a selector (your screenshot: “Hong Kong Time”). That part works correctly — the issue is almost always **host-side availability timezone**, not the embed.
+
+### 17.5 What we cannot fix in code (embed-only)
+
+- Force 9–5 HK from the website
+- Hide “wrong” slots via CSS
+- Sync Supabase workshop hours with Calendly
+
+**Scheduling API** (paid, out of scope) would be required to build custom slot UI on-site.
 
 ---
 
@@ -274,8 +392,8 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 
 ### Local dev
 
-- `.env.local` (gitignored) — copy from `.env.example`
-- Document in README / Implementation folder only (no secrets in repo)
+- Single **`.env`** at project root (gitignored) — restart `npm run dev` after edits
+- Document vars in this plan; no separate `.env.example` required for solo dev
 
 ---
 
@@ -367,6 +485,22 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 - [ ] E2. Update `IMPLEMENTATION_LANDING_PAGE_BOOK.md` CTA table
 - [ ] E3. Privacy policy note (third-party scheduler, Calendly link)
 
+### Phase G — Pre-step questionnaire (planned v2)
+
+- [ ] G1. Product sign-off on 5 questions (§5.2)
+- [ ] G2. Align Calendly invitee question order with `customAnswers` a1/a2/a3
+- [ ] G3. Build `BookCallPreflightModal.tsx` (3 pages, Meridian styling)
+- [ ] G4. Wire `useCalendlyBooking` → preflight → `openCalendlyPopupWidget({ prefill })`
+- [ ] G5. Prefill logged-in profile when available
+- [ ] G6. QA: no duplicate prompts in Calendly; booking completes with prefilled data in Calendly admin
+
+### Phase H — Branding & availability QA (Calendly admin + env)
+
+- [ ] H1. Set Calendly account timezone to **Asia/Hong_Kong**
+- [ ] H2. Set event availability Mon–Fri 9:00–17:00 HK; verify slots in embed
+- [ ] H3. Set Calendly account branding color `#0F2A1D`; confirm embed params in Network tab
+- [ ] H4. Confirm `VITE_CALENDLY_URL` matches the event type you configured
+
 ### Phase F — QA & rollout (see §11–12)
 
 ---
@@ -375,16 +509,15 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 
 ### Functional
 
-- [ ] Inline embed loads on homepage `#book-a-call`
+- [ ] Calendly popup opens from all five “Book a call” CTAs
 - [ ] Complete booking end-to-end → appears in Calendly admin + calendar email
-- [ ] Invitee questions configured in Calendly appear in embed flow
-- [ ] Location (Zoom/etc.) shown correctly in confirmation
-- [ ] Timezone: book as HK user; verify displayed times sensible
-- [ ] Timezone: book with browser set to US/EU; verify invitee picks correct local time
-- [ ] All **five** consultation CTAs reach Calendly (hero scroll + four popups)
-- [ ] Each popup source books successfully with correct `utm_content` in Calendly reporting (if UTM enabled)
-- [ ] `VITE_CALENDLY_ENABLED=false` hides embed, shows fallback
-- [ ] Broken URL shows fallback, not infinite spinner
+- [ ] **Availability:** weekday slots show **9:00–17:00 Hong Kong Time** (after Calendly admin fix §17)
+- [ ] **Branding:** time-slot buttons use forest green `#0F2A1D`, not default blue (§3.1)
+- [ ] Invitee questions appear in embed (or prefill skips duplicates in v2)
+- [ ] Each CTA passes correct `utm_content`
+- [ ] `VITE_CALENDLY_ENABLED=false` → fallback modal
+- [ ] Broken URL → fallback, not infinite spinner
+- [ ] *(v2)* Pre-step modal prefills name/email into Calendly
 
 ### Cross-browser / device
 
@@ -416,8 +549,7 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 - [ ] `#booking` workshop catalog still works
 - [ ] `ContactModal` fallback works when `VITE_CALENDLY_ENABLED=false`
 - [ ] `#contact` email / phone / WhatsApp unchanged
-- [ ] EN/ZH language toggle doesn’t break section (titles translate; widget may stay EN)
-- [ ] Navigate away from `/book-a-call` and back — embed re-inits cleanly
+- [ ] EN/ZH language toggle doesn’t break CTAs (Calendly widget may stay EN)
 
 ---
 
@@ -440,14 +572,14 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 
 | Upgrade | Requires | Notes |
 |---------|----------|-------|
-| **Prefill** from logged-in `profile` | Embed only | `useAuth` → pass name/email to init |
-| **On-site mini-form** before embed | Embed only | Collect name/email → prefill |
-| **UTM tracking** | Embed `utm` params | `utm_source=meridian-site&utm_medium=book-a-call` |
-| **Multiple event types** | Multiple URLs or Calendly routing forms | e.g. audit vs tax discovery — still embed, pick URL per CTA |
-| **Calendly webhooks** | Paid plan + Edge Function | Sync bookings to Supabase / CRM |
-| **Scheduling API** | Paid Calendly | Programmatic slot display — explicitly out of scope now |
+| **Pre-step modal + prefill** | Embed only | §5 — planned v2 |
+| **Logged-in prefill** | Embed + `useAuth` | Auto-fill page 1 from profile |
+| **UTM tracking** | Embed `utm` params | Already wired per CTA |
+| **Multiple event types** | Multiple URLs or routing forms | Audit vs tax discovery |
+| **Calendly webhooks** | Paid plan + Edge Function | Sync to Supabase / CRM |
+| **Scheduling API** | Paid Calendly | Custom slot UI — out of scope |
 | **ZH event type** | Second Calendly event | Switch URL when `lang === 'zh'` |
-| **Google Analytics events** | `onEventScheduled` callback if using Calendly JS events | Track conversion |
+| **GA conversion events** | Calendly JS event callbacks | Track `event_scheduled` |
 
 ---
 
@@ -456,11 +588,13 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 | # | Decision | Status |
 |---|----------|--------|
 | 1 | All five CTAs → Calendly popup | ✅ **Locked** |
-| 2 | CTA label “Book a call” (header + buttons) | ✅ **Locked** |
-| 3 | No inline `#book-a-call` section | ✅ **Locked** — popup only |
-| 4 | Enquiry modal | ✅ **Fallback only**; async via `#contact` email/WhatsApp |
-| 5 | GDPR banner | Show (recommended) or hide with legal approval |
-| 6 | Single vs dual Calendly events | One URL for all consults vs separate audit/tax types |
+| 2 | CTA label “Book a call” | ✅ **Locked** |
+| 3 | Enquiry modal | ✅ **Fallback only** |
+| 4 | Pre-step 5 questions before widget | **Recommend §5.2** — confirm with product |
+| 5 | Pre-step page count (3 pages vs 5) | **Recommend 3 pages** — pending sign-off |
+| 6 | Calendly account timezone HK + 9–5 | **Action in Calendly admin** — §17 |
+| 7 | GDPR banner | Show (recommended) or hide with legal approval |
+| 8 | Single vs dual Calendly events | One URL vs separate audit/tax types |
 
 ---
 
@@ -468,14 +602,11 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 
 | Phase | Estimate |
 |-------|----------|
-| Calendly admin setup | 1–2 hours |
-| Config + loader + inline embed | 4–6 hours |
-| Section + nav + i18n | 2–3 hours |
-| Popup + CTA wiring (all five) | 2–3 hours |
-| `/book-a-call` route (optional) | 1–2 hours |
+| Calendly admin (timezone, branding, questions) | 1–2 hours |
+| Popup v1 (done) | — |
+| Pre-step modal + prefill (v2) | 1–2 days |
+| Branding QA (green theme verification) | 1–2 hours |
 | QA + Vercel env | 2–3 hours |
-| **Total (inline + CTAs)** | **~2–3 days** |
-| **Total (with `/book-a-call` route)** | **~3 days** |
 
 ---
 
@@ -485,5 +616,6 @@ Store prefill wiring in `src/lib/calendly.ts` as optional params; default empty 
 - [Inline embed](https://help.calendly.com/hc/en-us/articles/223147027-Embed-options-overview#inline-embed)
 - [Popup widget](https://help.calendly.com/hc/en-us/articles/223147027-Embed-options-overview#popup-embed)
 - [Advanced embed parameters](https://help.calendly.com/hc/en-us/articles/223147027-Embed-options-overview) (colors, hide_gdpr_banner)
-- Internal: `Implementation/IMPLEMENTATION_LANDING_PAGE_BOOK.md` (CTA hierarchy)
+- [Calendly prefill](https://help.calendly.com/hc/en-us/articles/223147767-How-to-pre-fill-invitee-information-in-your-embed)
+- [Calendly timezone & availability](https://help.calendly.com/hc/en-us/articles/223147067-Event-type-availability)
 - Internal: `Implementation/IMPLEMENTATION_ROADMAP.md` (prototype complete; Calendly is additive)
