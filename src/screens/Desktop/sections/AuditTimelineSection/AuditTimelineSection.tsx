@@ -1,3 +1,4 @@
+import { assetUrl } from "../../../../lib/asset-url";
 import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 
@@ -44,7 +45,7 @@ export const AuditTimelineSection = ({ lang }: AuditTimelineSectionProps): JSX.E
         {/* Atmosphere photo strip */}
         <div className="relative h-[160px] w-full overflow-hidden rounded-sm sm:h-[200px]">
           <img
-            src="/images/audit-lifecycle.png"
+            src={assetUrl("/images/audit-lifecycle.png")}
             alt="Meridian CPA team reviewing audit documents in the office"
             loading="lazy"
             className="h-full w-full object-cover"

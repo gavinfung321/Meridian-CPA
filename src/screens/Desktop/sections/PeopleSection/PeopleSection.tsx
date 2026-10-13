@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { assetUrl } from "../../../../lib/asset-url";
 import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 
@@ -113,7 +114,7 @@ const PartnerAvatar = ({ partner, large = false }: { partner: Partner; large?: b
 
   return (
     <img
-      src={partner.photo}
+      src={assetUrl(partner.photo)}
       alt={`${partner.name}, ${partner.title}`}
       loading="lazy"
       onError={() => setImageError(true)}

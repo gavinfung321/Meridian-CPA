@@ -1,3 +1,4 @@
+import { assetUrl } from "../../../../lib/asset-url";
 import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 
@@ -22,7 +23,7 @@ export const WhyUsSection = ({ lang }: WhyUsSectionProps): JSX.Element => {
         >
           <div className="overflow-hidden rounded-t-sm rounded-b-[50%]">
             <img
-              src="/images/why-us.png"
+              src={assetUrl("/images/why-us.png")}
               alt={m.imageAlt}
               className="aspect-[4/5] w-full object-cover object-center"
               loading="lazy"

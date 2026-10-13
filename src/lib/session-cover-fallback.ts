@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Briefcase, Calculator, FileCheck, Users } from "lucide-react";
+import { assetUrl } from "./asset-url";
 import type { Language } from "./translations";
 import { translations } from "./translations";
 import type { PublicSessionCard } from "./public-sessions";
@@ -14,11 +15,11 @@ export type SessionCoverTheme = {
 };
 
 const CATEGORY_COVER_PATHS: Record<SessionTypeFilter, string> = {
-  taxPlanning: "/images/sessions/tax-planning.png",
-  auditCompliance: "/images/sessions/audit-compliance.png",
-  payrollMpf: "/images/sessions/payroll-mpf.png",
-  advisory: "/images/sessions/advisory.png",
-  all: "/images/sessions/advisory.png",
+  taxPlanning: assetUrl("/images/sessions/tax-planning.png"),
+  auditCompliance: assetUrl("/images/sessions/audit-compliance.png"),
+  payrollMpf: assetUrl("/images/sessions/payroll-mpf.png"),
+  advisory: assetUrl("/images/sessions/advisory.png"),
+  all: assetUrl("/images/sessions/advisory.png"),
 };
 
 const COVER_THEMES: Record<SessionTypeFilter, SessionCoverTheme> = {

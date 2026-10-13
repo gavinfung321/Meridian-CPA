@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
+import { assetUrl } from "../../../../lib/asset-url";
 import { CLIENT_PORTAL_ENABLED } from "../../../../lib/features";
 import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
@@ -64,7 +65,7 @@ const TestimonialAvatar = ({ photo, author }: TestimonialAvatarProps) => {
 
   return (
     <img
-      src={photo}
+      src={assetUrl(photo)}
       alt={author}
       loading="lazy"
       onError={() => setImageError(true)}
@@ -178,7 +179,7 @@ export const MainContentSection = ({
         role="img"
         aria-label="Meridian CPA office with Hong Kong skyline view"
         className="static-banner relative h-[320px] sm:h-[380px] lg:h-[420px] w-full"
-        style={{ backgroundImage: "url('/images/office.png')" }}
+        style={{ backgroundImage: `url('${assetUrl("/images/office.png")}')` }}
       />
 
       <section
@@ -335,7 +336,7 @@ export const MainContentSection = ({
         role="img"
         aria-label="Audited financial statements with Hong Kong harbour view"
         className="static-banner relative h-[320px] sm:h-[380px] lg:h-[420px] w-full"
-        style={{ backgroundImage: "url('/images/documents.png')" }}
+        style={{ backgroundImage: `url('${assetUrl("/images/documents.png")}')` }}
       />
     </section>
   );

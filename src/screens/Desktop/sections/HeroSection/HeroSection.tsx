@@ -1,4 +1,5 @@
 import { Button } from "../../../../components/ui/button";
+import { assetUrl } from "../../../../lib/asset-url";
 import { Language, translations } from "../../../../lib/translations";
 
 interface HeroSectionProps {
@@ -17,7 +18,7 @@ export const HeroSection = ({ lang, onBookNowClick }: HeroSectionProps): JSX.Ele
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: "url('/images/hero.png')",
+          backgroundImage: `url('${assetUrl("/images/hero.png")}')`,
         }}
       />
       <div
