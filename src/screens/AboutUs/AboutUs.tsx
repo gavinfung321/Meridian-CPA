@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MeridianLogo } from "../../components/MeridianLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { getHomeRouteForRole } from "../../lib/auth-routes";
+import { CLIENT_PORTAL_ENABLED } from "../../lib/features";
 import { Language, translations } from "../../lib/translations";
 
 interface AboutUsProps {
@@ -33,7 +34,7 @@ export const AboutUs = ({ lang, setLang }: AboutUsProps): JSX.Element => {
           <MeridianLogo variant="light" />
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
-          {!loading && user ? (
+          {!CLIENT_PORTAL_ENABLED ? null : !loading && user ? (
             <Link
               to={getHomeRouteForRole(profile?.role)}
               className="text-[12px] font-medium text-white/80 hover:text-white transition-colors"

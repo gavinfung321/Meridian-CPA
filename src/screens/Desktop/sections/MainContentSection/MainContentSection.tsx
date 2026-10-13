@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
+import { CLIENT_PORTAL_ENABLED } from "../../../../lib/features";
 import { Language, translations } from "../../../../lib/translations";
 import { useScrollAnimation } from "../../../../hooks/useScrollAnimation";
 import { PeopleSection } from "../PeopleSection/PeopleSection";
@@ -226,7 +227,9 @@ export const MainContentSection = ({
         </div>
       </section>
 
-      <BookingSection lang={lang} onContactClick={onBookingContactClick} />
+      {CLIENT_PORTAL_ENABLED && (
+        <BookingSection lang={lang} onContactClick={onBookingContactClick} />
+      )}
 
       <WhyUsSection lang={lang} />
       <AuditTimelineSection lang={lang} />

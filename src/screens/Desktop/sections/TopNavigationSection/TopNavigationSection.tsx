@@ -4,6 +4,7 @@ import { MeridianLogo } from "../../../../components/MeridianLogo";
 import { ProfileMenu } from "../../../../components/ProfileMenu";
 import { Button } from "../../../../components/ui/button";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { CLIENT_PORTAL_ENABLED } from "../../../../lib/features";
 import { Language, translations } from "../../../../lib/translations";
 
 interface TopNavigationProps {
@@ -26,7 +27,7 @@ export const TopNavigationSection = ({
   const primaryLinks = [
     { label: t.about, href: "#about" },
     { label: t.services, href: "#services" },
-    { label: t.sessions, href: "#booking" },
+    ...(CLIENT_PORTAL_ENABLED ? [{ label: t.sessions, href: "#booking" }] : []),
     { label: t.auditCycle, href: "#process" },
     { label: t.ourTeam, href: "#partners" },
     { label: t.faq, href: "#faq" },
@@ -67,7 +68,7 @@ export const TopNavigationSection = ({
   const authLinkClass =
     "text-[12px] xl:text-[13px] font-medium text-white/80 hover:text-white transition-colors duration-150 whitespace-nowrap tracking-[-0.02em]";
 
-  const authLink = !loading && user ? (
+  const authLink = !CLIENT_PORTAL_ENABLED ? null : !loading && user ? (
     <ProfileMenu lang={lang} onNavigate={closeMenu} />
   ) : (
     <Link to="/login" className={authLinkClass} onClick={closeMenu}>
@@ -124,7 +125,9 @@ export const TopNavigationSection = ({
         </nav>
 
         <div className="ml-auto flex lg:hidden items-center gap-3">
-          {!loading && user ? <ProfileMenu lang={lang} onNavigate={closeMenu} /> : null}
+          {CLIENT_PORTAL_ENABLED && !loading && user ? (
+            <ProfileMenu lang={lang} onNavigate={closeMenu} />
+          ) : null}
           <button
             type="button"
             className="flex h-10 w-10 items-center justify-center text-white"
@@ -169,7 +172,7 @@ export const TopNavigationSection = ({
                 {item.label}
               </a>
             ))}
-            {!loading && !user ? (
+            {CLIENT_PORTAL_ENABLED && !loading && !user ? (
               <div className="py-3 border-b border-white/10">{authLink}</div>
             ) : null}
             <Button
