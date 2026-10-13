@@ -224,7 +224,7 @@ export const BookCallPreflightModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-6">
       <button
         type="button"
         className="absolute inset-0 bg-[#0F2A1D]/60 backdrop-blur-[2px]"
@@ -236,19 +236,19 @@ export const BookCallPreflightModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 flex h-[680px] max-h-[calc(100vh-3rem)] w-full max-w-[1040px] flex-col overflow-hidden rounded-sm border border-[#0F2A1D]/10 shadow-2xl md:flex-row"
+        className="relative z-10 flex h-[calc(100dvh-0.75rem)] w-full max-w-[1040px] flex-col overflow-hidden rounded-t-sm border border-[#0F2A1D]/10 shadow-2xl sm:h-auto sm:max-h-[min(680px,calc(100dvh-3rem))] sm:rounded-sm md:h-[680px] md:max-h-[calc(100vh-3rem)] md:flex-row"
       >
-        <aside className="flex shrink-0 flex-col justify-between bg-[#0F2A1D] px-8 py-8 md:w-[300px] md:py-10">
+        <aside className="flex shrink-0 flex-col justify-between bg-[#0F2A1D] px-6 py-5 md:w-[300px] md:px-8 md:py-10">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C9A84C]">
               {t.label}
             </p>
-            <p className="mt-3 font-serif text-[1.35rem] font-bold leading-tight tracking-tight text-white">
+            <p className="mt-2 font-serif text-[1.2rem] font-bold leading-tight tracking-tight text-white md:mt-3 md:text-[1.35rem]">
               {t.brandName}
             </p>
-            <div className="mt-4 h-px w-10 bg-[#C9A84C]" aria-hidden="true" />
+            <div className="mt-3 h-px w-10 bg-[#C9A84C] md:mt-4" aria-hidden="true" />
 
-            <ul className="mt-8 flex flex-col gap-6">
+            <ul className="mt-8 hidden flex-col gap-6 md:flex">
               {t.sidebar.map((item, index) => {
                 const Icon = SIDEBAR_ICONS[index] ?? Users;
                 return (
@@ -266,12 +266,12 @@ export const BookCallPreflightModal = ({
             </ul>
           </div>
 
-          <p className="mt-8 text-[11px] font-medium uppercase tracking-[0.12em] text-white/45 md:mt-0">
+          <p className="mt-8 hidden text-[11px] font-medium uppercase tracking-[0.12em] text-white/45 md:mt-0 md:block">
             {t.footerNote}
           </p>
         </aside>
 
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#F9F9F6] px-6 py-8 sm:px-8 sm:py-10">
+        <div className="relative flex min-h-0 flex-1 flex-col bg-[#F9F9F6] px-6 py-6 sm:px-8 sm:py-10">
           <button
             type="button"
             onClick={handleClose}
@@ -344,62 +344,64 @@ export const BookCallPreflightModal = ({
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <label className={labelClassName}>
-                    {t.name}
-                    <input
-                      ref={firstFieldRef}
-                      required
-                      type="text"
-                      autoComplete="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className={fieldClassName}
-                    />
-                  </label>
-                  <label className={labelClassName}>
-                    {t.email}
-                    <input
-                      required
-                      type="email"
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={fieldClassName}
-                    />
-                  </label>
-                  <label className={`${labelClassName} sm:col-span-2`}>
-                    {t.objective}
-                    <select
-                      required
-                      value={objective}
-                      onChange={(e) => setObjective(e.target.value as BookCallServiceLine)}
-                      className={fieldClassName}
-                    >
-                      <option value="" disabled>
-                        {t.objectivePlaceholder}
-                      </option>
-                      {OBJECTIVE_KEYS.map((key) => (
-                        <option key={key} value={key}>
-                          {objectiveLabel(key)}
+              <form onSubmit={handleSubmit} className="mt-6 flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label className={labelClassName}>
+                      {t.name}
+                      <input
+                        ref={firstFieldRef}
+                        required
+                        type="text"
+                        autoComplete="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className={fieldClassName}
+                      />
+                    </label>
+                    <label className={labelClassName}>
+                      {t.email}
+                      <input
+                        required
+                        type="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={fieldClassName}
+                      />
+                    </label>
+                    <label className={`${labelClassName} sm:col-span-2`}>
+                      {t.objective}
+                      <select
+                        required
+                        value={objective}
+                        onChange={(e) => setObjective(e.target.value as BookCallServiceLine)}
+                        className={fieldClassName}
+                      >
+                        <option value="" disabled>
+                          {t.objectivePlaceholder}
                         </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className={`${labelClassName} sm:col-span-2`}>
-                    {t.briefContext}
-                    <textarea
-                      rows={3}
-                      value={briefContext}
-                      onChange={(e) => setBriefContext(e.target.value)}
-                      placeholder={t.briefContextPlaceholder}
-                      className="min-h-[88px] w-full resize-y rounded-sm border border-[#0F2A1D]/12 bg-white px-3 py-2.5 text-[15px] text-[#0F2A1D] outline-none transition-colors placeholder:text-[#0F2A1D]/35 focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30"
-                    />
-                  </label>
+                        {OBJECTIVE_KEYS.map((key) => (
+                          <option key={key} value={key}>
+                            {objectiveLabel(key)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className={`${labelClassName} sm:col-span-2`}>
+                      {t.briefContext}
+                      <textarea
+                        rows={3}
+                        value={briefContext}
+                        onChange={(e) => setBriefContext(e.target.value)}
+                        placeholder={t.briefContextPlaceholder}
+                        className="min-h-[88px] w-full resize-y rounded-sm border border-[#0F2A1D]/12 bg-white px-3 py-2.5 text-[15px] text-[#0F2A1D] outline-none transition-colors placeholder:text-[#0F2A1D]/35 focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30"
+                      />
+                    </label>
+                  </div>
                 </div>
 
-                <div className="mt-auto flex shrink-0 flex-col-reverse gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-[#0F2A1D]/8 bg-[#F9F9F6] pt-4 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-6">
                   <Button
                     type="button"
                     variant="ghost"

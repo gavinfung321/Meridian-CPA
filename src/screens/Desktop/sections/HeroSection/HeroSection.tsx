@@ -12,7 +12,7 @@ export const HeroSection = ({ lang, onBookNowClick }: HeroSectionProps): JSX.Ele
   return (
     <section
       aria-labelledby="hero-title"
-      className="relative flex h-screen min-h-[100svh] sm:min-h-[700px] w-full items-end overflow-hidden px-6 sm:px-12 lg:px-[50px] pb-12 sm:pb-[70px] pt-[25px] text-white animate-fade-in"
+      className="relative flex h-[100svh] min-h-[100svh] sm:min-h-[700px] w-full items-end overflow-hidden px-6 sm:px-12 lg:px-[50px] pb-[max(3rem,env(safe-area-inset-bottom))] sm:pb-[70px] pt-[25px] text-white animate-fade-in"
     >
       <div
         className="absolute inset-0 bg-cover bg-center"
