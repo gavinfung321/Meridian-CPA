@@ -1,0 +1,65 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_BASE_PATH: /Meridian-CPA/
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_CALENDLY_URL: ${{ secrets.VITE_CALENDLY_URL }}
+          VITE_CALENDLY_PRIMARY_COLOR: ${{ secrets.VITE_CALENDLY_PRIMARY_COLOR }}
+          VITE_CALENDLY_TEXT_COLOR: ${{ secrets.VITE_CALENDLY_TEXT_COLOR }}
+          VITE_CALENDLY_BACKGROUND_COLOR: ${{ secrets.VITE_CALENDLY_BACKGROUND_COLOR }}
+          VITE_CALENDLY_BRAND_FILTER: ${{ secrets.VITE_CALENDLY_BRAND_FILTER }}
+          VITE_BRAND_PRIMARY: ${{ secrets.VITE_BRAND_PRIMARY }}
+          VITE_BRAND_BG: ${{ secrets.VITE_BRAND_BG }}
+        run: npm run build
+
+      # SPA fallback so /Meridian-CPA/about etc. resolve on refresh
+      - name: Add Pages SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

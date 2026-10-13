@@ -44,7 +44,7 @@ export const App = (): JSX.Element => {
   return (
     <AuthProvider>
       <ToastProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Routes>
           <Route path="/" element={<Desktop lang={lang} setLang={setLang} />} />
           <Route path="/about" element={<AboutUs lang={lang} setLang={setLang} />} />
